@@ -310,8 +310,9 @@ def NormalizeWords(string):
                                                                                                              'ssiebzigd')
     string = string.replace('e.go life', 'e.golife').replace('s85', 'sfünfundachtzig')
 
-    # car brand
+    # names, companies, terms
     string = string.replace(' vw', ' volkswagen')
+    string = string.replace('ig metall', 'igmetall').replace('ig-metall', 'igmetall')
     string = string.replace('z.e.', 'zeroemission')
 
     # titel
@@ -388,4 +389,24 @@ def NormalizeWords(string):
     string = string.replace(' s ', ' sekunden ').replace(' kw', ' kilowatt').replace('°c', 'gradcelsius')
 
     return string
+
+def ParagraphsLowercase(listOfPars):
+    lowerPars = []
+    for par in listOfPars:
+        lowerPars.append(par.lower())
+    return lowerPars
+
+def ParagraphSplitter(listOfPars, splitAt):
+    """
+    Remove text which defines end of articles;
+    Strings = 'graphic', 'foto: classification language', 'classification language', 'kommentar seite '
+    """
+    splitPars = []
+    for par in listOfPars:
+        for splitstring in splitAt:
+            while splitstring not in par:
+                splitPars.append(par)
+            else:
+                continue
+    return splitPars
 

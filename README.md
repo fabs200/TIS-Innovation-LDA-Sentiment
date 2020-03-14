@@ -1,5 +1,5 @@
-# Media Analysis
-project topic modelling and sentiment analysis
+# TIS Innovation
+project topic modelling and sentiment analysis of TIS innovation electic cars
 
 ## Disclaimer
 Disclaimer: The author posed the following code for academic purposes

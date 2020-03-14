@@ -6,7 +6,7 @@ from python.ConfigUser import path_processedarticles
 import python.main
 from python.ProcessingFunctions import MakeListInLists
 
-# Read in file with articles from R-Skript ProcessNexisArticles.R
+# Read in file with articles from R-script ProcessNexisArticles.R
 df_articles_lda = pandas.read_csv(path_processedarticles + 'articles_for_lda_analysis.csv', sep='\t')
 
 # Remove rare and common tokens
@@ -36,7 +36,7 @@ pp.pprint(id2word_nouns)
 # print('Number of unique tokens: {}'.format(len(dict_nouns)))
 # print('Number of documents: {}'.format(len(corpus_nouns)))
 
-# TODO: save corpus and dctionary to disk and load them back
+# TODO: save corpus and dictionary to disk and load them back
 # save to path_lda_data
 
 lda_nouns = LdaModel(corpus=corpus_nouns, id2word=id2word_nouns, num_topics=5, iterations=300, eval_every=1)
@@ -54,7 +54,7 @@ from gensim.models.coherencemodel import CoherenceModel
 lda_nouns_cm = CoherenceModel(model=lda_nouns, corpus=corpus_nouns, dictionary=dict_nouns, coherence="u_mass")
 print(lda_nouns_cm.get_coherence())
 
-##we use coherence measure c_v as suggested by Röder et al. 2015, bceause it has the highest correlation with human interpretability
+##we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation with human interpretability
 
 #TODO: test alpha = 'auto' and eta ='auto' in lda model and add to compute_coherence function
 
