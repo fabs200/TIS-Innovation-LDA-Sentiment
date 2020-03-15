@@ -390,23 +390,20 @@ def NormalizeWords(string):
 
     return string
 
-def ParagraphsLowercase(listOfPars):
-    lowerPars = []
-    for par in listOfPars:
-        lowerPars.append(par.lower())
-    return lowerPars
 
 def ParagraphSplitter(listOfPars, splitAt):
     """
     Remove text which defines end of articles;
     Strings = 'graphic', 'foto: classification language', 'classification language', 'kommentar seite '
     """
-    splitPars = []
+    splitPars, splitHere = [], False
     for par in listOfPars:
         for splitstring in splitAt:
-            while splitstring not in par:
-                splitPars.append(par)
-            else:
-                continue
+            if splitstring in par:
+                splitHere = True
+        if not splitHere:
+            splitPars.append(par)
+        else:
+            break
     return splitPars
 
