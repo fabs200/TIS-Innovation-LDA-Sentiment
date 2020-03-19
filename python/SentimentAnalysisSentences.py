@@ -35,7 +35,7 @@ sentence2 = nlp2(sentence2)
 #suitable candidates: nouns, adjectives, adverbs and verbs
 
 candidates = []
-for token in sentence1:
+for token in sentence2:
     print(token.tag_)
     if token.tag_.startswith(('NN','V','ADV', 'ADJ')):
         if df_sepl['phrase'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(token)).any():
@@ -47,20 +47,25 @@ print(candidates)
 # The search is terminated on a comma (POS tag $,), a punctuation terminating a sentence (POS tag $.),
 # a conjunction (POS-Tag KON) or an opinion-bearing word that is already tagged. (Max distance determined by sentence lenght)
 #If one of the adjacent words is included in the SePL, together with the previously extracted phrase, it is added to the phrase.
-stack = []
+
+
 for word in candidates:
+    stack = []
     index = candidates.index(word)
-    #check if word is included in SePL
-    print('for filter',word)
-    #if df_sepl['phrase_sorted'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(word)).any():
-    if df_sepl['phrase_sorted'].str.contains(word).any(): #todo: other function for tokens
+
+    if df_sepl['phrase_sorted'].str.contains(word).any(): #todo diese zeile kann eigentlich raus
         stack.append(word)
-        print(stack)
+        print('stack ohne nachbar', stack)
         for i in candidates[index+1:]:
             stack.append(i)
-        for i in candidates[:index-1]:
-            stack.append(i)
-            print ('stack', stack)
+           print('stack mit rechts nachbarn', stack)            #checked: rechte nachbarn werden korrekt gezogen
+
+        for x in candidates[:index][::-1]: #select slice of left neigbours and reverse it with second bracket
+            stack.append(x)   # linke nachbarn werden korrekt gezogen in reverse
+            print ('stack mit linken nachbarn', stack)
+
+        print('final', stack) #checked: korrekt- word dann rechte nachbarn und dann linke nachbarn in reverse
+
         while len(stack)>0:
             phr = sorted(stack)
             phr_string = ' '.join(phr)
@@ -71,7 +76,7 @@ for word in candidates:
             else:
                 print('deleting', stack[-1])
                 del stack[-1]
-
+            #todo: loop does not continue with next word in candidates. stops after the stack of "ganz" is processed
 
 
 #third step: compare extracted phrases with SePL
