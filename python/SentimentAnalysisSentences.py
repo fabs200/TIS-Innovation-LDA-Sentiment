@@ -24,7 +24,7 @@ df_sepl['phrase_sorted'] = df_sepl['phrase'].apply(lambda x: ' '.join(sorted(x.s
 
 sentence1 = 'anfangs war er mir sehr unsympathisch' #included in SePL: anfangs sehr unsympathisch
 sentence2 = 'ich finde ihn ganz gut, aber ich bin nicht sehr begeistert von seinem auto' #negation not included in SePL
-sentence3 = 'ich habe heute, am 19.03.2020 Geburtstag, keine geile Party später'
+sentence3 = 'ich habe heute, am 19.03.2020 Geburtstag, keine geile Party'
 
 nlp2 = spacy.load('de_core_news_md', disable=['ner', 'parser'])
 
@@ -36,16 +36,43 @@ sentence3 = nlp2(sentence3)
 #first step: identification of suitable candidates for opinionated phrases
 #suitable candidates: nouns, adjectives, adverbs and verbs
 
-# TODO: write function
-# TODO: implement it in such a way that it splits by POS: $, and KON (example: ... ganz gut, aber ich bin ...) and return list in list
 # TODO: Add negation (1. as POS tag 'PTKNEG', 2. from predefined list), see Rill p.72
 candidates = []
-for token in sentence1:
+for token in sentence3:
     print(token.text, token.tag_)
-    if token.tag_.startswith(('NN','V','ADV', 'ADJ')):
-        if df_sepl['phrase'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(token)).any():
+    if token.tag_.startswith(('NN','V','ADV', 'ADJ', '$,')):
+        if df_sepl['phrase'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(token)).any() or token.tag_.startswith(('$,')):
             candidates.append(token.text)
 print(candidates)
+
+# get index of elements at which we want to split the list
+split_at_index = [i for i, j in enumerate(candidates) if j == ',']
+# Split list at index and make nested lists
+candidates = [candidates[i : j] for i, j in zip([0] + split_at_index, split_at_index + [None])]
+print(candidates)
+
+
+# temp_candidates, candidates = candidates, []
+# for li in temp_candidates:
+#     temp_li = []
+#     for el in li:
+#         if el is not ',':
+#             print(el)
+#             temp_li.append(el)
+#         print(temp_li)
+#     candidates.append(temp_li)
+
+# remove ',' so commas
+candidates = [x for x in candidates if x != [',']]
+# remove '' so empty lists
+candidates = [x for x in candidates if x]
+print(candidates)
+
+# negation_words = ['nicht', 'kein', 'bar', 'foo']
+# # get index of elements at which we want to split the list
+# split_at_index = [i for i, j in enumerate(list) if j in negation_words]
+# # Split list at index and make nested lists
+# candidates = [candidates[i : j] for i, j in zip([0] + split_at_index, split_at_index + [None])]
 
 #second step: extraction of possible opinion-bearing phrases from a candidate
 #starting from a candidate, check all left and right neighbours to extract possible phrases.
