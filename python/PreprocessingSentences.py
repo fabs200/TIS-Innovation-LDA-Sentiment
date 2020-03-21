@@ -3,10 +3,6 @@ from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import Sentencizer, SentenceCleaner, SentencePOStagger, NormalizeWords, SentenceWordRemover, \
     SentenceLinkRemover, SentenceMailRemover, DateRemover, SentenceCleanTokens, NumberComplexRemover, SentenceLemmatizer
-# TODO: for sentiment analysis replace ; AND conjunction by , (and afterwards 2 successive ,, or , , )
-# TODO: for sentiment analysis let Spacy identify commas as it identifies whether it is a sentence split or a numeration
-# TODO: for sentiment analysis run lemmatizer for all words
-# (TODO: for sentiment analysis for lemmatizer, tokenize sentences, then run lemmatizer, then go back to sentence as a string)
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
 df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_articles_withbattery.feather')

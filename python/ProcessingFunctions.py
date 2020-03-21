@@ -10,7 +10,6 @@ import spacy
 import re
 from germalemma import GermaLemma
 
-
 def MakeListInLists(string):
     """
     make lists nested in list, this is used for reading in exported, preprocessed articles and to prepare them
@@ -407,3 +406,16 @@ def ParagraphSplitter(listOfPars, splitAt):
             break
     return splitPars
 
+def ProcessSentsforSentiment(listOfSents):
+    """
+
+    # TODO: for sentiment analysis replace ; AND conjunction by , (and afterwards 2 successive ,, or , , )
+    # TODO: for sentiment analysis let Spacy identify commas as it identifies whether it is a sentence split or a numeration
+    # TODO: for sentiment analysis run lemmatizer for all words
+    # (TODO: for sentiment analysis for lemmatizer, tokenize sentences, then run lemmatizer, then go back to sentence as a string)
+
+    :param listOfSents: list of sentences
+    :return: same as input but processed listOfSents
+    """
+
+    return

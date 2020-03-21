@@ -15,6 +15,8 @@ violation of LexisNexis user policy. Use at your own legal risk.
 - [x] implement spacy.lang.de Sentence Boundary Detection
 - [x] prepare articles sentence-level
 - [x] test stop-word needed or not, or token.tag_.startswith('NN') enough
+- [x] Local LDA
+- [ ] implement sentiment analysis sepl
 - [ ] check LDA_TEST_get_topics.py
 - [ ] set up lda evaluation (e.g. pyLDAvis) of pre- and postprocessing
       of text
@@ -23,9 +25,7 @@ violation of LexisNexis user policy. Use at your own legal risk.
   - [ ]   or 'auto'/'symmetric' as lda args
 - [ ] plot: lda time series
 - [ ] Get large dataset
-- [ ] Local LDA
-- [ ] implement sentiment analysis sepl
-
+- [ ] create one Analysis file (lda + sentiment analysis)
 
 ## Tasks later
 - [ ] config_LDA.py: set up dictionary with parameters

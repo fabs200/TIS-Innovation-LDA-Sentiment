@@ -145,3 +145,32 @@ def GetSentiments(candidates, df_sepl=None, verbose=False):
     if verbose: print('final list of phrs:', final_phrs)
 
     return final_sentiments, final_phrs
+
+def ExtractSentimentFrequency(candidates, negation, sentimentscores):
+    """
+
+    # TODO: Add aspect-specific word list based on most frequent opinion phrases via spacy POS tagger
+    # TODO: Check most frequently negated opinion phrases (based on manually tagged Negation, e.g. 'kein', 'nicht', ...) if sentiment score is appropriate (*-1)
+
+    :param candidates:
+    :param negation:
+    :param sentimentscores:
+    :return:
+    """
+
+
+def ProcessSentimentScores(candidates, negation, sentimentscores):
+    """
+    # TODO: read in candidates, negation and sentimentscores as nested lists which are returned by MakeCandidates() and GetSentiments().
+    # TODO: return a final sentiment per full sentence
+    # TODO: apply rules such as: if sentimentscore>0 and negation is not empty -> invert sentiment score
+    # TODO: apply rules such as: if sentimentscore<0 and negation is not empty -> invert sentiment score (weighting check literature)
+    # TODO: apply rules such as: if sentimentscore<0 OR >0 and negation is empty -> do nothing
+
+    :param candidates:
+    :param negation:
+    :param sentimentscores:
+    :return:
+    """
+
+    return
