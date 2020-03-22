@@ -2,7 +2,8 @@ import pandas, re
 from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import Sentencizer, SentenceCleaner, SentencePOStagger, NormalizeWords, SentenceWordRemover, \
-    SentenceLinkRemover, SentenceMailRemover, DateRemover, SentenceCleanTokens, NumberComplexRemover, SentenceLemmatizer
+    SentenceLinkRemover, SentenceMailRemover, DateRemover, SentenceCleanTokens, NumberComplexRemover, SentenceLemmatizer, \
+    ProcessSentsforSentiment
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
 df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_articles_withbattery.feather')
@@ -52,6 +53,9 @@ df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x
                                                                                                       dropWords=drop_words))
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceLinkRemover(x))
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceMailRemover(x))
+
+### Fork sentences for Sentiment Analysis
+df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessSentsforSentiment(x))
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceCleaner(x))

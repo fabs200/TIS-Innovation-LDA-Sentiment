@@ -160,49 +160,43 @@ def ExtractSentimentFrequency(candidates, negation, sentimentscores):
     """
 
 
-def ProcessSentimentScores(candidates, negation, sentimentscores):
+def ProcessSentimentScores(candidates, negation_candidates, sentimentscores):
     """
-    # TODO: read in candidates, negation and sentimentscores as nested lists which are returned by MakeCandidates() and GetSentiments().
-    # TODO: return a final sentiment per full sentence
-    # TODO: apply rules such as: if sentimentscore>0 and negation is not empty -> invert sentiment score
-    # TODO: apply rules such as: if sentimentscore<0 and negation is not empty -> invert sentiment score (weighting check literature)
-    # TODO: apply rules such as: if sentimentscore<0 OR >0 and negation is empty -> do nothing
-
-    :param candidates:
-    :param negation:
-    :param sentimentscores:
-    :return:
+    :param candidates: MakeCandidates(..., get='candidates')
+    :param negation_candidates: MakeCandidates(..., get='negation')
+    :param sentimentscores: GetSentiments(...)
+    :return: sentiment score per sentence
     """
-
-    candidates_string = []
-   #create list for inverted sentiment scores
+   # Create list for inverted sentiment scores
     sentimentscores_inv = []
+
+    # Convert candidates tokes in to strings to get same index count as sentimentscores and negation_candidates
+    candidates_string = []
     for c in candidates:
-        #convert candidates tokes in to strings to get same index count as sentimentscores and negation_candidates
         list_help = []
         string_help = ' '.join(c)
         list_help.append(string_help)
         candidates_string.append(list_help)
 
-     for sent in candidates_string:
+    # Loop over candidates and process sentiment score
+    for sent in candidates_string:
         index_sent = candidates_string.index(sent)
         print(index_sent)
         for phrase in sent:
             index_phrase = sent.index(phrase)
             print(index_phrase)
-            #condition at specific index pair: positive/negative sentiment score and there exist a corresponding negation element
+            # Condition at specific index pair: positive/negative sentiment score and there exist a corresponding negation element
             #Todo: sentiment score condition uncessesary??
-            if sentimentscores[index_sent][index_phrase]>0 and len(negation_candidates[index_sent])>0 or  sentimentscores[index_sent][index_phrase]<0 and len(negation_candidates[index_sent])>0:
+            if sentimentscores[index_sent][index_phrase] > 0 and len(negation_candidates[index_sent]) > 0 or \
+                    sentimentscores[index_sent][index_phrase] < 0 and len(negation_candidates[index_sent]) > 0:
                 help = sentimentscores[index_sent][index_phrase]
-                sentimentscores_inv.append(help*-1)
+                sentimentscores_inv.append((-1)*help)
             else:
                 help = sentimentscores[index_sent][index_phrase]
                 sentimentscores_inv.append(help)
-    #flatten list to make it readable for fsum
+    # Flatten list to make it readable for fsum
     senti_help = [element for sublist in sentimentscores for element in sublist]
-    #sum up floats in list
+    # Sum up floats in list
     sentence_sentimentscore = math.fsum(senti_help)
 
     return sentence_sentimentscore
-
-

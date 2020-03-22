@@ -2,12 +2,10 @@
 Create help functions to call when running scripts
 """
 from python.ConfigUser import path_project
-import xlsxwriter
+import spacy, xlsxwriter, re
 from textdistance import jaro
 from spacy.lang.de import German
 from spacy.tokenizer import Tokenizer
-import spacy
-import re
 from germalemma import GermaLemma
 
 def MakeListInLists(string):
@@ -406,16 +404,26 @@ def ParagraphSplitter(listOfPars, splitAt):
             break
     return splitPars
 
+
+# Load Lemmatization
+lemmatizer = GermaLemma()
+
 def ProcessSentsforSentiment(listOfSents):
     """
-
-    # TODO: for sentiment analysis replace ; AND conjunction by , (and afterwards 2 successive ,, or , , )
-    # TODO: for sentiment analysis let Spacy identify commas as it identifies whether it is a sentence split or a numeration
-    # TODO: for sentiment analysis run lemmatizer for all words
-    # (TODO: for sentiment analysis for lemmatizer, tokenize sentences, then run lemmatizer, then go back to sentence as a string)
-
+    Process sentences before running Sentiment Analysis, replace ;: by , and lemmatize
     :param listOfSents: list of sentences
     :return: same as input but processed listOfSents
     """
 
-    return
+    final_articles, temp_article = [], []
+    for sent in listOfSents:
+        temp_sent = re.sub(r'[\.?!]$', '', sent)
+        temp_sent = re.sub(r'[;:]\s', ' ', temp_sent)
+        temp_sent = nlp2(temp_sent)
+        sent_tokens = []
+        for token in temp_sent:
+            # print(token, '->', token.lemma_)
+            sent_tokens.append(token.lemma_)
+        final_articles.append(sent_tokens)
+    # print(final_articles)
+    return [' '.join(i) for i in final_articles]
