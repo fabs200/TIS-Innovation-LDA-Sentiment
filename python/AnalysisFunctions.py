@@ -4,6 +4,7 @@ from spacy.tokenizer import Tokenizer
 from nltk.tokenize import word_tokenize
 from python.ConfigUser import path_processedarticles
 import pandas
+import math
 
 def Load_SePL():
     """
@@ -33,7 +34,7 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
     :param negation_list: specifiy list with negation words to identify negated sentences; negation_list must not specified
     :return: nested list of lists where each nested list is separated by the POS tag $,
     """
-
+#ToDo: split sentences if POS_tag = conjunction
     # split sentence by comma, write in list and read in via nlp2()
     sent = sent.split(',')
     sent = [nlp2(s) for s in sent]
@@ -173,4 +174,35 @@ def ProcessSentimentScores(candidates, negation, sentimentscores):
     :return:
     """
 
-    return
+    candidates_string = []
+   #create list for inverted sentiment scores
+    sentimentscores_inv = []
+    for c in candidates:
+        #convert candidates tokes in to strings to get same index count as sentimentscores and negation_candidates
+        list_help = []
+        string_help = ' '.join(c)
+        list_help.append(string_help)
+        candidates_string.append(list_help)
+
+     for sent in candidates_string:
+        index_sent = candidates_string.index(sent)
+        print(index_sent)
+        for phrase in sent:
+            index_phrase = sent.index(phrase)
+            print(index_phrase)
+            #condition at specific index pair: positive/negative sentiment score and there exist a corresponding negation element
+            #Todo: sentiment score condition uncessesary??
+            if sentimentscores[index_sent][index_phrase]>0 and len(negation_candidates[index_sent])>0 or  sentimentscores[index_sent][index_phrase]<0 and len(negation_candidates[index_sent])>0:
+                help = sentimentscores[index_sent][index_phrase]
+                sentimentscores_inv.append(help*-1)
+            else:
+                help = sentimentscores[index_sent][index_phrase]
+                sentimentscores_inv.append(help)
+    #flatten list to make it readable for fsum
+    senti_help = [element for sublist in sentimentscores for element in sublist]
+    #sum up floats in list
+    sentence_sentimentscore = math.fsum(senti_help)
+
+    return sentence_sentimentscore
+
+
