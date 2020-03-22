@@ -183,25 +183,32 @@ def ProcessSentimentScores(sepl_phrase, negation_candidates, sentimentscores, ne
         negation_list = ['nicht', 'kein', 'nichts', 'kaum', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'gegen',
                          'niemanden', 'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
 
-    # get size of candidates list
-    size = len(sepl_phrase)
     # Loop over each sentence part and access each list (sepl_word/negation_candidates/sentimentscores) via index
-    for i in range(0, size):
+    for i in range(0, len(sepl_phrase)):
 
         # Check whether sepl_word in sentence part is contained in negation_list, if yes, set flag to True
-        sepl_string, sepl_phrase_in_negation_list = sepl_phrase[i][0], False
-        for word in sepl_string.split():
-            if word in negation_list: sepl_phrase_in_negation_list = True
-        # Condition Case II
-        if not sepl_phrase_in_negation_list and set(negation_candidates[i]).intersection(negation_list).__len__():
-            # Invert sentiment
-            sentimentscores[i][0] = -sentimentscores[i][0]
+        if sepl_phrase[i]:
+            sepl_string = sepl_phrase[i][0]
+            sepl_phrase_in_negation_list = False
+            for word in sepl_string.split():
+                if word in negation_list: sepl_phrase_in_negation_list = True
+            # Condition Case II
+            if not sepl_phrase_in_negation_list and set(negation_candidates[i]).intersection(negation_list).__len__():
+                # Invert sentiment
+                sentimentscores[i][0] = -sentimentscores[i][0]
+        else:
+            continue
 
     # Flatten list
     flatsentimentscores = [element for sublist in sentimentscores for element in sublist]
 
-    # Return average sentiment score
-    return sum(flatsentimentscores) / len(flatsentimentscores)
+    # Average sentiment score
+    if flatsentimentscores:
+        averagescore = sum(flatsentimentscores) / len(flatsentimentscores)
+    else:
+        averagescore = []
+
+    return averagescore
 
 def GetSentimentScores(listOfSents):
     """
