@@ -417,15 +417,29 @@ def ProcessSentsforSentiment(listOfSents):
 
     final_articles, temp_article = [], []
     for sent in listOfSents:
-        # Drop .?! and replace ;: by ,
-        temp_sent = re.sub(r'[\.?!]$', '', sent)
-        temp_sent = re.sub(r'[;:]\s', ' ', temp_sent)
-        temp_sent = nlp2(temp_sent)
-        # TODO: , aber POS tag Konjuktion ersetzten durch ,
+        # First drop .?! and replace ;: by ,
+        temp_sent = []
+        sent_nlp = nlp2(sent)
+        # process each token and 'translate' konjunktion or .;:!? to ,
+        for token in sent_nlp:
+            if token.tag_ in ['$.', '$,', 'KON']:
+                temp_sent.append(',')
+            else:
+                temp_sent.append(token.text)
+
+        # put all tokens to a string
+        sent_string = ' '.join(temp_sent)
+        # correct successive ,
+        sent_string = sent_string.replace(' , , ', ', ')
+        # prepare for lemmatization
+        sent_string = nlp2(sent_string)
+
+        # Second, loop over all tokens in sentence and lemmatize them
         sent_tokens = []
-        # Loop over all tokens in sentence and lemmatize them
-        for token in temp_sent:
+        for token in sent_string:
             sent_tokens.append(token.lemma_)
         final_articles.append(sent_tokens)
+
+    # return a string with lemmatized words and united sentence splits to ,
     return [' '.join(i) for i in final_articles]
 
