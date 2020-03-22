@@ -417,13 +417,15 @@ def ProcessSentsforSentiment(listOfSents):
 
     final_articles, temp_article = [], []
     for sent in listOfSents:
+        # Drop .?! and replace ;: by ,
         temp_sent = re.sub(r'[\.?!]$', '', sent)
         temp_sent = re.sub(r'[;:]\s', ' ', temp_sent)
         temp_sent = nlp2(temp_sent)
+        # TODO: , aber POS tag Konjuktion ersetzten durch ,
         sent_tokens = []
+        # Loop over all tokens in sentence and lemmatize them
         for token in temp_sent:
-            # print(token, '->', token.lemma_)
             sent_tokens.append(token.lemma_)
         final_articles.append(sent_tokens)
-    # print(final_articles)
     return [' '.join(i) for i in final_articles]
+

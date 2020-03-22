@@ -34,11 +34,19 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
     :param negation_list: specifiy list with negation words to identify negated sentences; negation_list must not specified
     :return: nested list of lists where each nested list is separated by the POS tag $,
     """
-#ToDo: split sentences if POS_tag = conjunction
-    # split sentence by comma, write in list and read in via nlp2()
+    #ToDo: split sentences if POS_tag = conjunction
     sent = sent.split(',')
     sent = [nlp2(s) for s in sent]
     candidates = []
+
+    if negation_list is None:
+        # Rill (2016)
+        # negation_list = ['nicht', 'kein', 'nichts', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'niemanden',
+        #                  'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
+        # Rill + Wiegant et al. (2018)
+        negation_list = ['nicht', 'kein', 'nichts', 'kaum', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'gegen',
+                         'niemanden', 'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
+        # TODO: check further negation words in literature
 
     if get == 'candidates':
 
@@ -48,7 +56,7 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
             # loop over tokens in sentences, get tags and prepare
             for token in s:
                 if verbose: print('token:', token.text, '->', token.tag_)
-                if token.tag_.startswith(('NN', 'V', 'ADV', 'ADJ')):
+                if token.tag_.startswith(('NN', 'V', 'ADV', 'ADJ')) or token.text in negation_list:
                     if df_sepl['phrase'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(token)).any():
                         c.append(token.text)
             candidates.append(c)
@@ -56,15 +64,6 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
         if verbose: print('final candidates:', candidates)
 
     if get == 'negation':
-
-        if negation_list is None:
-            # Rill (2016)
-            # negation_list = ['nicht', 'kein', 'nichts', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'niemanden',
-            #                  'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
-            # Rill + Wiegant et al. (2018)
-            negation_list = ['nicht', 'kein', 'nichts', 'kaum', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'gegen',
-                             'niemanden', 'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
-            # TODO: check further negation words in literature
 
         # loop over sentence parts and check whether a word is contained in negotion_list, if yes, append to candidates
         for s in sent:
@@ -80,7 +79,7 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
 
     return candidates
 
-def GetSentiments(candidates, df_sepl=None, verbose=False):
+def ReadSePLSentiments(candidates, df_sepl=None, verbose=False):
     """
     reads in candidates (list in list), retrieves sentiment scores (sentiment_scores), returns them and the opinion
     relevant terms (tagged_phr), make sure df_sepl is loaded (run Load_SePL() before)
@@ -123,7 +122,7 @@ def GetSentiments(candidates, df_sepl=None, verbose=False):
                     if verbose: print('phr_string:', phr_string)
 
                     # if el of stack found in SePL, extract sentiment and save phrases
-                    if (df_sepl['phrase_sorted'] == phr_string).any() and phr_string not in c_phrs and phr_string not in tagged_phr_list:
+                    if (df_sepl['phrase_sorted'] == phr_string).any() and phr_string not in c_phrs and set(tagged_phr_list).intersection(phr).__len__() == 0:
                         # extract sentiment
                         sentiment_score = df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'opinion_value'].item()
                         c_sentiments.append(sentiment_score)
@@ -159,44 +158,54 @@ def ExtractSentimentFrequency(candidates, negation, sentimentscores):
     :return:
     """
 
-
-def ProcessSentimentScores(candidates, negation_candidates, sentimentscores):
+def ProcessSentimentScores(sepl_phrase, negation_candidates, sentimentscores, negation_list=None):
     """
-    :param candidates: MakeCandidates(..., get='candidates')
+    Process sentimentscores of sentence parts and return only one sentiment score per sentence
+
+        # Case I:
+        # 1. any word contained in negation_list
+        # (2. sentimentscore is not empty)
+        # -> do nothing
+
+        # Case II:
+        # 1. any word is NOT contained in negation_list
+        # (2. sentimentscore is not empty)
+        # 3. negation_candidates is not empty
+        # -> Invert sentimentscore
+
+    :param sepl_phrase: GetSentiments(...)[1], here are all words which are in SePL
     :param negation_candidates: MakeCandidates(..., get='negation')
-    :param sentimentscores: GetSentiments(...)
-    :return: sentiment score per sentence
+    :param sentimentscores: GetSentiments(...)[0]
+    :return: 1 sentiment score
     """
-   # Create list for inverted sentiment scores
-    sentimentscores_inv = []
 
-    # Convert candidates tokes in to strings to get same index count as sentimentscores and negation_candidates
-    candidates_string = []
-    for c in candidates:
-        list_help = []
-        string_help = ' '.join(c)
-        list_help.append(string_help)
-        candidates_string.append(list_help)
+    if negation_list is None:
+        negation_list = ['nicht', 'kein', 'nichts', 'kaum', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'gegen',
+                         'niemanden', 'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
 
-    # Loop over candidates and process sentiment score
-    for sent in candidates_string:
-        index_sent = candidates_string.index(sent)
-        print(index_sent)
-        for phrase in sent:
-            index_phrase = sent.index(phrase)
-            print(index_phrase)
-            # Condition at specific index pair: positive/negative sentiment score and there exist a corresponding negation element
-            #Todo: sentiment score condition uncessesary??
-            if sentimentscores[index_sent][index_phrase] > 0 and len(negation_candidates[index_sent]) > 0 or \
-                    sentimentscores[index_sent][index_phrase] < 0 and len(negation_candidates[index_sent]) > 0:
-                help = sentimentscores[index_sent][index_phrase]
-                sentimentscores_inv.append((-1)*help)
-            else:
-                help = sentimentscores[index_sent][index_phrase]
-                sentimentscores_inv.append(help)
-    # Flatten list to make it readable for fsum
-    senti_help = [element for sublist in sentimentscores for element in sublist]
-    # Sum up floats in list
-    sentence_sentimentscore = math.fsum(senti_help)
+    # get size of candidates list
+    size = len(sepl_phrase)
+    # Loop over each sentence part and access each list (sepl_word/negation_candidates/sentimentscores) via index
+    for i in range(0, size):
 
-    return sentence_sentimentscore
+        # Check whether sepl_word in sentence part is contained in negation_list, if yes, set flag to True
+        sepl_string, sepl_phrase_in_negation_list = sepl_phrase[i][0], False
+        for word in sepl_string.split():
+            if word in negation_list: sepl_phrase_in_negation_list = True
+        # Condition Case II
+        if not sepl_phrase_in_negation_list and set(negation_candidates[i]).intersection(negation_list).__len__():
+            # Invert sentiment
+            sentimentscores[i][0] = -sentimentscores[i][0]
+
+    # Flatten list
+    flatsentimentscores = [element for sublist in sentimentscores for element in sublist]
+
+    # Return average sentiment score
+    return sum(flatsentimentscores) / len(flatsentimentscores)
+
+def GetSentimentScores(listOfSents):
+    """
+
+    :param listOfSents:
+    :return: TODO: return 1 value per Article OR return 1 list with sentiments of each sentence
+    """
