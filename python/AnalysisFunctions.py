@@ -4,7 +4,7 @@ from spacy.tokenizer import Tokenizer
 from nltk.tokenize import word_tokenize
 from python.ConfigUser import path_processedarticles
 import pandas
-import math
+import numpy as np
 
 def Load_SePL():
     """
@@ -123,8 +123,12 @@ def ReadSePLSentiments(candidates, df_sepl=None, verbose=False):
 
                     # if el of stack found in SePL, extract sentiment and save phrases
                     if (df_sepl['phrase_sorted'] == phr_string).any() and phr_string not in c_phrs and set(tagged_phr_list).intersection(phr).__len__() == 0:
-                        # extract sentiment
-                        sentiment_score = df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'opinion_value'].item()
+                        # extract sentiment, SePL sometimes contains non-unique entries, thus get the highest value
+                        # if there are more than 1 sentiments
+                        try:
+                            sentiment_score = df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'opinion_value'].item()
+                        except ValueError:
+                            sentiment_score = max(df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'opinion_value'].to_list())
                         c_sentiments.append(sentiment_score)
                         if verbose: print('phrase found! sentiment is', sentiment_score)
                         # save phr
@@ -281,8 +285,11 @@ def GetSentimentScores(listOfSents, df_sepl):
         listOfSentimentsscores.append(sentimentscores)
         listOfsepl_phrases.append(sepl_phrase)
 
-    # Calculate average sentiment score per article
-    article_score = sum([x for x in listOfSentimentsscores if x != []]) / len([x for x in listOfSentimentsscores if x != []])
+    # create flat, non-empty list with scores
+    sentiscores = np.array([i for i in listOfSentimentsscores if i])
 
-    return article_score, listOfSentimentsscores, listOfsepl_phrases
+    # Retrieve statistics
+    ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
+
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentimentsscores, listOfsepl_phrases
 
