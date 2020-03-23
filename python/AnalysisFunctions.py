@@ -210,9 +210,79 @@ def ProcessSentimentScores(sepl_phrase, negation_candidates, sentimentscores, ne
 
     return averagescore
 
-def GetSentimentScores(listOfSents):
+def ProcessSePLphrases(sepl_phrase):
+    """
+    Process sepl_phrases of sentence parts and return only one list with the opinion relevant words per sentence,
+    drop empty nested lists
+
+    :param sepl_phrase: GetSentiments(...)[1], here are all words which are in SePL
+    :return: 1 sepl_word list
     """
 
-    :param listOfSents:
-    :return: TODO: return 1 value per Article OR return 1 list with sentiments of each sentence
+    # Loop over sentence parts and append only non-empty lists
+    processed_sepl_phrases = ([])
+    for phrase in sepl_phrase:
+        if phrase:
+            for p in phrase:
+                processed_sepl_phrases.append(p)
+    return processed_sepl_phrases
+
+
+def GetSentimentScores(listOfSents, df_sepl):
     """
+    Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
+    Include following function:
+
+    1. Load_SePL() to load SePL
+    2. MakeCandidates() to make candidates- and candidates_negation-lists
+    3. ReadSePLSentiments() which reads in candidates- and candidates_negation-lists and retrieves sentiment scores
+        from SePL
+    4. ProcessSentimentScores() to process the retrieved sentiment scores and to return a unified score per sentence
+
+    :param listOfSents: articles must be processed with ProcessSentsforSentiment()
+    :return: return 1 value per Article, return 1 list with sentiments of each sentence, 1 list w/ opinion relev. words
+    """
+
+    listOfSentimentsscores, listOfsepl_phrases = [], []
+
+    for sent in listOfSents:
+
+        """
+        first step: identification of suitable candidates for opinionated phrases suitable candidates: nouns, adjectives, 
+        adverbs and verbs
+        """
+        candidates = MakeCandidates(sent, df_sepl, get='candidates')
+        negation_candidates = MakeCandidates(sent, df_sepl, get='negation')
+
+        """
+        second step: extraction of possible opinion-bearing phrases from a candidate starting from a candidate, 
+        check all left and right neighbours to extract possible phrases. The search is terminated on a comma (POS tag $,), 
+        a punctuation terminating a sentence (POS tag $.), a conjunction (POS-Tag KON) or an opinion-bearing word that is 
+        already tagged. (Max distance determined by sentence lenght)
+        If one of the adjacent words is included in the SePL, together with the previously extracted phrase, it is added to 
+        the phrase.
+        """
+
+        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, df_sepl)
+
+        """
+        third step: compare extracted phrases with SePL After all phrases have been extracted, they are compared with the 
+        entries in the SePL. (everything lemmatized!) If no  match is found, the extracted Phrase is shortened by the last 
+        added element and compared again with the SePL. This is repeated until a match is found.
+        """
+
+        # Make sure sepl_phrase, negation_candidates, sentimentscores are of same size
+        assert len(raw_sepl_phrase) == len(raw_sentimentscores) == len(candidates) == len(negation_candidates)
+
+        # export processed, flattened lists
+        sentimentscores = ProcessSentimentScores(raw_sepl_phrase, negation_candidates, raw_sentimentscores)
+        sepl_phrase = ProcessSePLphrases(raw_sepl_phrase)
+
+        listOfSentimentsscores.append(sentimentscores)
+        listOfsepl_phrases.append(sepl_phrase)
+
+    # Calculate average sentiment score per article
+    article_score = sum([x for x in listOfSentimentsscores if x != []]) / len([x for x in listOfSentimentsscores if x != []])
+
+    return article_score, listOfSentimentsscores, listOfsepl_phrases
+
