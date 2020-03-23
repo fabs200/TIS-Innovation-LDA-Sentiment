@@ -4,9 +4,17 @@ from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import Sentencizer, SentenceCleaner, SentencePOStagger, NormalizeWords, SentenceWordRemover, \
     SentenceLinkRemover, SentenceMailRemover, DateRemover, SentenceCleanTokens, NumberComplexRemover, SentenceLemmatizer, \
     ProcessSentsforSentiment
+import time
+
+start_time0 = time.process_time()
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
 df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_articles_withbattery.feather')
+
+######
+# TEMP keep first 100 articles
+df_articles = df_articles[df_articles['ID']<101]
+######
 
 # convert all words to lower case
 df_articles['Article'] = [i.lower() for i in df_articles['Article']]
@@ -54,8 +62,17 @@ df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceLinkRemover(x))
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceMailRemover(x))
 
+end_time0 = time.process_time()
+
+print('Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 2)))
+
+start_time1 = time.process_time()
+
 ### Fork sentences for Sentiment Analysis
 df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessSentsforSentiment(x))
+end_time1 = time.process_time()
+
+
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceCleaner(x))
@@ -74,8 +91,8 @@ df_articles['Article_sentence_nouns_cleaned'] = df_articles['Article_sentence_no
 pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_sentence_nouns_cleaned']).to_excel(
     path_processedarticles + "Article_sentence_nouns_cleaned.xlsx")
 
-# # Export data to csv (will be read in again in LDAArticles.py)
-df_articles[['ID_incr', 'ID', 'Date', 'Article_sentence_nouns_cleaned']].to_csv(
+### Export data to csv (will be read in again in LDAArticles.py)
+df_articles[['ID_incr', 'ID', 'Date', 'Article_sentence_nouns_cleaned', 'Article_sentiment_sentences']].to_csv(
     path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t', index=False)
 
 # Clean up to keep RAM small
