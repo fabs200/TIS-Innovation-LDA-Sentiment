@@ -7,10 +7,12 @@ import python.main
 from python.ProcessingFunctions import MakeListInLists
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
-df_articles_sentences_lda = pandas.read_csv(path_processedarticles + 'sentences_for_lda_analysis.csv', sep='\t')
+df_articles_sentences_lda = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t')
+
+sentences = df_articles_sentences_lda['Article_sentence_nouns_cleaned'].to_list()
 
 # Read in list in list (=1 sentences 1 doc)
-sentences = MakeListInLists(df_articles_sentences_lda['Article_sentence_tokenized'])
+sentences = MakeListInLists(sentences)
 
 # Create a dictionary representation of the documents
 dict_nouns = Dictionary(sentences)
@@ -19,7 +21,7 @@ dict_nouns = Dictionary(sentences)
 # pp.pprint(dict_nouns.token2id)
 
 # Filter out words that occur less than 20 documents, or more than 50% of the documents
-dict_nouns.filter_extremes(no_below=20, no_above=0.2)
+dict_nouns.filter_extremes(no_below=4, no_above=0.4)
 
 # Bag-of-words representation of the documents
 corpus_nouns = [dict_nouns.doc2bow(doc) for doc in sentences]
@@ -39,7 +41,7 @@ pp.pprint(id2word_nouns)
 # TODO: save corpus and dctionary to disk and load them back
 # save to path_lda_data
 
-lda_nouns = LdaModel(corpus=corpus_nouns, id2word=id2word_nouns, num_topics=5, iterations=300, eval_every=1)
+lda_nouns = LdaModel(corpus=corpus_nouns, id2word=id2word_nouns, num_topics=10, iterations=300, eval_every=1)
 
 lda_nouns.print_topics(-1)
 

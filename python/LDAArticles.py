@@ -7,10 +7,13 @@ import python.main
 from python.ProcessingFunctions import MakeListInLists
 
 # Read in file with articles from R-script ProcessNexisArticles.R
-df_articles_lda = pandas.read_csv(path_processedarticles + 'articles_for_lda_analysis.csv', sep='\t')
+df_articles_lda = pandas.read_csv(path_processedarticles + 'feather/articles_for_lda_analysis.csv', sep='\t')
 
 # Remove rare and common tokens
-nouns = MakeListInLists(df_articles_lda['Nouns_lemma'])
+nouns = df_articles_lda['Nouns_lemma'].to_list()
+
+# Make List in List
+nouns = MakeListInLists(nouns)
 
 # Create a dictionary representation of the documents
 dict_nouns = Dictionary(nouns)

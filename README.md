@@ -16,7 +16,9 @@ violation of LexisNexis user policy. Use at your own legal risk.
 - [x] prepare articles sentence-level
 - [x] test stop-word needed or not, or token.tag_.startswith('NN') enough
 - [x] Local LDA
-- [ ] implement sentiment analysis sepl
+- [x] implement sentiment analysis sepl
+- [ ] frequency distribution sentiment analysis negation words
+- [ ] write function to make long file
 - [ ] check LDA_TEST_get_topics.py
 - [ ] set up lda evaluation (e.g. pyLDAvis) of pre- and postprocessing
       of text

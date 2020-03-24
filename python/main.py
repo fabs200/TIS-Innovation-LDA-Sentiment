@@ -2,7 +2,7 @@
 Run preprocessing from here, adjust configurations for lda, for calibration
 """
 
-from python.preprocessingSentences
+import python.PreprocessingSentences
 # from python.preprocessingArticles import noun_lemma_list, noun_list
 
 
