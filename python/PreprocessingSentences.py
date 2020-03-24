@@ -88,6 +88,10 @@ df_articles['Article_sentence_nouns'] = df_articles['Article_sentence_nouns'].ap
 df_articles['Article_sentence_nouns_cleaned'] = df_articles['Article_sentence_nouns'].apply(SentenceCleanTokens,
                                                                                             minwordinsent=2,
                                                                                             minwordlength=2)
+
+# todo: make long data set
+# todo: export wide and export long
+
 pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_sentence_nouns_cleaned']).to_excel(
     path_processedarticles + "Article_sentence_nouns_cleaned.xlsx")
 
