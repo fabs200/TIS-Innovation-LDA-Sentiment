@@ -8,10 +8,22 @@ from python.ProcessingFunctions import MakeListInLists
 from python.ProcessingFunctions import SentenceCleaner
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
-df_articles_sentences_lda = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t',)
+#df_articles_sentences_lda = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t',)
+df_articles_sentences_lda = pandas.read_csv(path_processedarticles + 'feather/articles_for_lda_analysis.csv', sep='\t')
+
+df_articles = df_articles_sentences_lda[df_articles_sentences_lda['ID']<101]
+
+temp_list = df_articles['Nouns_lemma'].to_list()
+
+# Temp:
+# help = []
+# for list in temp_list:
+#     temp_list = list.replace('[', '').replace(']', '').replace("'", "")
+#     temp_list = temp_list.split(', ')
+#     help.append(temp_list)
 
 # Read in list in list (=1 sentences 1 doc)
-sentences_nouns = MakeListInLists(df_articles_sentences_lda['Article_sentence_nouns_cleaned'])
+sentences_nouns = MakeListInLists(temp_list)
 
 #Todo: noun list for lda on article and paragraph level - as function parameters?
 

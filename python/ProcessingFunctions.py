@@ -15,12 +15,14 @@ def MakeListInLists(string):
     """
     listinlist = []
     for n in string:
-        help = []
-        m = n.replace('[', '').replace(']', '').replace('\'', '')
+        # help = []
+        m = n.replace('[', '').replace(']', '').replace('\'', '').replace("'", "")
         m = m.split(', ')
-        for o in m:
-            help.append(o)
-        listinlist.append(help[0:(len(help[0]) - 1)])
+        # TODO: Check later whether loop below is needed when running lda
+        # for o in m:
+        #     help.append(o)
+        # listinlist.append(help[0:(len(help[0]) - 1)])
+        listinlist.append(m)
     return listinlist
 
 
