@@ -9,65 +9,40 @@ from python.ProcessingFunctions import SentenceCleaner
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
 #df_articles_sentences_lda = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t',)
-df_articles_sentences_lda = pandas.read_csv(path_processedarticles + 'feather/articles_for_lda_analysis.csv', sep='\t')
+df_docs_lda = pandas.read_csv(path_processedarticles + 'feather/articles_for_lda_analysis.csv', sep='\t')
 
-df_articles = df_articles_sentences_lda[df_articles_sentences_lda['ID']<101]
 
-temp_list = df_articles['Nouns_lemma'].to_list()
+def EstimateLDA(dataframecolumn, no_below, no_above, alpha='symmetric', eta=None,
+                eval_every=10, iterations=50, random_state=None):
+    
+    #Read in datafram column and convert to list of lists
+    templist = dataframecolumn.tolist()
+    docsforlda = MakeListInLists(templist)
+    # Create a dictionary representation of the documents and frequency filter
+    dict_lda = Dictionary(docsforlda)
+    dict_lda.filter_extremes(no_below=no_below, no_above=no_above)
 
-# Temp:
-# help = []
-# for list in temp_list:
-#     temp_list = list.replace('[', '').replace(']', '').replace("'", "")
-#     temp_list = temp_list.split(', ')
-#     help.append(temp_list)
+    # Bag-of-words representation of the documents
+    corpus_lda = [dict_lda.doc2bow(doc) for doc in docsforlda]
+    # Make a index to word dictionary
+    temp = dict_lda[0]  # This is only to "load" the dictionary
+    id2word_lda = dict_lda.id2token
 
-# Read in list in list (=1 sentences 1 doc)
-sentences_nouns = MakeListInLists(temp_list)
+    # Display corpus for lda
+    pp.pprint(dict_lda.token2id)
+    pp.pprint(id2word_lda)
+    print('Number of unique tokens: {}'.format(len(dict_lda)))
+    print('Number of documents: {}'.format(len(corpus_lda)))
+   # TODO: save corpus and dictionary to disk and load them back (necessary?)
 
-#Todo: noun list for lda on article and paragraph level - as function parameters?
+    lda_model = LdaModel(corpus=corpus_lda, id2word=id2word_lda, num_topics=5, alpha=alpha, eta=eta,
+                         eval_every=eval_every, iterations=iterations, random_state=random_state)
+    # Print the topic keywords
+    lda_model.print_topics(-1)
+    pp.pprint(lda_model.print_topics())
 
-# Read n file with textbody from R-Skript ProcessNexisArticles.R
-#df_sentences = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t')
+    return lda_model
 
-# Extract list from dataframe
-#nouns = MakeListInLists(df_articles_lda['Nouns_lemma'])
-
-# Create a dictionary representation of the documents
-dict_nouns = Dictionary(sentences_nouns)
-
-# Display
-# pp.pprint(dict_nouns.token2id)
-
-# Filter out words that occur less than 20 documents, or more than 50% of the documents
-# Todo: include filter settings as function parameters
-dict_nouns.filter_extremes(no_below=20, no_above=0.5)
-
-# Bag-of-words representation of the documents
-corpus_nouns = [dict_nouns.doc2bow(doc) for doc in sentences_nouns]
-
-# Make a index to word dictionary
-temp = dict_nouns[0]  # This is only to "load" the dictionary
-id2word_nouns = dict_nouns.id2token
-
-# Display
-pp.pprint(id2word_nouns)
-
-# Display results of Corpus
-#print(corpus_nouns)
-print('Number of unique tokens: {}'.format(len(dict_nouns)))
-print('Number of documents: {}'.format(len(corpus_nouns)))
-
-# TODO: save corpus and dictionary to disk and load them back
-# save to path_lda_data
-
-#todo lda parameters in function
-lda_nouns = LdaModel(corpus=corpus_nouns, id2word=id2word_nouns, num_topics=5, iterations=300, eval_every=1)
-
-lda_nouns.print_topics(-1)
-
-# Print the Keyword in the 10 topics
-pp.pprint(lda_nouns.print_topics())
 
 ########################
 ########################
