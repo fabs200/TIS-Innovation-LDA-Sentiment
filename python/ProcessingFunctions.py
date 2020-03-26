@@ -8,6 +8,7 @@ from spacy.lang.de import German
 from spacy.tokenizer import Tokenizer
 from germalemma import GermaLemma
 
+
 def MakeListInLists(string):
     """
     make lists nested in list, this is used for reading in exported, preprocessed articles and to prepare them
@@ -186,16 +187,33 @@ def SentenceCleaner(listOfSents):
 
 nlp2 = spacy.load('de_core_news_md', disable=['ner', 'parser'])
 
+
 def SentencePOStagger(listOfSents, POStag='NN'):
     """
     POS tag words in sentences
+
+    :param listOfSents: nested list of articles where senteces are nesetd
+    :param POStag: str, list; e.g. 'NN', or ['NN', 'NE']
+    :return: listOfSents
     """
     POStaggedlist = []
-    for sent in listOfSents:
-        list, sent_tokens = nlp2(sent), []
-        for token in list:
-            if token.tag_.startswith(POStag): sent_tokens.append(token)
-        POStaggedlist.append(sent_tokens)
+
+    # In case POStag is a list
+    if isinstance(POStag, (list, tuple)):
+        for sent in listOfSents:
+            sent_nlp2, sent_tokens = nlp2(sent), []
+            for token in sent_nlp2:
+                if token.tag_ in POStag: sent_tokens.append(token)
+            POStaggedlist.append(sent_tokens)
+
+    # In case POStag is a string, only one tag specified
+    else:
+        for sent in listOfSents:
+            sent_nlp2, sent_tokens = nlp2(sent), []
+            for token in sent_nlp2:
+                if token.tag_.startswith(POStag): sent_tokens.append(token)
+            POStaggedlist.append(sent_tokens)
+
     return POStaggedlist
 
 
@@ -410,6 +428,7 @@ def ParagraphSplitter(listOfPars, splitAt):
 # Load Lemmatization
 lemmatizer = GermaLemma()
 
+
 def ProcessSentsforSentiment(listOfSents):
     """
     Process sentences before running Sentiment Analysis, replace ;: by , and lemmatize
@@ -444,4 +463,3 @@ def ProcessSentsforSentiment(listOfSents):
 
     # return a string with lemmatized words and united sentence splits to ,
     return [' '.join(i) for i in final_articles]
-

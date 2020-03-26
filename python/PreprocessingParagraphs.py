@@ -1,16 +1,19 @@
-import pandas
+import pandas, time
 from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import ParagraphSplitter, NormalizeWords, DateRemover, NumberComplexRemover, \
     DateRemover, NumberComplexRemover, SentenceWordRemover, SentenceLinkRemover, SentenceMailRemover, SentenceCleaner,\
-    SentencePOStagger, SentenceLemmatizer, SentenceCleanTokens
+    SentencePOStagger, SentenceLemmatizer, SentenceCleanTokens, ProcessSentsforSentiment
+
+
+start_time0 = time.process_time()
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
 df_paragraphs = pandas.read_feather(path_processedarticles + 'feather/auto_paragraphs_withbattery.feather')
 
 ######
 # TEMP keep first 100 articles
-# df_paragraphs_TEMP = df_paragraphs[df_paragraphs['Art_ID']<101]
+df_paragraphs_TEMP = df_paragraphs[df_paragraphs['Art_ID']<101]
 ######
 
 # Write all paragraphs into a list of lists
@@ -71,6 +74,22 @@ df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda
 df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: SentenceLinkRemover(x))
 df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: SentenceMailRemover(x))
 
+
+end_time0 = time.process_time()
+
+print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 2)))
+
+start_time1 = time.process_time()
+
+### Fork sentences for Sentiment Analysis
+df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessSentsforSentiment(x))
+end_time1 = time.process_time()
+
+print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
+
+start_time2 = time.process_time()
+
+
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: SentenceCleaner(x))
 
@@ -85,14 +104,33 @@ df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph_nouns'].
 df_articles['Article_paragraph_nouns_cleaned'] = df_articles['Article_paragraph_nouns'].apply(SentenceCleanTokens,
                                                                                               minwordinsent=2,
                                                                                               minwordlength=2)
-pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_paragraph_nouns_cleaned']).to_excel(
-    path_processedarticles + "Article_paragraphs_nouns_cleaned.xlsx")
 
-# # Export data to csv (will be read in again in LDAArticles.py)
+### Export data to csv (will be read in again in LDAArticles.py)
 df_articles[['ID_incr', 'Art_ID', 'Date', 'Article_paragraph_nouns_cleaned']].to_csv(
     path_processedarticles + 'csv/paragraphs_for_lda_analysis.csv', sep='\t', index=False)
 
+### Export as Excel and add Raw Articles
+pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_paragraph_nouns_cleaned']).to_excel(
+    path_processedarticles + "Article_paragraphs_nouns_cleaned.xlsx")
+
+# Make Longfile
+df_long_articles = df_articles.Article_paragraph_nouns_cleaned.apply(pandas.Series)\
+    .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
+    .melt(id_vars = ['ID_incr'], value_name = 'Article_paragraph_nouns_cleaned')\
+    .dropna(subset=['Article_paragraph_nouns_cleaned'])\
+    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
+
+### Export longfile to csv (will be read in later)
+df_long_articles.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_analysis_l.csv', sep='\t', index=False)
+df_long_articles.to_excel(path_processedarticles + 'paragraphs_for_lda_analysis_l.xlsx')
+
+end_time2 = time.process_time()
+
+print('timer2: Elapsed time is {} seconds.'.format(round(end_time2-start_time2, 2)))
+
+print('Overall elapsed time is {} seconds.'.format(round(end_time2-start_time0, 2)))
+
 # Clean up to keep RAM small
-del df_articles, df_paragraphs, stopwords, drop_words
+del df_articles, df_long_articles, df_paragraphs, stopwords, drop_words
 
 ###
