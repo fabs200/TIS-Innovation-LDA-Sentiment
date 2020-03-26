@@ -1,10 +1,12 @@
 # Help functions for LDA and Sentiment Analysis
 import spacy
-from spacy.tokenizer import Tokenizer
-from nltk.tokenize import word_tokenize
 from python.ConfigUser import path_processedarticles
 import pandas
 import numpy as np
+from gensim.corpora import Dictionary
+from gensim.models import LdaModel
+import pprint as pp
+from python.ProcessingFunctions import MakeListInLists
 
 def Load_SePL():
     """
@@ -292,4 +294,82 @@ def GetSentimentScores(listOfSents, df_sepl):
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
 
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentimentsscores, listOfsepl_phrases
+
+
+
+# todo: describe functions
+def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
+                eval_every=10, iterations=50, random_state=None):
+    """
+
+    :param dataframecolumn:
+    :param no_below:
+    :param no_above:
+    :param num_topics:
+    :param alpha:
+    :param eta:
+    :param eval_every:
+    :param iterations:
+    :param random_state:
+    :return:
+    """
+
+    # Read in datafram column and convert to list of lists
+    templist = dataframecolumn.tolist()
+    docsforlda = MakeListInLists(templist)
+    # Create a dictionary representation of the documents and frequency filter
+    global dict_lda
+
+    dict_lda = Dictionary(docsforlda)
+    dict_lda.filter_extremes(no_below=no_below, no_above=no_above)
+
+    # Bag-of-words representation of the documents
+    corpus_lda = [dict_lda.doc2bow(doc) for doc in docsforlda]
+    # Make a index to word dictionary
+    temp = dict_lda[0]  # This is only to "load" the dictionary
+    id2word_lda = dict_lda.id2token
+
+    # Display corpus for lda
+    pp.pprint(dict_lda.token2id)
+    pp.pprint(id2word_lda)
+    print('Number of unique tokens: {}'.format(len(dict_lda)))
+    print('Number of documents: {}'.format(len(corpus_lda)))
+    # TODO: save corpus and dictionary to disk and load them back (necessary?)
+
+    lda_model = LdaModel(corpus=corpus_lda, id2word=id2word_lda, num_topics=num_topics, alpha=alpha, eta=eta,
+                         eval_every=eval_every, iterations=iterations, random_state=random_state)
+    # Print the topic keywords
+    lda_model.print_topics(-1)
+    pp.pprint(lda_model.print_topics())
+
+    return lda_model
+
+
+def GetTopicsOfDoc(tokenized_doc, lda_model):
+    """
+
+    :param tokenized_doc: iterable list of tokenized words
+    :param lda_model:
+    :return:
+    """
+
+    # Create BOW representation of doc to use as input for the LDA model
+    doc_bow = dict_lda.doc2bow(tokenized_doc)
+
+    return lda_model.get_document_topics(doc_bow)
+
+
+def GetDomTopicOfDoc(tokenized_doc, lda_model):
+    """
+
+    :param tokenized_doc:
+    :param lda_model:
+    :return:
+    """
+
+    doc_bow = dict_lda.doc2bow(tokenized_doc)
+
+    doc_topics = lda_model.get_document_topics(doc_bow)
+
+    return max(doc_topics, key=lambda item: item[1])
 
