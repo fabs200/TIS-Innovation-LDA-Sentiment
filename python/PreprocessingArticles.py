@@ -93,7 +93,7 @@ df_articles = (df_articles.merge(df_help_noun_lemma_list, left_on='ID_incr', rig
 # Export data to excel
 df_articles.to_excel(path_processedarticles + 'articles_for_lda_analysis.xlsx')
 
-# Export data to csv (will be read in again in LDAArticles.py)
+# Export data to csv (will be read in again in LDACalibration.py)
 df_articles_export = df_articles[['ID_incr', 'ID', 'Date', 'Nouns', 'Nouns_lemma']]
 df_articles_export.to_csv(path_processedarticles + 'articles_for_lda_analysis.csv', sep='\t', index=False)
 

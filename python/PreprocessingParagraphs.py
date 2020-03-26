@@ -105,7 +105,7 @@ df_articles['Article_paragraph_nouns_cleaned'] = df_articles['Article_paragraph_
                                                                                               minwordinsent=2,
                                                                                               minwordlength=2)
 
-### Export data to csv (will be read in again in LDAArticles.py)
+### Export data to csv (will be read in again in LDACalibration.py)
 df_articles[['ID_incr', 'Art_ID', 'Date', 'Article_paragraph_nouns_cleaned', 'Article_sentiment_paragraph']].to_csv(
     path_processedarticles + 'csv/paragraphs_for_lda_analysis.csv', sep='\t', index=False)
 

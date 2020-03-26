@@ -90,7 +90,7 @@ df_articles['Article_sentence_nouns'] = df_articles['Article_sentence_nouns'].ap
 df_articles['Article_sentence_nouns_cleaned'] = df_articles['Article_sentence_nouns'].apply(SentenceCleanTokens,
                                                                                             minwordinsent=2,
                                                                                             minwordlength=2)
-### Export data to csv (will be read in again in LDAArticles.py)
+### Export data to csv (will be read in again in LDACalibration.py)
 df_articles[['ID_incr', 'ID', 'Date', 'Article_sentence_nouns_cleaned', 'Article_sentiment_sentences']].to_csv(
     path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t', index=False)
 
