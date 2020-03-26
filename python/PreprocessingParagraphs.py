@@ -82,7 +82,7 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 start_time1 = time.process_time()
 
 ### Fork sentences for Sentiment Analysis
-df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessSentsforSentiment(x))
+df_articles['Article_sentiment_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: ProcessSentsforSentiment(x))
 end_time1 = time.process_time()
 
 print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
@@ -106,7 +106,7 @@ df_articles['Article_paragraph_nouns_cleaned'] = df_articles['Article_paragraph_
                                                                                               minwordlength=2)
 
 ### Export data to csv (will be read in again in LDAArticles.py)
-df_articles[['ID_incr', 'Art_ID', 'Date', 'Article_paragraph_nouns_cleaned']].to_csv(
+df_articles[['ID_incr', 'Art_ID', 'Date', 'Article_paragraph_nouns_cleaned', 'Article_sentiment_paragraph']].to_csv(
     path_processedarticles + 'csv/paragraphs_for_lda_analysis.csv', sep='\t', index=False)
 
 ### Export as Excel and add Raw Articles
