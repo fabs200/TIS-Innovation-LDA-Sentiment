@@ -13,7 +13,7 @@ df_paragraphs = pandas.read_feather(path_processedarticles + 'feather/auto_parag
 
 ######
 # TEMP keep first 100 articles
-df_paragraphs_TEMP = df_paragraphs[df_paragraphs['Art_ID']<101]
+# df_paragraphs_TEMP = df_paragraphs[df_paragraphs['Art_ID']<101]
 ######
 
 # Write all paragraphs into a list of lists
@@ -131,6 +131,7 @@ print('timer2: Elapsed time is {} seconds.'.format(round(end_time2-start_time2, 
 print('Overall elapsed time is {} seconds.'.format(round(end_time2-start_time0, 2)))
 
 # Clean up to keep RAM small
-del df_articles, df_long_articles, df_paragraphs, stopwords, drop_words
+del df_articles, df_long_articles, df_paragraphs, df_paragraphs_TEMP, stopwords, drop_words, df_paragraphs_lists, \
+    df_paragraphs_lists
 
 ###

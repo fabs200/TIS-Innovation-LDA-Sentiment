@@ -3,13 +3,12 @@ import pprint as pp
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
-import python.main
 from python.ProcessingFunctions import MakeListInLists
 
-# Read in file with articles from R-Skript ProcessNexisArticles.R
-df_articles_sentences_lda = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t')
+# Read in output file from PreprocessingSentences.py
+df_sentences = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t')
 
-sentences = df_articles_sentences_lda['Article_sentence_nouns_cleaned'].to_list()
+sentences = df_sentences['Article_sentence_nouns_cleaned'].to_list()
 
 # Read in list in list (=1 sentences 1 doc)
 sentences = MakeListInLists(sentences)

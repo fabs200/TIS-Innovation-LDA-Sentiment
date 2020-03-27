@@ -1,15 +1,19 @@
-import pandas
-import re
+import pandas, re, time
 from nltk.corpus import stopwords
-import spacy
-from spacy.pipeline import SentenceSegmenter
-from germalemma import GermaLemma
 from python.ConfigUser import path_processedarticles
-from python.ProcessingFunctions import Sentencizer
-# from textblob import NLTKPunktTokenizer
+from python.ProcessingFunctions import ArticlesToLists, SentenceCleaner, SentencePOStagger, NormalizeWords, SentenceWordRemover, \
+    SentenceLinkRemover, SentenceMailRemover, DateRemover, SentenceCleanTokens, NumberComplexRemover, SentenceLemmatizer, \
+    ProcessSentsforSentiment
+
+start_time0 = time.process_time()
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
-df_articles = pandas.read_feather(path_processedarticles + 'autofiles_withbattery.feather')
+df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_articles_withbattery.feather')
+
+######
+# TEMP keep first 100 articles
+#df_articles = df_articles[df_articles['ID']<101]
+######
 
 # convert all words to lower case
 df_articles['Article'] = [i.lower() for i in df_articles['Article']]
@@ -18,15 +22,13 @@ df_articles['Article'] = [i.lower() for i in df_articles['Article']]
 df_articles.drop_duplicates(subset=['Article', 'Date'], inplace=True)
 df_articles.drop_duplicates(subset=['Headline'], inplace=True)
 
-# TODO: drop duplicates Articles based on similaritiy index
-
 # Remove text which defines end of articles
-df_articles['Article'] = df_articles['Article'].str.split('graphic').str[0]
-df_articles['Article'] = df_articles['Article'].str.split('classification language').str[0]
-cutpage = re.compile(r'(kommentar seite \d+)')
-cutpage2 = re.compile(r'deliverynotification')
-df_articles['Article'] = [cutpage.sub(lambda m: (m.group(1) if m.group(1) else " "), x) for x in df_articles['Article'].tolist()]
-df_articles['Article'] = [cutpage2.sub(lambda m: (m.group(1) if m.group(1) else " "), x) for x in df_articles['Article'].tolist()]
+for splitstring in ['graphic', 'foto: classification language', 'classification language']:
+    df_articles['Article'] = df_articles['Article'].str.split(splitstring).str[0]
+df_articles['Article'] = [re.compile(r'(kommentar seite \d+)').sub(
+    lambda m: (m.group(1) if m.group(1) else " "), x) for x in df_articles['Article'].tolist()]
+df_articles['Article'] = [re.compile(r'deliverynotification').sub(
+    lambda m: (m.group(1) if m.group(1) else " "), x) for x in df_articles['Article'].tolist()]
 
 # Make Backup
 df_articles['Article_backup'] = df_articles['Article']
@@ -34,75 +36,84 @@ df_articles['Article_backup'] = df_articles['Article']
 # Create id increasing (needed to merge help files later)
 df_articles.insert(0, 'ID_incr', range(1, 1 + len(df_articles)))
 
-# Remove all numbers
+# Normalize Words (preserve words by replacing by synonyms and write full words instead abbrev.)
+df_articles['Article'] = df_articles['Article'].apply(lambda x: NormalizeWords(x))
+
+### Numbers in Text
+# First, remove dates of the format: 20. Februar, e.g.
+df_articles['Article'] = df_articles['Article'].apply(lambda x: DateRemover(x))
+# Second, remove all complex combinations of numbers and special characters
+df_articles['Article'] = df_articles['Article'].apply(lambda x: NumberComplexRemover(x)) # TODO: check again
+# Third, remove all remaining numbers
 df_articles['Article'] = df_articles['Article'].str.replace('\d+', '')
 
-# Remove additional words and words of length 1
-drop_words = ['www', 'dpa', 'de', 'foto', 'webseite', 'herr', 'vdi', 'interview']
-df_articles['Article'] = df_articles['Article'].apply(lambda x: " ".join(x for x in x.split() if x not in drop_words))
-df_articles['Article'] = df_articles['Article'].apply(lambda x: re.sub(r'(^|\s+)(\S(\s+|$))', ' ', x))
+### Special Characters
+df_articles['Article'] = df_articles['Article'].str.replace("'", '')
 
-# Remove punctuation except hyphen and apostrophe between words
-p = re.compile(r"(\b[-']\b)|[\W_]")
-df_articles['Article'] = [p.sub(lambda m: (m.group(1) if m.group(1) else " "), x) for x in df_articles['Article'].tolist()]
+### Put Articles into a nested list in list so we can apply same fcts as we do to sentences and paragraphs
+df_articles['Article'] = df_articles['Article'].apply(ArticlesToLists)
 
-# Download list of stopwords from nltk (needed to be done once)
-# nltk.download('stopwords')
+### Remove additional words, remove links and emails
+drop_words = ['taz', 'dpa', 'de', 'foto', 'webseite', 'herr', 'interview', 'siehe grafik', 'vdi nachrichten', 'vdi',
+              'reuters', ' mid ', 'sz-online']
+df_articles['Article'] = df_articles['Article'].apply(lambda x: SentenceWordRemover(x, dropWords=drop_words))
+df_articles['Article'] = df_articles['Article'].apply(lambda x: SentenceLinkRemover(x))
+df_articles['Article'] = df_articles['Article'].apply(lambda x: SentenceMailRemover(x))
 
-# Load German stop words and apply to articles
-stop = stopwords.words('german')
-df_articles['Article'] = df_articles['Article'].apply(lambda x: " ".join(x for x in x.split() if x not in stop))
-#TODO: check for other stop-words list - spacy, solariz github (check if negation is removed - sentiment analysis)
+end_time0 = time.process_time()
 
-# POS tagging (time-consuming!)
-#TODO: maybe use faster POS-tagging, e.g. NLTK tagger or ClassifierBasedGermanTagger using TIGER corpus, but spacy has higher accuracy
-nlp = spacy.load('de_core_news_md', disable=['ner', 'parser'])
-df_articles['Article_POS'] = df_articles['Article'].apply(lambda x: nlp(x))
+print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 2)))
 
-# Create new column including only nouns (all noun types from STTS tagset)
-df_articles['Nouns'] = df_articles['Article_POS'].apply(lambda x: [token for token in x if token.tag_.startswith('NN')])
+start_time1 = time.process_time()
 
-# remove words with length==1
-df_articles['Nouns'] = df_articles['Nouns'].apply(lambda x: [word for word in x if len(x)>1])
-# df_articles['Nounverbs'] = df_articles['Nounverbs'].apply(lambda x: [word for word in x if len(x)>1])
+### Fork sentences for Sentiment Analysis
+df_articles['Article_sentiment'] = df_articles['Article'].apply(lambda x: ProcessSentsforSentiment(x))
+end_time1 = time.process_time()
 
-# Lemmatization
-lemmatizer = GermaLemma()
+print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
 
-# Lemmatization of Nouns
-noun_list = df_articles['Nouns'].tolist()
+start_time2 = time.process_time()
 
-global noun_lemma_list
-noun_lemma_list = []
-for doc in noun_list:
-    noun_lemma_list.append([])
-    for token in doc:
-        token_lemma = lemmatizer.find_lemma(token.text, token.tag_)
-        token_lemma = token_lemma.lower()
-        noun_lemma_list[-1].append(token_lemma)
 
-# Save to help df
-df_help_noun_lemma_list = pandas.DataFrame({'x': noun_lemma_list})
+### Remove punctuation except hyphen and apostrophe between words, special characters
+df_articles['Article'] = df_articles['Article'].apply(lambda x: SentenceCleaner(x))
 
-# Create id increasing (needed to merge to original df)
-df_help_noun_lemma_list.insert(0, 'ID_incr', range(1, 1 + len(df_help_noun_lemma_list)))
+# not solving hyphenation as no univeral rule found
 
-# Merge df_help_noun_lemma_list to df_help_noun_lemma_list and rename
-df_articles = (df_articles.merge(df_help_noun_lemma_list, left_on='ID_incr', right_on='ID_incr')).rename(columns={'x': 'Nouns_lemma'})
+### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
+df_articles['Article_nouns'] = df_articles['Article'].apply(lambda x: SentencePOStagger(x, POStag='NN'))
+df_articles['Article_nouns'] = df_articles['Article_nouns'].apply(lambda x: SentenceLemmatizer(x))
 
-# Export data to excel
-df_articles.to_excel(path_processedarticles + 'articles_for_lda_analysis.xlsx')
+# Cleaning: drop stop words, drop if sentence contain only two words or less
+df_articles['Article_nouns_cleaned'] = df_articles['Article_nouns'].apply(SentenceCleanTokens,
+                                                                          minwordinsent=2,
+                                                                          minwordlength=2)
+### Export data to csv (will be read in again in LDACalibration.py)
+df_articles[['ID_incr', 'ID', 'Date', 'Article_nouns_cleaned', 'Article_sentiment']].to_csv(
+    path_processedarticles + 'csv/articles_for_lda_analysis.csv', sep='\t', index=False)
 
-# Export data to csv (will be read in again in LDACalibration.py)
-df_articles_export = df_articles[['ID_incr', 'ID', 'Date', 'Nouns', 'Nouns_lemma']]
-df_articles_export.to_csv(path_processedarticles + 'articles_for_lda_analysis.csv', sep='\t', index=False)
+### Export as Excel and add Raw Articles
+pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_nouns_cleaned']).to_excel(
+    path_processedarticles + "Article_nouns_cleaned.xlsx")
 
-#Export textbody data to csv (for aspect extraction)
-df_textbody_export = df_articles[['ID_incr', 'ID', 'Date','Article']]
-df_textbody_export.to_csv(path_processedarticles + 'textbody_for_lda_analysis.csv', sep='\t', index=False)
+# Make Longfile
+df_long_articles = df_articles.Article_nouns_cleaned.apply(pandas.Series)\
+    .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
+    .melt(id_vars = ['ID_incr'], value_name = 'Article_nouns_cleaned')\
+    .dropna(subset=['Article_nouns_cleaned'])\
+    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
+
+### Export longfile to csv (will be read in later)
+df_long_articles.to_csv(path_processedarticles + 'csv/articles_for_lda_analysis_l.csv', sep='\t', index=False)
+df_long_articles.to_excel(path_processedarticles + 'articles_for_lda_analysis_l.xlsx')
+
+end_time2 = time.process_time()
+
+print('timer2: Elapsed time is {} seconds.'.format(round(end_time2-start_time2, 2)))
+
+print('Overall elapsed time is {} seconds.'.format(round(end_time2-start_time0, 2)))
 
 # Clean up to keep RAM small
-del df_articles, df_help_noun_lemma_list, df_articles_export
-del stop, stopwords
+del df_articles, df_long_articles, stopwords, drop_words
 
 ###

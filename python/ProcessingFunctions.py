@@ -118,11 +118,9 @@ def NumberComplexRemover(string):
     # Alternative: ((\d+)(.|\s{1,3}|)\d+)(.|\s)(?! er)
     return string
 
-
 nlp = German()
 sbd = nlp.create_pipe('sentencizer')
 nlp.add_pipe(sbd)
-
 
 def Sentencizer(string):
     """
@@ -138,6 +136,13 @@ def Sentencizer(string):
         sents_list.append(sent.text)
     return sents_list
 
+def ArticlesToLists(string):
+    """
+    Put Articles into a nested list in list so we can apply same fcts as we do to sentences and paragraphs
+    :param string: str, article
+    :return: list(str)
+    """
+    return [string]
 
 def SentenceWordRemover(listOfSents, dropWords):
     """
