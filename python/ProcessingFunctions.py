@@ -144,7 +144,7 @@ def ArticlesToLists(string):
     """
     return [string]
 
-def SentenceWordRemover(listOfSents, dropWords):
+def WordRemover(listOfSents, dropWords):
     """
     drop words from listOfSents which are specified in dropWords
     """
@@ -157,7 +157,7 @@ def SentenceWordRemover(listOfSents, dropWords):
     return cleanedlistOfSents
 
 
-def SentenceLinkRemover(listOfSents):
+def LinkRemover(listOfSents):
     """
     removes any kind of link
     """
@@ -170,7 +170,7 @@ def SentenceLinkRemover(listOfSents):
     return cleanedlistOfSents
 
 
-def SentenceMailRemover(listOfSents):
+def MailRemover(listOfSents):
     """
     removes mail addresses
     """
@@ -181,19 +181,19 @@ def SentenceMailRemover(listOfSents):
     return cleanedlistOfSents
 
 
-def SentenceCleaner(listOfSents):
+def SpecialCharCleaner(listOfSents):
     """
-    cleans trash hyphens, special characters and punctuations;
+    cleans special characters, trash hyphens and punctuations;
     apply loop fct to each list in pandas cell
     """
-    p = re.compile(r"(\b[-'/.&]\b)|[\W_]")  # TODO: check later - getestet DW, passt!
+    p = re.compile(r"(\b[-'/.&]\b)|[\W_]")
     return [p.sub(lambda m: (m.group(1) if m.group(1) else " "), x) for x in listOfSents]
 
 
 nlp2 = spacy.load('de_core_news_md', disable=['ner', 'parser'])
 
 
-def SentencePOStagger(listOfSents, POStag='NN'):
+def POStagger(listOfSents, POStag='NN'):
     """
     POS tag words in sentences
 
@@ -222,11 +222,11 @@ def SentencePOStagger(listOfSents, POStag='NN'):
     return POStaggedlist
 
 
-# Load Lemmatization
+# Load Lemmatizer
 lemmatizer = GermaLemma()
 
 
-def SentenceLemmatizer(listOfSents):
+def Lemmatization(listOfSents):
     """
     Lemmatizer of POS tagged words in sentences. Run this fct after SentencePOStagger()
     """
@@ -254,7 +254,7 @@ def SentenceTokenizer(listOfSents):
     return tokenizedlist
 
 
-def SentenceCleanTokens(listOfSents, minwordinsent, minwordlength):
+def TokensCleaner(listOfSents, minwordinsent, minwordlength):
     """
     drop sentences (=sent) which are too short and have only 2 or less words
     """
@@ -434,7 +434,7 @@ def ParagraphSplitter(listOfPars, splitAt):
 lemmatizer = GermaLemma()
 
 
-def ProcessSentsforSentiment(listOfSents):
+def ProcessforSentiment(listOfSents):
     """
     Process sentences before running Sentiment Analysis, replace ;: by , and lemmatize
     :param listOfSents: list of sentences

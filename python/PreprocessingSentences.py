@@ -1,9 +1,7 @@
-import pandas, re, time
+import pandas, time
 from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
-from python.ProcessingFunctions import Sentencizer, SentenceCleaner, SentencePOStagger, NormalizeWords, SentenceWordRemover, \
-    SentenceLinkRemover, SentenceMailRemover, DateRemover, SentenceCleanTokens, NumberComplexRemover, SentenceLemmatizer, \
-    ProcessSentsforSentiment
+from python.ProcessingFunctions import *
 
 start_time0 = time.process_time()
 
@@ -56,10 +54,10 @@ df_articles['Article_sentence'] = df_articles['Article'].apply(lambda x: Sentenc
 ### Remove additional words, remove links and emails
 drop_words = ['taz', 'dpa', 'de', 'foto', 'webseite', 'herr', 'interview', 'siehe grafik', 'vdi nachrichten', 'vdi',
               'reuters', ' mid ', 'sz-online']
-df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceWordRemover(x,
+df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: WordRemover(x,
                                                                                                       dropWords=drop_words))
-df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceLinkRemover(x))
-df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceMailRemover(x))
+df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: LinkRemover(x))
+df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: MailRemover(x))
 
 end_time0 = time.process_time()
 
@@ -68,7 +66,7 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 start_time1 = time.process_time()
 
 ### Fork sentences for Sentiment Analysis
-df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessSentsforSentiment(x))
+df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessforSentiment(x))
 end_time1 = time.process_time()
 
 print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
@@ -77,19 +75,19 @@ start_time2 = time.process_time()
 
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
-df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SentenceCleaner(x))
+df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SpecialCharCleaner(x))
 
 # not solving hyphenation as no univeral rule found
 
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
-df_articles['Article_sentence_nouns'] = df_articles['Article_sentence'].apply(lambda x: SentencePOStagger(x,
-                                                                                                          POStag='NN'))
-df_articles['Article_sentence_nouns'] = df_articles['Article_sentence_nouns'].apply(lambda x: SentenceLemmatizer(x))
+df_articles['Article_sentence_nouns'] = df_articles['Article_sentence'].apply(lambda x: POStagger(x, POStag='NN'))
+df_articles['Article_sentence_nouns'] = df_articles['Article_sentence_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less
-df_articles['Article_sentence_nouns_cleaned'] = df_articles['Article_sentence_nouns'].apply(SentenceCleanTokens,
+df_articles['Article_sentence_nouns_cleaned'] = df_articles['Article_sentence_nouns'].apply(TokensCleaner,
                                                                                             minwordinsent=2,
                                                                                             minwordlength=2)
+
 ### Export data to csv (will be read in again in LDACalibration.py)
 df_articles[['ID_incr', 'ID', 'Date', 'Article_sentence_nouns_cleaned', 'Article_sentiment_sentences']].to_csv(
     path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t', index=False)

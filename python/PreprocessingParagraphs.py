@@ -1,9 +1,7 @@
 import pandas, time
 from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
-from python.ProcessingFunctions import ParagraphSplitter, NormalizeWords, DateRemover, NumberComplexRemover, \
-    DateRemover, NumberComplexRemover, SentenceWordRemover, SentenceLinkRemover, SentenceMailRemover, SentenceCleaner,\
-    SentencePOStagger, SentenceLemmatizer, SentenceCleanTokens, ProcessSentsforSentiment
+from python.ProcessingFunctions import *
 
 
 start_time0 = time.process_time()
@@ -13,7 +11,7 @@ df_paragraphs = pandas.read_feather(path_processedarticles + 'feather/auto_parag
 
 ######
 # TEMP keep first 100 articles
-# df_paragraphs_TEMP = df_paragraphs[df_paragraphs['Art_ID']<101]
+df_paragraphs_TEMP = df_paragraphs[df_paragraphs['Art_ID']<101]
 ######
 
 # Write all paragraphs into a list of lists
@@ -47,7 +45,8 @@ df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda
 
 # Remove text which defines end of articles
 splittingstrings = ['graphic', 'foto: classification language', 'classification language', 'kommentar seite ']
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: ParagraphSplitter(x, splitAt=splittingstrings))
+df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(
+    lambda x: ParagraphSplitter(x, splitAt=splittingstrings))
 
 # Create id increasing (needed to merge help files later)
 df_articles.insert(0, 'ID_incr', range(1, 1 + len(df_articles)))
@@ -69,10 +68,9 @@ df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda
 ### Remove additional words, remove links and emails
 drop_words = ['taz', 'dpa', 'de', 'foto', 'webseite', 'herr', 'interview', 'siehe grafik', 'vdi nachrichten', 'vdi',
               'reuters', ' mid ', 'sz-online']
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: SentenceWordRemover(x,
-                                                                                                        dropWords=drop_words))
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: SentenceLinkRemover(x))
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: SentenceMailRemover(x))
+df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: WordRemover(x, dropWords=drop_words))
+df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: LinkRemover(x))
+df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: MailRemover(x))
 
 
 end_time0 = time.process_time()
@@ -82,7 +80,7 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 start_time1 = time.process_time()
 
 ### Fork sentences for Sentiment Analysis
-df_articles['Article_sentiment_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: ProcessSentsforSentiment(x))
+df_articles['Article_sentiment_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: ProcessforSentiment(x))
 end_time1 = time.process_time()
 
 print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
@@ -91,17 +89,16 @@ start_time2 = time.process_time()
 
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: SentenceCleaner(x))
+df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: SpecialCharCleaner(x))
 
 # not solving hyphenation as no univeral rule found
 
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
-df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph'].apply(lambda x: SentencePOStagger(x,
-                                                                                                            POStag='NN'))
-df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph_nouns'].apply(lambda x: SentenceLemmatizer(x))
+df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph'].apply(lambda x: POStagger(x, POStag='NN'))
+df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less
-df_articles['Article_paragraph_nouns_cleaned'] = df_articles['Article_paragraph_nouns'].apply(SentenceCleanTokens,
+df_articles['Article_paragraph_nouns_cleaned'] = df_articles['Article_paragraph_nouns'].apply(TokensCleaner,
                                                                                               minwordinsent=2,
                                                                                               minwordlength=2)
 
