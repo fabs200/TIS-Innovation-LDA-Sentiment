@@ -2,7 +2,7 @@
 Create help functions to call when running scripts
 """
 from python.ConfigUser import path_project
-import spacy, xlsxwriter, re
+import spacy, re
 from textdistance import jaro
 from spacy.lang.de import German
 from spacy.tokenizer import Tokenizer
@@ -29,36 +29,6 @@ def MakeListInLists(string):
 
 # function to flatten lists
 FlattenList = lambda l: [element for sublist in l for element in sublist]
-
-
-def ListToFreqDict(wordlist):
-    """
-    reads in a list, counts words, puts them into a dictionary ans sorts them reversed
-    """
-    wordfreq = [wordlist.count(p) for p in wordlist]
-    help = dict(list(zip(wordlist, wordfreq)))
-    # sort ascending
-    # help = sorted(help.items(), key=lambda kv: kv[1])
-    # sort descending
-    help = sorted(help.items(), reverse=True, key=lambda kv: kv[1])
-    return help
-
-
-def ExportFreqDict(wordlist, path=path_project + 'data/', filename='frequency_wordlist.xlsx'):
-    """
-    exports the produced frequency-wordlist from ListToFreqDict to an excel file
-    input: so list with tuples with the form [(,),(,),...]
-    """
-    workbook = xlsxwriter.Workbook(path + filename)
-    worksheet = workbook.add_worksheet()
-    row, col = 1, 0
-    worksheet.write(0, 0, 'word')
-    worksheet.write(0, 1, 'frequency')
-    for el in wordlist:
-        worksheet.write(row, col, el[0])
-        worksheet.write(row, col + 1, el[1])
-        row += 1
-    workbook.close()
 
 
 def GetUniqueStrings(list, threshold=.9, verbose=False):
@@ -448,7 +418,7 @@ def ProcessforSentiment(listOfSents):
         sent_nlp = nlp2(sent)
         # process each token and 'translate' konjunktion or .;:!? to ,
         for token in sent_nlp:
-            if token.tag_ in ['$.', '$,', 'KON']:
+            if token.tag_ in ['$.', '$,', 'KON'] and token.text not in [')', '(', '[', ']']:
                 temp_sent.append(',')
             else:
                 temp_sent.append(token.text)
@@ -457,6 +427,7 @@ def ProcessforSentiment(listOfSents):
         sent_string = ' '.join(temp_sent)
         # correct successive ,
         sent_string = sent_string.replace(' , , ', ', ')
+        sent_string = sent_string.replace('(', ' ').replace(')', ' ').replace('[', ' ').replace(']', ' ')
         # prepare for lemmatization
         sent_string = nlp2(sent_string)
 
