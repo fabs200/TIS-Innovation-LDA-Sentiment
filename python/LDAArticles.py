@@ -6,9 +6,9 @@ from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import MakeListInLists
 
 # Read in output file from PreprocessingSentences.py
-df_articles = pandas.read_csv(path_processedarticles + 'csv/articles_for_lda_analysis.csv', sep='\t')
+df_articles = pandas.read_csv(path_processedarticles + 'feather/articles_for_lda_analysis.csv', sep='\t')
 
-articles = df_articles['Article_nouns_cleaned'].to_list()
+articles = df_articles['Nouns_lemma'].to_list()
 
 # Read in list in list (=1 sentences 1 doc)
 articles = MakeListInLists(articles)
@@ -37,15 +37,61 @@ id2word_nouns = dict_nouns.id2token
 # print('Number of unique tokens: {}'.format(len(dict_nouns)))
 # print('Number of documents: {}'.format(len(corpus_nouns)))
 
-# TODO: save corpus and dctionary to disk and load them back
+# TODO: save corpus and dictionary to disk and load them back
 # save to path_lda_data
 
 lda_nouns = LdaModel(corpus=corpus_nouns, id2word=id2word_nouns, num_topics=10, iterations=300, eval_every=1)
 
 lda_nouns.print_topics(-1)
 
+# use Jaccard distance (Topic Chains for Understanding a News Corpus)
+
+from gensim.matutils import kullback_leibler, jaccard, hellinger, sparse2full
+kullback_leibler(list_bow, 10)
+
+list_bow[0]
+jaccard(list_bow[0], list_bow[2])
+
+
+
+
 # Print the Keyword in the 10 topics
 pp.pprint(lda_nouns.print_topics())
+
+
+list = lda_nouns.show_topics()
+
+list_bow = []
+for topic in list:
+    help = make_topics_bow(topic)
+    list_bow.append(help)
+
+for i in list_bow:
+    for j in list_bow:
+        jac = jaccard(i, j)
+        print(jac)
+        sum = 0+jac
+print(sum)
+
+def make_topics_bow(topic):
+    # split on strings to get topics and the probabilities
+    topic = topic[1].split('+')
+    # list to store topic bows
+    topic_bow = []
+    for word in topic:
+        # split topic probability and word
+        prob, word = word.split('*')
+        # get rid of spaces
+        word = word.replace(" ","").replace('"','')
+        # map topic words to dictionary id
+        word_id = dict_nouns.doc2bow([word])
+        # append word_id and topic probability
+        topic_bow.append((word_id[0][0], float(prob)))
+
+    return topic_bow
+
+
+test2 = make_topics_bow(top1)
 
 ########################
 ########################
