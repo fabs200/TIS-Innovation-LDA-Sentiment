@@ -10,7 +10,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first 100 articles
-#df_articles = df_articles[df_articles['ID']<101]
+df_articles = df_articles[df_articles['ID']<101]
 ######
 
 # convert all words to lower case
@@ -54,8 +54,7 @@ df_articles['Article_sentence'] = df_articles['Article'].apply(lambda x: Sentenc
 ### Remove additional words, remove links and emails
 drop_words = ['taz', 'dpa', 'de', 'foto', 'webseite', 'herr', 'interview', 'siehe grafik', 'vdi nachrichten', 'vdi',
               'reuters', ' mid ', 'sz-online']
-df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: WordRemover(x,
-                                                                                                      dropWords=drop_words))
+df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: WordRemover(x, dropWords=drop_words))
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: LinkRemover(x))
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: MailRemover(x))
 
