@@ -4,26 +4,10 @@ from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import MakeListInLists
+from python.AnalysisFunctions import MakeTopicsBOW, LDAHellinger
 
 from gensim.matutils import jaccard, hellinger
 
-
-def make_topics_bow(topic):
-    # split on strings to get topics and the probabilities
-    topic = topic[1].split('+')
-    # list to store topic bows
-    topic_bow = []
-    for word in topic:
-        # split topic probability and word
-        prob, word = word.split('*')
-        # get rid of spaces
-        word = word.replace(" ","").replace('"','')
-        # map topic words to dictionary id
-        word_id = dict_nouns.doc2bow([word])
-        # append word_id and topic probability
-        topic_bow.append((word_id[0][0], float(prob)))
-
-    return topic_bow
 
 
 # Read in output file from PreprocessingSentences.py
@@ -66,35 +50,18 @@ lda_nouns = LdaModel(corpus=corpus_nouns, id2word=id2word_nouns, num_topics=10, 
 lda_nouns.print_topics(-1)
 
 
-# Print the Keyword in the 10 topics
-pp.pprint(lda_nouns.print_topics())
-
-# ToDo: final test of function!
-def LDADistanceMetric(num_topics, lda_model, distance_metric=hellinger):
-
-    # generate BOW representation of topic distributions
-    list = lda_model.show_topics()
-    list_bow = []
-    sum = 0
-    for topic in list:
-        help = make_topics_bow(topic)
-        list_bow.append(help)
-   # compute distance metrics using BOW representation of topic distribution
-    for i in list_bow:
-        for j in list_bow:
-            dis = distance_metric(i, j)
-        sum = sum + dis
-        print(sum)
-    print('computed average distance metric:', distance_metric)
-
-    return sum/num_topics
 
 list = lda_nouns.show_topics()
 
+hell = LDAHellinger(lda_model=lda_nouns, num_topics=5)
 
-hell = LDADistanceMetric(num_topics=10, lda_model=lda_nouns, distance_metric=hellinger)
+jacc = LDAJaccard(lda_model=lda_nouns)
 
-jacc = LDADistanceMetric(num_topics=10, lda_model=lda_nouns, distance_metric=jaccard)
+
+lda_nouns.print_topic(topicno=1)
+
+
+
 
 
 

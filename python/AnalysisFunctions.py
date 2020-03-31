@@ -7,6 +7,7 @@ from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 import pprint as pp
 from python.ProcessingFunctions import MakeListInLists
+from gensim.matutils import jaccard, hellinger
 
 def Load_SePL():
     """
@@ -238,7 +239,7 @@ def ProcessSePLphrases(sepl_phrase):
 def GetSentimentScores(listOfSents, df_sepl):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
-    Include following function:
+    Includes following function:
 
     1. Load_SePL() to load SePL
     2. MakeCandidates() to make candidates- and candidates_negation-lists
@@ -372,4 +373,97 @@ def GetDomTopicOfDoc(tokenized_doc, lda_model):
     doc_topics = lda_model.get_document_topics(doc_bow)
 
     return max(doc_topics, key=lambda item: item[1])
+
+
+
+
+
+
+def MakeTopicsBOW(topic, dict_lda):
+    """
+       Help function for LDADistanceMetric.
+       Creates BOW representation of topic distributions.
+
+       :param topic: topic to be transformed in to BOW
+       :param dict_lda: dictionary of LDA model
+       :return: list of tuples, topic in BOW representation
+       """
+    # split on strings to get topics and the probabilities
+    topic = topic[1].split('+')
+    # list to store topic bows
+    topic_bow = []
+    for word in topic:
+        # split topic probability and word
+        prob, word = word.split('*')
+        # get rid of spaces
+        word = word.replace(" ","").replace('"','')
+        # map topic words to dictionary id
+        word_id = dict_lda.doc2bow([word])
+        # append word_id and topic probability
+        topic_bow.append((word_id[0][0], float(prob)))
+
+    return topic_bow
+
+
+def LDAHellinger(lda_model, num_topics=None, num_words=10):
+    """
+    This functions returns the average hellinger distance for all topic pairs in an LDA model.
+    Includes following function:
+
+    1. MakeTopicsBOW to create BOW representation of the LDA topic distributions
+
+    :param lda_model: LDA model for which the distance metrics should be computed
+    :param topn: number of most relevant words in each topic to compare
+    :return: float, returns average distance metric over all topic pairs with values between 0 and 1
+    """
+
+    # generate BOW representation of topic distributions
+    if num_topics is None:
+        num_topics = lda_model.num_topics
+
+    # extract topic word presentations to list
+    list = lda_model.show_topics(num_topics=num_topics, num_words=num_words)
+    list_bow, sum = [], 0
+    for topic in list:
+        help = MakeTopicsBOW(topic)
+        list_bow.append(help)
+
+    # compute distance metric for each topic pair in list_bow
+    for i in list_bow:
+        for j in list_bow:
+            dis = hellinger(i, j)
+        sum = sum + dis
+    print('computed average Hellinger distance')
+
+    return sum/lda_model.num_topics
+
+
+def LDAJaccard(lda_model, topn=10):
+    """
+    This functions returns the average jaccard distance for all topic pairs in an LDA model.
+    Includes following function:
+
+    1. MakeTopicsBOW to create BOW representation of the LDA topic distributions
+
+    :param lda_model: LDA model for which the distance metrics should be computed
+    :param topn: number of most relevant words in each topic to compare
+    :return: float, returns average distance metric over all topic pairs with values between 0 and 1
+    """
+
+    topic_list, sum = [], 0
+    for i in range(0, lda_model.num_topics):
+        topic_list.append([tuple[0] for tuple in lda_model.show_topic(topicid=i, topn=topn)])
+
+    # compute distance metric for each topic pair in list_bow
+    for i in topic_list:
+        for j in topic_list:
+            print(i, j)
+            dis = jaccard(i, j)
+            print(dis)
+        sum = sum + dis
+    print('computed average Jaccard distance')
+
+    return sum / lda_model.num_topics
+
+
 
