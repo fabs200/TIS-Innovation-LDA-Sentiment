@@ -5,10 +5,31 @@ from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import MakeListInLists
 
-# Read in output file from PreprocessingSentences.py
-df_articles = pandas.read_csv(path_processedarticles + 'csv/articles_for_lda_analysis.csv', sep='\t')
+from gensim.matutils import jaccard, hellinger
 
-articles = df_articles['Article_nouns_cleaned'].to_list()
+
+def make_topics_bow(topic):
+    # split on strings to get topics and the probabilities
+    topic = topic[1].split('+')
+    # list to store topic bows
+    topic_bow = []
+    for word in topic:
+        # split topic probability and word
+        prob, word = word.split('*')
+        # get rid of spaces
+        word = word.replace(" ","").replace('"','')
+        # map topic words to dictionary id
+        word_id = dict_nouns.doc2bow([word])
+        # append word_id and topic probability
+        topic_bow.append((word_id[0][0], float(prob)))
+
+    return topic_bow
+
+
+# Read in output file from PreprocessingSentences.py
+df_articles = pandas.read_csv(path_processedarticles + 'feather/articles_for_lda_analysis.csv', sep='\t')
+
+articles = df_articles['Nouns_lemma'].to_list()
 
 # Read in list in list (=1 sentences 1 doc)
 articles = MakeListInLists(articles)
@@ -37,15 +58,50 @@ id2word_nouns = dict_nouns.id2token
 # print('Number of unique tokens: {}'.format(len(dict_nouns)))
 # print('Number of documents: {}'.format(len(corpus_nouns)))
 
-# TODO: save corpus and dctionary to disk and load them back
+# TODO: save corpus and dictionary to disk and load them back
 # save to path_lda_data
 
 lda_nouns = LdaModel(corpus=corpus_nouns, id2word=id2word_nouns, num_topics=10, iterations=300, eval_every=1)
 
 lda_nouns.print_topics(-1)
 
+
 # Print the Keyword in the 10 topics
 pp.pprint(lda_nouns.print_topics())
+
+# ToDo: final test of function!
+def LDADistanceMetric(num_topics, lda_model, distance_metric=hellinger):
+
+    # generate BOW representation of topic distributions
+    list = lda_model.show_topics()
+    list_bow = []
+    sum = 0
+    for topic in list:
+        help = make_topics_bow(topic)
+        list_bow.append(help)
+   # compute distance metrics using BOW representation of topic distribution
+    for i in list_bow:
+        for j in list_bow:
+            dis = distance_metric(i, j)
+        sum = sum + dis
+        print(sum)
+    print('computed average distance metric:', distance_metric)
+
+    return sum/num_topics
+
+list = lda_nouns.show_topics()
+
+
+hell = LDADistanceMetric(num_topics=10, lda_model=lda_nouns, distance_metric=hellinger)
+
+jacc = LDADistanceMetric(num_topics=10, lda_model=lda_nouns, distance_metric=jaccard)
+
+
+
+
+
+
+
 
 ########################
 ########################
