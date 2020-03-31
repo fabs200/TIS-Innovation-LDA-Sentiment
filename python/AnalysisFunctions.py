@@ -24,6 +24,8 @@ def Load_SePL():
 
     return df_sepl
 
+df_sepl = Load_SePL
+
 nlp2 = spacy.load('de_core_news_md', disable=['ner', 'parser'])
 
 def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation_list=None):
@@ -36,7 +38,7 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
     :param negation_list: specifiy list with negation words to identify negated sentences; negation_list must not specified
     :return: nested list of lists where each nested list is separated by the POS tag $,
     """
-    #ToDo: split sentences if POS_tag = conjunction
+
     sent = sent.split(',')
     sent = [nlp2(s) for s in sent]
     candidates = []
@@ -59,7 +61,7 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
             for token in s:
                 if verbose: print('token:', token.text, '->', token.tag_)
                 if token.tag_.startswith(('NN', 'V', 'ADV', 'ADJ')) or token.text in negation_list:
-                    if df_sepl['phrase'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(token)).any():
+                    if df_sepl['phrase'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(token.text)).any():
                         c.append(token.text)
             candidates.append(c)
 
@@ -152,29 +154,18 @@ def ReadSePLSentiments(candidates, df_sepl=None, verbose=False):
 
     return final_sentiments, final_phrs
 
-def ExtractSentimentFrequency(candidates, negation, sentimentscores):
-    """
-
-    # TODO: Add aspect-specific word list based on most frequent opinion phrases via spacy POS tagger
-    # TODO: Check most frequently negated opinion phrases (based on manually tagged Negation, e.g. 'kein', 'nicht', ...) if sentiment score is appropriate (*-1)
-
-    :param candidates:
-    :param negation:
-    :param sentimentscores:
-    :return:
-    """
 
 def ProcessSentimentScores(sepl_phrase, negation_candidates, sentimentscores, negation_list=None):
     """
     Process sentimentscores of sentence parts and return only one sentiment score per sentence
 
         # Case I:
-        # 1. any word contained in negation_list
+        # 1. any word contained in negation_list, sepl_phrase is already negated in SePL list
         # (2. sentimentscore is not empty)
         # -> do nothing
 
         # Case II:
-        # 1. any word is NOT contained in negation_list
+        # 1. any word is NOT contained in negation_list, sepl_phrase is NOT negated in SePL list
         # (2. sentimentscore is not empty)
         # 3. negation_candidates is not empty
         # -> Invert sentimentscore
@@ -194,13 +185,22 @@ def ProcessSentimentScores(sepl_phrase, negation_candidates, sentimentscores, ne
 
         # Check whether sepl_word in sentence part is contained in negation_list, if yes, set flag to True
         if sepl_phrase[i]:
+
+            # write as str
             sepl_string = sepl_phrase[i][0]
-            sepl_phrase_in_negation_list = False
+            sepl_neg_string = negation_candidates[i][0]
+
+            # set up flags
+            seplphr, seplphrneg = False, False
+
+            # check whether negation word in sepl_string, in sepl_neg_string
             for word in sepl_string.split():
-                if word in negation_list: sepl_phrase_in_negation_list = True
-            # Condition Case II
-            if not sepl_phrase_in_negation_list and set(negation_candidates[i]).intersection(negation_list).__len__():
-                # Invert sentiment
+                if word in negation_list: seplphr = True
+            for word in sepl_neg_string.split():
+                if word in negation_list: seplphrneg = True
+
+            # Condition Case II: Invert sentiment
+            if not seplphr and seplphrneg:
                 sentimentscores[i][0] = -sentimentscores[i][0]
         else:
             continue
@@ -215,6 +215,7 @@ def ProcessSentimentScores(sepl_phrase, negation_candidates, sentimentscores, ne
         averagescore = []
 
     return averagescore
+
 
 def ProcessSePLphrases(sepl_phrase):
     """
@@ -294,7 +295,6 @@ def GetSentimentScores(listOfSents, df_sepl):
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
 
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentimentsscores, listOfsepl_phrases
-
 
 
 # todo: describe functions
