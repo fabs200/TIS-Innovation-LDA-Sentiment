@@ -36,8 +36,7 @@ def ExportFreqDict(wordlist, path=path_project + 'data/', filename='frequency_wo
         row += 1
     workbook.close()
 
-
-def ExtractNegatedSeplPhrases(sepl_phrase, negation_candidates, negation_list=None):
+def ExtractNegSeplPhr(sepl_phrase, negation_candidates, negation_list=None):
     """
     Check Chase II words from ProcessSentimentScores()
     :param sepl_phrase: GetSentiments(...)[1], here are all words which are in SePL
@@ -45,35 +44,58 @@ def ExtractNegatedSeplPhrases(sepl_phrase, negation_candidates, negation_list=No
     :return: 1 sentiment score
     """
 
-    # TODO: not finished
-
     if negation_list is None:
         negation_list = ['nicht', 'kein', 'nichts', 'kaum', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'gegen',
                          'niemanden', 'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
 
     # Loop over each sentence part and access each list (sepl_word/negation_candidates/sentimentscores) via index
+    sepl_phrase_inv_neg = []
     for i in range(0, len(sepl_phrase)):
 
-        exportlist = []
         # Check whether sepl_word in sentence part is contained in negation_list, if yes, set flag to True
-        if sepl_phrase[i]:
+        if sepl_phrase[i] and negation_candidates[i]:
+
+            # write as str
             sepl_string = sepl_phrase[i][0]
-            sepl_phrase_in_negation_list = False
+            sepl_neg_string = negation_candidates[i][0]
+
+            # set up flags
+            seplphr, seplphrneg = False, False
+
+            # check whether negation word in sepl_string, in sepl_neg_string
             for word in sepl_string.split():
-                if word in negation_list: sepl_phrase_in_negation_list = True
+                if word in negation_list: seplphr = True
+            for word in sepl_neg_string.split():
+                if word in negation_list: seplphrneg = True
+
             # Condition Case II
-            if not sepl_phrase_in_negation_list and set(negation_candidates[i]).intersection(negation_list).__len__():
-                # Invert sentiment
-                # sentimentscores[i][0] = -sentimentscores[i][0]
-                exportlist.append(sepl_string)
+            if not seplphr and seplphrneg:
+                sepl_phrase_inv_neg.append(sepl_neg_string + ' ' + sepl_string)
         else:
             continue
 
     # Flatten list
-    return [element for sublist in exportlist for element in sublist]
+    # flatsentimentscores = [element for sublist in sentimentscores for element in sublist]
+
+    return sepl_phrase_inv_neg
 
 
-def GetNegatedSepl(listOfSents, df_sepl=df_sepl):
+
+def GetNegatedSepl(listOfSents, df_sepl=df_sepl, phronly=False):
+    """
+    This function is a wrapper which first loads the candidates and negation_candidates as nested lists and passes them
+    to ReadSePLSentiments(). This fct extracts sentimentscore and sepl_phrase. Least, we pass further to
+    ExtractNegSeplPhr() which then checks whether or not it is manually negated by our rule (if negation word in
+    negation_list contained, then invert sentimentscore). We want to investigate which and how many negated phrases are
+    missing in the SePL list and if needed extend frequent negated phrases.
+    apply this fct to the column 'Article_sentiment_sentences' e.g. and run via pandas .apply(lambda x:...) to each row.
+    :param listOfSents: nested list in list
+    :param df_sepl: Pandas dataframe, load it via df_sepl=LoadSePL()
+    :param phronly: True, False, set to False if you want to get only also empty lists such that one can trace the location.
+    :return: nested list in list with manually negated sepl_phrases as elements
+    """
+
+    negSeplList = []
 
     for sent in listOfSents:
 
@@ -92,10 +114,16 @@ def GetNegatedSepl(listOfSents, df_sepl=df_sepl):
         If one of the adjacent words is included in the SePL, together with the previously extracted phrase, it is added to 
         the phrase.
         """
-        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, df_sepl=df_sepl)
+        sentimentscores, sepl_phrase = ReadSePLSentiments(candidates, df_sepl=df_sepl)
 
         """
-        Extract self negated phrases not in SePL
+        Extract manually negated phrases not in negated form SePL (but in positive)
         """
-        return ExtractNegatedSeplPhrases(raw_sepl_phrase, negation_candidates)
+        temp_mannegphr = ExtractNegSeplPhr(sepl_phrase, negation_candidates)
+        if phronly and temp_mannegphr:
+            negSeplList.append(temp_mannegphr)
+        if not phronly:
+            negSeplList.append(temp_mannegphr)
+
+    return negSeplList
 
