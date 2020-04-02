@@ -316,8 +316,6 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     :return:
     """
 
-
-
     # Read in datafram column and convert to list of lists
     templist = dataframecolumn.tolist()
     docsforlda = MakeListInLists(templist)
@@ -407,7 +405,7 @@ def MakeTopicsBOW(topic, dict_lda):
     return topic_bow
 
 
-def LDAHellinger(lda_model, num_topics=None, num_words=10):
+def LDAHellinger(lda_model, dict_lda=dict_lda, num_topics=None, num_words=10):
     """
     This functions returns the average hellinger distance for all topic pairs in an LDA model.
     Includes following function:
@@ -427,7 +425,7 @@ def LDAHellinger(lda_model, num_topics=None, num_words=10):
     list = lda_model.show_topics(num_topics=num_topics, num_words=num_words)
     list_bow, sum = [], 0
     for topic in list:
-        help = MakeTopicsBOW(topic)
+        help = MakeTopicsBOW(topic, dict_lda)
         list_bow.append(help)
 
     # compute distance metric for each topic pair in list_bow

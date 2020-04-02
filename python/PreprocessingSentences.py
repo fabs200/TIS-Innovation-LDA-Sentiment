@@ -10,7 +10,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first 100 articles
-# df_articles = df_articles[df_articles['ID']<501]
+ df_articles = df_articles[df_articles['ID']<101]
 ######
 
 # convert all words to lower case

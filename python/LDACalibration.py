@@ -1,59 +1,49 @@
-
-########################
-########################
-
-# TODo: check function for coherence score, should be compatible to EstimateLDA function
-# TODO: test alpha = 'auto' and eta ='auto' in lda model and add to compute_coherence function
-# ToDO: Function to compute Kullback-Leibler divergence between topics
-
-#u_mass coherence measure
 from gensim.models.coherencemodel import CoherenceModel
-lda_nouns_cm = CoherenceModel(model=lda_nouns, corpus=corpus_nouns, dictionary=dict_nouns, coherence="u_mass")
-print(lda_nouns_cm.get_coherence())
-
-##we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation with human interpretability
-
-
-
-##with coherence measure: u_mass
-
-
-
-def compute_coherence_values(dictionary, corpus, texts, id2word, topics_limit, topics_start, topics_step):
-    """
-    Compute c_v coherence for various number of topics
-
-    Parameters:
-    ----------
-    dictionary : Gensim dictionary
-    corpus : Gensim corpus
-    texts : List of input texts
-    limit : Max num of topics
-    TODO: add random state to get same results
-
-    Returns:
-    -------
-    model_list : List of LDA topic models
-    coherence_values : Coherence values corresponding to the LDA model with respective number of topics
-    """
-    coherence_values = []
-    model_list = []
-    for num_topics in range(topics_start, topics_limit, topics_step):
-        model = LdaModel(corpus=corpus, id2word=id2word, num_topics=num_topics, alpha='auto', eta='auto', random_state=203495)
-        model_list.append(model)
-        coherencemodel = CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
-        coherence_values.append(coherencemodel.get_coherence())
-        print('num_topics:', num_topics, 'coherence:', coherencemodel.get_coherence())
-    return model_list, coherence_values
-
-start, limit, step = 1, 10, 1
-
-model_list, coherence_values = compute_coherence_values(dictionary=dict_nouns, id2word=id2word_nouns, corpus=corpus_nouns, texts=nouns, topics_start=start, topics_limit=limit, topics_step=step)
-# Show graph
 import matplotlib.pyplot as plt
-x = range(start, limit, step)
-plt.plot(x, coherence_values)
-plt.xlabel("Num Topics")
-plt.ylabel("Coherence score")
-plt.legend(("coherence_values"), loc='best')
-plt.show()
+
+# Todo: change LDACoherence to c_v
+def LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda):
+
+    # we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation with human interpretability
+    lda_model_cm = CoherenceModel(model=lda_model, corpus=corpus, dictionary=dictionary, coherence="u_mass")
+    #lda_model_cm = CoherenceModel(model=lda_model, texts=texts, dictionary=dictionary, coherence='c_v')
+    print(lda_model_cm.get_coherence())
+
+    return lda_model_cm.get_coherence()
+
+def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, topn, num_words, metric, no_below=0.1, no_above=0.9, alpha='symmetric', eta=None,
+                eval_every=10, iterations=50, random_state=None, verbose=False, display_plot=True):
+
+    metric_values = []
+    model_list = [] #Todo: delete
+
+    for num_topics in range(topics_start, topics_limit, topics_step):
+        lda_results = EstimateLDA(dataframecolumn, no_below, no_above, num_topics, alpha, eta,
+                eval_every, iterations, random_state)
+        lda_model = lda_results[0]
+        docsforlda = lda_results[1]
+        dict_lda = lda_results[2]
+        corpus_lda = lda_results[3]
+        model_list.append(lda_model)
+
+        if metric == 'coherence':
+            metric_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
+        if metric == 'jaccard':
+            metric_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
+        if metric == 'hellinger':
+            metric_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
+
+        if verbose: print('num_topics: {}, metric: {}, metric values: {}'.format(num_topics, metric, metric_values))
+
+    if display_plot:
+
+        plt.plot(range(topics_start, topics_limit, topics_step), metric_values)
+        plt.xlabel('Num Topics')
+        plt.ylabel('{} score'.format(metric))
+        # plt.legend(('metric'), loc='best')
+        plt.show()
+
+    return model_list, metric_values
+
+test = LDACalibration(topics_start=1, topics_limit=5, topics_step=1, dataframecolumn=df_articles['Article_sentence_nouns_cleaned'], topn=10, num_words=10, metric='coherence', verbose=True)
+
