@@ -11,7 +11,7 @@ from gensim.matutils import jaccard, hellinger
 
 def Load_SePL():
     """
-    Reads in SePL file, prepares phrases and sorts them; this is required be be run before MakeCandidates() and 
+    Reads in SePL file, prepares phrases and sorts them; this is required be be run before MakeCandidates() and
     GetSentiments()
     """
     # Read in SePL
@@ -298,6 +298,7 @@ def GetSentimentScores(listOfSents, df_sepl):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentimentsscores, listOfsepl_phrases
 
 
+
 # todo: describe functions
 def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
                 eval_every=10, iterations=50, random_state=None):
@@ -315,11 +316,12 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     :return:
     """
 
+
+
     # Read in datafram column and convert to list of lists
     templist = dataframecolumn.tolist()
     docsforlda = MakeListInLists(templist)
     # Create a dictionary representation of the documents and frequency filter
-    global dict_lda
 
     dict_lda = Dictionary(docsforlda)
     dict_lda.filter_extremes(no_below=no_below, no_above=no_above)
@@ -343,7 +345,7 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     lda_model.print_topics(-1)
     pp.pprint(lda_model.print_topics())
 
-    return lda_model
+    return lda_model, docsforlda, dict_lda, corpus_lda
 
 
 def GetTopicsOfDoc(tokenized_doc, lda_model):
