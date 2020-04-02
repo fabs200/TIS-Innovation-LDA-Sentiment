@@ -22,7 +22,7 @@ violation of LexisNexis user policy. Use at your own legal risk.
 - [x] check LDA_TEST_get_topics.py
 - [ ] set up lda evaluation (e.g. pyLDAvis) of pre- and postprocessing
       of text
-  - [ ]   coherence score, (grid search, alpha, beta)
+  - [ ]   coherence score, (grid search, alpha, beta, set random seed)
   - [ ]   Leibler divergence (Li et al. 2019)
   - [ ]   or 'auto'/'symmetric' as lda args
 - [ ] plot: lda time series
