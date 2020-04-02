@@ -156,7 +156,7 @@ def SpecialCharCleaner(listOfSents):
     cleans special characters, trash hyphens and punctuations;
     apply loop fct to each list in pandas cell
     """
-    p = re.compile(r"(\b[-'/.&]\b)|[\W_]")
+    p = re.compile(r"(\b[-'/.&\\]\b)|[\W_]")
     return [p.sub(lambda m: (m.group(1) if m.group(1) else " "), x) for x in listOfSents]
 
 

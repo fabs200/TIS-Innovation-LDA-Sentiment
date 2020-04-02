@@ -83,6 +83,7 @@ def ExtractNegSeplPhr(sepl_phrase, negation_candidates, negation_list=None):
 
 def GetNegatedSepl(listOfSents, df_sepl=df_sepl, phronly=False):
     """
+    SePL does not include a negated phrase for every word in the list (p.72 f.). To circumvent this problem:
     This function is a wrapper which first loads the candidates and negation_candidates as nested lists and passes them
     to ReadSePLSentiments(). This fct extracts sentimentscore and sepl_phrase. Least, we pass further to
     ExtractNegSeplPhr() which then checks whether or not it is manually negated by our rule (if negation word in
@@ -119,7 +120,11 @@ def GetNegatedSepl(listOfSents, df_sepl=df_sepl, phronly=False):
         """
         Extract manually negated phrases not in negated form SePL (but in positive)
         """
-        temp_mannegphr = ExtractNegSeplPhr(sepl_phrase, negation_candidates)
+        try:
+            temp_mannegphr = ExtractNegSeplPhr(sepl_phrase, negation_candidates)
+        except:
+            temp_mannegphr = []
+
         if phronly and temp_mannegphr:
             negSeplList.append(temp_mannegphr)
         if not phronly:

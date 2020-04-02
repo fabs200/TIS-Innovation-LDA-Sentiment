@@ -462,10 +462,7 @@ def LDAJaccard(lda_model, topn=10):
             print(i, j)
             dis = jaccard(i, j)
             print(dis)
-        sum = sum + dis
+            sum = sum + dis
     print('computed average Jaccard distance')
 
     return sum / lda_model.num_topics
-
-
-
