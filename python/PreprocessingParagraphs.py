@@ -65,6 +65,8 @@ df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda
 ### Special Characters
 df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace("'", '') for i in x])
 df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace("\\", '') for i in x])
+df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace('"', '') for i in x])
+df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace('+', '') for i in x])
 
 ### Remove additional words, remove links and emails
 drop_words = ['taz', 'dpa', 'de', 'foto', 'webseite', 'herr', 'interview', 'siehe grafik', 'vdi nachrichten', 'vdi',

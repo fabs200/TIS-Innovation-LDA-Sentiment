@@ -46,7 +46,7 @@ df_articles['Article'] = df_articles['Article'].apply(lambda x: NumberComplexRem
 df_articles['Article'] = df_articles['Article'].str.replace('\d+', '')
 
 ### Special Characters
-df_articles['Article'] = df_articles['Article'].str.replace("'", '').str.replace("\\", '')
+df_articles['Article'] = df_articles['Article'].str.replace("'", '').str.replace("\\", '').str.replace('"', '').str.replace('+', '')
 
 ### Put Articles into a nested list in list so we can apply same fcts as we do to sentences and paragraphs
 df_articles['Article'] = df_articles['Article'].apply(ArticlesToLists)
