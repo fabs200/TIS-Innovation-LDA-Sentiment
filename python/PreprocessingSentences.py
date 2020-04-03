@@ -10,7 +10,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first 100 articles
-df_articles = df_articles[df_articles['ID']>=2200]
+# df_articles = df_articles[df_articles['ID']<501]
 ######
 
 # convert all words to lower case
@@ -46,7 +46,7 @@ df_articles['Article'] = df_articles['Article'].apply(lambda x: NumberComplexRem
 df_articles['Article'] = df_articles['Article'].str.replace('\d+', '')
 
 ### Special Characters
-df_articles['Article'] = df_articles['Article'].str.replace("'", '').str.replace("\\", '').str.replace('"', '').str.replace('+', '')
+df_articles['Article'] = df_articles['Article'].str.replace("'", '').str.replace("\\", '')
 
 ### Split sentence-wise
 df_articles['Article_sentence'] = df_articles['Article'].apply(lambda x: Sentencizer(x))

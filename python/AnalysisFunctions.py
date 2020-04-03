@@ -8,10 +8,12 @@ from gensim.models import LdaModel
 import pprint as pp
 from python.ProcessingFunctions import MakeListInLists
 from gensim.matutils import jaccard, hellinger
+from gensim.models.coherencemodel import CoherenceModel
+import matplotlib.pyplot as plt
 
 def Load_SePL():
     """
-    Reads in SePL file, prepares phrases and sorts them; this is required be be run before MakeCandidates() and 
+    Reads in SePL file, prepares phrases and sorts them; this is required be be run before MakeCandidates() and
     GetSentiments()
     """
     # Read in SePL
@@ -298,6 +300,7 @@ def GetSentimentScores(listOfSents, df_sepl):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentimentsscores, listOfsepl_phrases
 
 
+
 # todo: describe functions
 def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
                 eval_every=10, iterations=50, random_state=None):
@@ -319,7 +322,6 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     templist = dataframecolumn.tolist()
     docsforlda = MakeListInLists(templist)
     # Create a dictionary representation of the documents and frequency filter
-    global dict_lda
 
     dict_lda = Dictionary(docsforlda)
     dict_lda.filter_extremes(no_below=no_below, no_above=no_above)
@@ -343,7 +345,7 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     lda_model.print_topics(-1)
     pp.pprint(lda_model.print_topics())
 
-    return lda_model
+    return lda_model, docsforlda, dict_lda, corpus_lda
 
 
 def GetTopicsOfDoc(tokenized_doc, lda_model):
@@ -405,7 +407,7 @@ def MakeTopicsBOW(topic, dict_lda):
     return topic_bow
 
 
-def LDAHellinger(lda_model, num_topics=None, num_words=10):
+def LDAHellinger(lda_model, dict_lda, num_topics=None, num_words=10):
     """
     This functions returns the average hellinger distance for all topic pairs in an LDA model.
     Includes following function:
@@ -425,7 +427,7 @@ def LDAHellinger(lda_model, num_topics=None, num_words=10):
     list = lda_model.show_topics(num_topics=num_topics, num_words=num_words)
     list_bow, sum = [], 0
     for topic in list:
-        help = MakeTopicsBOW(topic)
+        help = MakeTopicsBOW(topic, dict_lda)
         list_bow.append(help)
 
     # compute distance metric for each topic pair in list_bow
@@ -464,3 +466,46 @@ def LDAJaccard(lda_model, topn=10):
     print('computed average Jaccard distance')
 
     return sum / lda_model.num_topics
+
+def LDACoherence(lda_model, corpus, dictionary, texts):
+
+    # we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation with human interpretability
+    lda_model_cm = CoherenceModel(model=lda_model, corpus=corpus, dictionary=dictionary, coherence="u_mass")
+    #lda_model_cm = CoherenceModel(model=lda_model, texts=texts, dictionary=dictionary, coherence='c_v')
+    print(lda_model_cm.get_coherence())
+
+    return lda_model_cm.get_coherence()
+
+def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, topn, num_words, metric, no_below=0.1, no_above=0.9, alpha='symmetric', eta=None,
+                eval_every=10, iterations=50, random_state=None, verbose=False, display_plot=True):
+
+    metric_values = []
+    model_list = []
+
+    for num_topics in range(topics_start, topics_limit, topics_step):
+        lda_results = EstimateLDA(dataframecolumn, no_below, no_above, num_topics, alpha, eta,
+                eval_every, iterations, random_state)
+        lda_model = lda_results[0]
+        docsforlda = lda_results[1]
+        dict_lda = lda_results[2]
+        corpus_lda = lda_results[3]
+        model_list.append(lda_model)
+
+        if metric == 'coherence':
+            metric_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
+        if metric == 'jaccard':
+            metric_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
+        if metric == 'hellinger':
+            metric_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
+
+        if verbose: print('num_topics: {}, metric: {}, metric values: {}'.format(num_topics, metric, metric_values))
+
+    if display_plot:
+
+        plt.plot(range(topics_start, topics_limit, topics_step), metric_values)
+        plt.xlabel('Num Topics')
+        plt.ylabel('{} score'.format(metric))
+        # plt.legend(('metric'), loc='best')
+        plt.show()
+
+    return model_list, metric_values
