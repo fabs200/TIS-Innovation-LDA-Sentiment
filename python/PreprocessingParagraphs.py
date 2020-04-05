@@ -3,6 +3,8 @@ from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import *
 
+# Specify POStag type
+POStag_type = 'NN'
 
 start_time0 = time.process_time()
 
@@ -63,10 +65,10 @@ df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda
 df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace('\d+', '') for i in x])
 
 ### Special Characters
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace("'", '') for i in x])
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace("\\", '') for i in x])
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace('"', '') for i in x])
-df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.replace('+', '') for i in x])
+drop_specchars = ["'", "\\", '"', '+']
+for s in drop_specchars:
+    df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(
+        lambda x: [i.replace("{}".format(s), '') for i in x])
 
 ### Remove additional words, remove links and emails
 drop_words = ['taz', 'dpa', 'de', 'foto', 'webseite', 'herr', 'interview', 'siehe grafik', 'vdi nachrichten', 'vdi',
@@ -107,11 +109,11 @@ df_articles['Article_paragraph_nouns_cleaned'] = df_articles['Article_paragraph_
 
 ### Export data to csv (will be read in again in LDACalibration.py)
 df_articles[['ID_incr', 'Art_ID', 'Date', 'Article_paragraph_nouns_cleaned', 'Article_sentiment_paragraph']].to_csv(
-    path_processedarticles + 'csv/paragraphs_for_lda_analysis.csv', sep='\t', index=False)
+    path_processedarticles + 'csv/paragraphs_for_lda_{}.csv'.format(POStag_type), sep='\t', index=False)
 
-### Export as Excel and add Raw Articles
+### Export as Excel and add Raw Articles (previous file name Article_paragraphs_nouns_cleaned.xlsx)
 pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_paragraph_nouns_cleaned']).to_excel(
-    path_processedarticles + "Article_paragraphs_nouns_cleaned.xlsx")
+    path_processedarticles + 'paragraphs_for_lda_{}.xlsx'.format(POStag_type))
 
 # Make Longfile
 df_long_articles = df_articles.Article_paragraph_nouns_cleaned.apply(pandas.Series)\
@@ -121,8 +123,9 @@ df_long_articles = df_articles.Article_paragraph_nouns_cleaned.apply(pandas.Seri
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 ### Export longfile to csv (will be read in later)
-df_long_articles.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_analysis_l.csv', sep='\t', index=False)
-df_long_articles.to_excel(path_processedarticles + 'paragraphs_for_lda_analysis_l.xlsx')
+df_long_articles.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
+                        sep='\t', index=False)
+df_long_articles.to_excel(path_processedarticles + 'paragraphs_for_lda_{}_l.xlsx'.format(POStag_type))
 
 end_time2 = time.process_time()
 

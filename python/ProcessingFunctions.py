@@ -411,7 +411,7 @@ def ProcessforSentiment(listOfSents):
     :return: same as input but processed listOfSents
     """
 
-    final_articles, temp_article = [], []
+    temp_article, processed_article, final_article = [], [], []
     for sent in listOfSents:
         # First drop .?! and replace ;: by ,
         temp_sent = []
@@ -435,7 +435,12 @@ def ProcessforSentiment(listOfSents):
         sent_tokens = []
         for token in sent_string:
             sent_tokens.append(token.lemma_)
-        final_articles.append(sent_tokens)
+
+        processed_article.append(sent_tokens)
+
+    processed_article = [' '.join(i) for i in processed_article]
+    for sent in processed_article:
+        final_article.append(sent.split(','))
 
     # return a string with lemmatized words and united sentence splits to ,
-    return [' '.join(i) for i in final_articles]
+    return final_article

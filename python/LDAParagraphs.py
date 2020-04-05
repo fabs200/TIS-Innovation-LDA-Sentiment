@@ -5,6 +5,9 @@ from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import MakeListInLists
 
+# Specify POStag type
+POStag_type = 'NN'
+
 # Read in output file from PreprocessingSentences.py
 df_paragraphs = pandas.read_csv(path_processedarticles + 'csv/paragraphs_for_lda_analysis.csv', sep='\t')
 

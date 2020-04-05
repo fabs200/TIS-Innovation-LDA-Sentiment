@@ -3,6 +3,9 @@ from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import *
 
+# Specify POStag type
+POStag_type = 'NN'
+
 start_time0 = time.process_time()
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
@@ -10,7 +13,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first 100 articles
-# df_articles = df_articles[df_articles['ID']<501]
+df_articles = df_articles[df_articles['ID']<10]
 ######
 
 # convert all words to lower case
@@ -46,7 +49,7 @@ df_articles['Article'] = df_articles['Article'].apply(lambda x: NumberComplexRem
 df_articles['Article'] = df_articles['Article'].str.replace('\d+', '')
 
 ### Special Characters
-df_articles['Article'] = df_articles['Article'].str.replace("'", '').str.replace("\\", '')
+df_articles['Article'] = df_articles['Article'].str.replace("'", '').str.replace("\\", '').str.replace('"', '').str.replace('+', '')
 
 ### Split sentence-wise
 df_articles['Article_sentence'] = df_articles['Article'].apply(lambda x: Sentencizer(x))
@@ -89,11 +92,12 @@ df_articles['Article_sentence_nouns_cleaned'] = df_articles['Article_sentence_no
 
 ### Export data to csv (will be read in again in LDACalibration.py)
 df_articles[['ID_incr', 'ID', 'Date', 'Article_sentence_nouns_cleaned', 'Article_sentiment_sentences']].to_csv(
-    path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t', index=False)
+    path_processedarticles + 'csv/sentences_for_lda_{}.csv'.format(POStag_type),
+    sep='\t', index=False)
 
-### Export as Excel and add Raw Articles
+### Export as Excel and add Raw Articles (previous filename Article_sentence_nouns_cleaned.xlsx)
 pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_sentence_nouns_cleaned']).to_excel(
-    path_processedarticles + "Article_sentence_nouns_cleaned.xlsx")
+    path_processedarticles + 'sentences_for_lda_{}.xlsx'.format(POStag_type))
 
 # Make Longfile
 df_long_articles = df_articles.Article_sentence_nouns_cleaned.apply(pandas.Series)\
@@ -103,8 +107,9 @@ df_long_articles = df_articles.Article_sentence_nouns_cleaned.apply(pandas.Serie
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 ### Export longfile to csv (will be read in later)
-df_long_articles.to_csv(path_processedarticles + 'csv/sentences_for_lda_analysis_l.csv', sep='\t', index=False)
-df_long_articles.to_excel(path_processedarticles + 'sentences_for_lda_analysis_l.xlsx')
+df_long_articles.to_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
+                        sep='\t', index=False)
+df_long_articles.to_excel(path_processedarticles + 'sentences_for_lda_{}_l.xlsx'.format(POStag_type))
 
 end_time2 = time.process_time()
 

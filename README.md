@@ -17,16 +17,21 @@ violation of LexisNexis user policy. Use at your own legal risk.
 - [x] test stop-word needed or not, or token.tag_.startswith('NN') enough
 - [x] Local LDA
 - [x] implement sentiment analysis sepl
-- [ ] frequency distribution sentiment analysis negation words
-- [ ] write function to make long file
+- [x] frequency distribution sentiment analysis negation words
+- [x] make long file
 - [x] check LDA_TEST_get_topics.py
-- [ ] set up lda evaluation (e.g. pyLDAvis) of pre- and postprocessing
-      of text
-  - [ ]   coherence score, (grid search, alpha, beta, set random seed)
-  - [ ]   Leibler divergence (Li et al. 2019)
-  - [ ]   or 'auto'/'symmetric' as lda args
+  - [x]   coherence score, (grid search, alpha, beta, set random seed)
+  - [x]   Leibler divergence (Li et al. 2019)
+  - [ ]   or 'auto'/'symmetric' as lda args (eyeballing)
+- [ ] update and adjust SePL by manneg phrs
+- [ ] write lda as class()
+- [ ] add manneg phrs to ProcessSePLphrases(raw_sepl_phrase) and return it, too
+- [ ] final programming routine to create final analysis df long (colums: sentence/parag/article, topic distr, dom. topic, avg sent, med sent, sd sent, n sent(/phr), list phrs)
 - [ ] plot: lda time series
 - [ ] Get large dataset
+- [ ] Check Frequency:
+    - [ ] all SePL phrs
+    - [ ] SePL phrs by topics
 - [ ] create one Analysis file (lda + sentiment analysis)
 
 ## Tasks later

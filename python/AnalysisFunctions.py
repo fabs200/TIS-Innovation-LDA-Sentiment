@@ -187,7 +187,8 @@ def ProcessSentimentScores(sepl_phrase, negation_candidates, sentimentscores, ne
     for i in range(0, len(sepl_phrase)):
 
         # Check whether sepl_word in sentence part is contained in negation_list, if yes, set flag to True
-        if sepl_phrase[i]:
+        # if sepl_phrase[i]:
+        if sepl_phrase[i] and negation_candidates[i]:
 
             # write as str
             sepl_string = sepl_phrase[i][0]

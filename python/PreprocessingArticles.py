@@ -3,6 +3,9 @@ from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import *
 
+# Specify POStag type
+POStag_type = 'NN'
+
 start_time0 = time.process_time()
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
@@ -79,7 +82,7 @@ df_articles['Article'] = df_articles['Article'].apply(lambda x: SpecialCharClean
 # not solving hyphenation as no univeral rule found
 
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
-df_articles['Article_nouns'] = df_articles['Article'].apply(lambda x: POStagger(x, POStag='NN'))
+df_articles['Article_nouns'] = df_articles['Article'].apply(lambda x: POStagger(x, POStag=POStag_type))
 df_articles['Article_nouns'] = df_articles['Article_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less
@@ -89,11 +92,11 @@ df_articles['Article_nouns_cleaned'] = df_articles['Article_nouns'].apply(Tokens
 
 ### Export data to csv (will be read in again in LDACalibration.py)
 df_articles[['ID_incr', 'ID', 'Date', 'Article_nouns_cleaned', 'Article_sentiment']].to_csv(
-    path_processedarticles + 'csv/articles_for_lda_analysis.csv', sep='\t', index=False)
+    path_processedarticles + 'csv/articles_for_lda_{}.csv'.format(POStag_type), sep='\t', index=False)
 
-### Export as Excel and add Raw Articles
+### Export as Excel and add Raw Articles (old file name: Article_nouns_cleaned.xlsx)
 pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_nouns_cleaned']).to_excel(
-    path_processedarticles + "Article_nouns_cleaned.xlsx")
+    path_processedarticles + 'articles_for_lda_{}.xlsx'.format(POStag_type))
 
 # Make Longfile
 df_long_articles = df_articles.Article_nouns_cleaned.apply(pandas.Series)\
@@ -103,8 +106,8 @@ df_long_articles = df_articles.Article_nouns_cleaned.apply(pandas.Series)\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 ### Export longfile to csv (will be read in later)
-df_long_articles.to_csv(path_processedarticles + 'csv/articles_for_lda_analysis_l.csv', sep='\t', index=False)
-df_long_articles.to_excel(path_processedarticles + 'articles_for_lda_analysis_l.xlsx')
+df_long_articles.to_csv(path_processedarticles + 'csv/articles_for_lda_{}_l.csv'.format(POStag_type), sep='\t', index=False)
+df_long_articles.to_excel(path_processedarticles + 'articles_for_lda_{}_l.xlsx'.format(POStag_type))
 
 end_time2 = time.process_time()
 

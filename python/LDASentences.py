@@ -5,13 +5,16 @@ from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import MakeListInLists
 
+# Specify POStag type
+POStag_type = 'NN'
+
 # Read in output file from PreprocessingSentences.py
-df_sentences = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_analysis.csv', sep='\t')
+df_sentences = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type), sep='\t')
 
 sentences = df_sentences['Article_sentence_nouns_cleaned'].to_list()
 
 # Read in list in list (=1 sentences 1 doc)
-sentences = MakeListInLists(sentences)
+# sentences = MakeListInLists(sentences)
 
 # Create a dictionary representation of the documents
 dict_nouns = Dictionary(sentences)
