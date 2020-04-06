@@ -239,9 +239,11 @@ def ProcessSePLphrases(sepl_phrase):
     return processed_sepl_phrases
 
 
-def GetSentimentScores(listOfSents, df_sepl):
+def GetSentimentScores(listOfSentenceparts, df_sepl):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
+    Note: Apply this function on the final long file only!
+
     Includes following function:
 
     1. Load_SePL() to load SePL
@@ -250,20 +252,22 @@ def GetSentimentScores(listOfSents, df_sepl):
         from SePL
     4. ProcessSentimentScores() to process the retrieved sentiment scores and to return a unified score per sentence
 
-    :param listOfSents: articles must be processed with ProcessSentsforSentiment()
+    :param listOfSentenceparts
+        input must be processed by ProcessforSentiment() where listOfSentenceparts==1 sentence
+        ['sentencepart', 'sentencepart', ...]
     :return: return 1 value per Article, return 1 list with sentiments of each sentence, 1 list w/ opinion relev. words
     """
 
-    listOfSentimentsscores, listOfsepl_phrases = [], []
+    listOfSentiScores, listOfseplphrs = [], []
 
-    for sent in listOfSents:
+    for sentpart in listOfSentenceparts:
 
         """
-        first step: identification of suitable candidates for opinionated phrases suitable candidates: nouns, adjectives, 
-        adverbs and verbs
+        first step: identification of suitable candidates for opinionated phrases suitable candidates: 
+        nouns, adjectives, adverbs and verbs
         """
-        candidates = MakeCandidates(sent, df_sepl, get='candidates')
-        negation_candidates = MakeCandidates(sent, df_sepl, get='negation')
+        candidates = MakeCandidates(sentpart, df_sepl, get='candidates')
+        negation_candidates = MakeCandidates(sentpart, df_sepl, get='negation')
 
         """
         second step: extraction of possible opinion-bearing phrases from a candidate starting from a candidate, 
@@ -289,16 +293,16 @@ def GetSentimentScores(listOfSents, df_sepl):
         sentimentscores = ProcessSentimentScores(raw_sepl_phrase, negation_candidates, raw_sentimentscores)
         sepl_phrase = ProcessSePLphrases(raw_sepl_phrase)
 
-        listOfSentimentsscores.append(sentimentscores)
-        listOfsepl_phrases.append(sepl_phrase)
+        listOfSentiScores.append(sentimentscores)
+        listOfseplphrs.append(sepl_phrase)
 
     # create flat, non-empty list with scores
-    sentiscores = np.array([i for i in listOfSentimentsscores if i])
+    sentiscores = np.array([i for i in listOfSentiScores if i])
 
     # Retrieve statistics
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
 
-    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentimentsscores, listOfsepl_phrases
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
 
 
 

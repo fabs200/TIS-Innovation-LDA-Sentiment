@@ -4,9 +4,13 @@ from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import MakeListInLists
+from python.AnalysisFunctions import Load_SePL, GetSentimentScores
 
 # Specify POStag type
 POStag_type = 'NN'
+
+# Read in SePL
+df_sepl = Load_SePL()
 
 # Read in output file from PreprocessingSentences.py
 df_sentences = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type), sep='\t')

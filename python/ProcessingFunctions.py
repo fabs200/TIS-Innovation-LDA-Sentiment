@@ -406,28 +406,32 @@ lemmatizer = GermaLemma()
 
 def ProcessforSentiment(listOfSents):
     """
-    Process sentences before running Sentiment Analysis, replace ;: by , and lemmatize
-    :param listOfSents: list of sentences
-    :return: same as input but processed listOfSents
+    Process sentences before running Sentiment Analysis, replace ;: KON by , and drop .!? and lemmatize
+    :param listOfSents: list of sentences where sentences are str
+    :return: listOfSentenceparts
+        [['sentencepart1', 'sentencepart2', ...], [], [], ...]
+        which are split by ,
     """
 
     temp_article, processed_article, final_article = [], [], []
     for sent in listOfSents:
-        # First drop .?! and replace ;: by ,
+        # First drop .?! and brackets
+        temp_sent = sent.replace('.', '').replace('!', '').replace('?', '').replace('(', '').replace(')', '').replace('[', '').replace(']', '')
+        # Replace :; by ,
+        temp_sent = temp_sent.replace(';', ',').replace(':', ',')
+        # apply nlp2 to temp_sent
+        temp_sent_nlp = nlp2(temp_sent)
+        # process each token and 'translate' konjunction or ;: to ,
         temp_sent = []
-        sent_nlp = nlp2(sent)
-        # process each token and 'translate' konjunktion or .;:!? to ,
-        for token in sent_nlp:
-            if token.tag_ in ['$.', '$,', 'KON'] and token.text not in [')', '(', '[', ']']:
+        for token in temp_sent_nlp:
+            if token.tag_=='KON':
                 temp_sent.append(',')
             else:
                 temp_sent.append(token.text)
 
-        # put all tokens to a string
+        # put all tokens to a string (but split later by normalized ,)
         sent_string = ' '.join(temp_sent)
-        # correct successive ,
-        sent_string = sent_string.replace(' , , ', ', ')
-        sent_string = sent_string.replace('(', ' ').replace(')', ' ').replace('[', ' ').replace(']', ' ')
+
         # prepare for lemmatization
         sent_string = nlp2(sent_string)
 
@@ -435,12 +439,23 @@ def ProcessforSentiment(listOfSents):
         sent_tokens = []
         for token in sent_string:
             sent_tokens.append(token.lemma_)
-
         processed_article.append(sent_tokens)
 
+    # Put together tokenized, lemmatized elements of lists to a string
     processed_article = [' '.join(i) for i in processed_article]
+    # Split by normalized commas
     for sent in processed_article:
         final_article.append(sent.split(','))
 
-    # return a string with lemmatized words and united sentence splits to ,
+    # Flatten list
+    final_article = FlattenList(final_article)
+
+    # strip strings
+    final_article = [x.strip() for x in final_article]
+
+    # drop empty elements
+    final_article = [x for x in final_article if x != '']
+    # final_article = [x.strip() for x in final_article if x.strip()]
+
+    #  return a string with lemmatized words and united sentence splits to ,
     return final_article

@@ -106,6 +106,8 @@ df_long_articles = df_articles.Article_sentence_nouns_cleaned.apply(pandas.Serie
     .dropna(subset=['Article_sentence_nouns_cleaned'])\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
+# TODO: Add Article_sentiment_sentences to df_long_articles
+
 ### Export longfile to csv (will be read in later)
 df_long_articles.to_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
                         sep='\t', index=False)
