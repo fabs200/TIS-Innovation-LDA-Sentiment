@@ -90,6 +90,11 @@ def ReadSePLSentiments(candidates, df_sepl=None, verbose=False):
     """
     reads in candidates (list in list), retrieves sentiment scores (sentiment_scores), returns them and the opinion
     relevant terms (tagged_phr), make sure df_sepl is loaded (run Load_SePL() before)
+
+    Note: As Rill (2016) stated, this method does only work for simple sentences. To reduce complex candidates-lists,
+    we only read in sentenceparts. However, it is possible that real life articles contain errors such as missing
+    commas. This might result in incorrect identification of Sentiments which we cannot control for.
+
     :param candidates: list in list with POS tagged words
     :param df_sepl: load df_sepl via Load_SePL()
     :param verbose: display
