@@ -23,7 +23,7 @@ violation of LexisNexis user policy. Use at your own legal risk.
   - [x]   coherence score, (grid search, alpha, beta, set random seed)
   - [x]   Leibler divergence (Li et al. 2019)
   - [ ]   or 'auto'/'symmetric' as lda args (eyeballing)
-- [ ] update and adjust SePL by manneg phrs
+- [x] update and adjust SePL by manneg phrs
 - [ ] write lda as class()
 - [ ] add manneg phrs to ProcessSePLphrases(raw_sepl_phrase) and return it, too
 - [ ] final programming routine to create final analysis df long (colums: sentence/parag/article, topic distr, dom. topic, avg sent, med sent, sd sent, n sent(/phr), list phrs)
