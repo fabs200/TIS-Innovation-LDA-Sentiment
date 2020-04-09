@@ -86,24 +86,24 @@ df_articles['Article_sentence_nouns'] = df_articles['Article_sentence'].apply(la
 df_articles['Article_sentence_nouns'] = df_articles['Article_sentence_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less
-df_articles['Article_sentence_nouns_cleaned'] = df_articles['Article_sentence_nouns'].apply(TokensCleaner,
+df_articles['sentences_{}_for_lda'.format(POStag_type)] = df_articles['Article_sentence_nouns'].apply(TokensCleaner,
                                                                                             minwordinsent=2,
                                                                                             minwordlength=2)
 
-### Export data to csv (will be read in again in LDACalibration.py)
-df_articles[['ID_incr', 'ID', 'Date', 'Article_sentence_nouns_cleaned', 'Article_sentiment_sentences']].to_csv(
+### Export data to csv
+df_articles[['ID_incr', 'ID', 'Date', 'sentences_{}_for_lda'.format(POStag_type), 'Article_sentiment_sentences']].to_csv(
     path_processedarticles + 'csv/sentences_for_lda_{}.csv'.format(POStag_type),
     sep='\t', index=False)
 
-### Export as Excel and add Raw Articles (previous filename Article_sentence_nouns_cleaned.xlsx)
-pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_sentence_nouns_cleaned']).to_excel(
+### Export as Excel and add Raw Articles
+pandas.DataFrame(df_articles, columns=['Article_backup', 'sentences_{}_for_lda'.format(POStag_type)]).to_excel(
     path_processedarticles + 'sentences_for_lda_{}.xlsx'.format(POStag_type))
 
 # Make Longfile
 df_long_articles = df_articles.Article_sentence_nouns_cleaned.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
-    .melt(id_vars = ['ID_incr'], value_name = 'Article_sentence_nouns_cleaned')\
-    .dropna(subset=['Article_sentence_nouns_cleaned'])\
+    .melt(id_vars = ['ID_incr'], value_name = 'sentences_{}_for_lda'.format(POStag_type))\
+    .dropna(subset=['sentences_{}_for_lda'.format(POStag_type)])\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 # TODO: Add Article_sentiment_sentences to df_long_articles

@@ -358,7 +358,7 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     return lda_model, docsforlda, dict_lda, corpus_lda
 
 
-def GetTopicsOfDoc(tokenized_doc, lda_model):
+def GetTopicsOfDoc(tokenized_doc, lda_model, dict_lda):
     """
 
     :param tokenized_doc: iterable list of tokenized words
@@ -372,7 +372,7 @@ def GetTopicsOfDoc(tokenized_doc, lda_model):
     return lda_model.get_document_topics(doc_bow)
 
 
-def GetDomTopicOfDoc(tokenized_doc, lda_model):
+def GetDomTopicOfDoc(tokenized_doc, lda_model, dict_lda):
     """
 
     :param tokenized_doc:
