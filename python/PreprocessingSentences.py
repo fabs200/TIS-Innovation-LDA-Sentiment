@@ -67,8 +67,11 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 
 start_time1 = time.process_time()
 
+# TODO: remove Process for Sentiments - s
 ### Fork sentences for Sentiment Analysis
-df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessforSentiment(x))
+#df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessforSentiment(x))
+df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence']
+
 end_time1 = time.process_time()
 
 print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
@@ -79,7 +82,7 @@ start_time2 = time.process_time()
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['Article_sentence'] = df_articles['Article_sentence'].apply(lambda x: SpecialCharCleaner(x))
 
-# not solving hyphenation as no univeral rule found
+# not solving hyphenation as no universal rule found
 
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
 df_articles['Article_sentence_nouns'] = df_articles['Article_sentence'].apply(lambda x: POStagger(x, POStag='NN'))
@@ -99,19 +102,41 @@ df_articles[['ID_incr', 'ID', 'Date', 'sentences_{}_for_lda'.format(POStag_type)
 pandas.DataFrame(df_articles, columns=['Article_backup', 'sentences_{}_for_lda'.format(POStag_type)]).to_excel(
     path_processedarticles + 'sentences_for_lda_{}.xlsx'.format(POStag_type))
 
+df_articles['Temp'] = df_articles['sentences_{}_for_lda'.format(POStag_type)]
+
 # Make Longfile
-df_long_articles = df_articles.Article_sentence_nouns_cleaned.apply(pandas.Series)\
+df_long_articles1 = df_articles.Temp.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
     .melt(id_vars = ['ID_incr'], value_name = 'sentences_{}_for_lda'.format(POStag_type))\
     .dropna(subset=['sentences_{}_for_lda'.format(POStag_type)])\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
-# TODO: Add Article_sentiment_sentences to df_long_articles
+# TODO: Add Article_sentiment_sentences to df_long_articles & merge (??)
+# TODO: rename all files: articles vs sentences vs paragraphs
+
+# Make Longfile
+df_long_articles2 = df_articles.Article_sentiment_sentences.apply(pandas.Series)\
+    .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
+    .melt(id_vars = ['ID_incr'], value_name = 'Article_sentiment_sentences')\
+    .dropna(subset=['Article_sentiment_sentences'])\
+    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
+
+
+
+df_long_articles3 = df_articles.Article_sentence.apply(pandas.Series)\
+    .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
+    .melt(id_vars = ['ID_incr'], value_name = 'Article_sentence')\
+    .dropna(subset=['Article_sentence'])\
+    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 ### Export longfile to csv (will be read in later)
-df_long_articles.to_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
+df_long_articles1.to_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
                         sep='\t', index=False)
-df_long_articles.to_excel(path_processedarticles + 'sentences_for_lda_{}_l.xlsx'.format(POStag_type))
+df_long_articles1.to_excel(path_processedarticles + 'sentences_for_lda_{}_l.xlsx'.format(POStag_type))
+
+df_long_articles2.to_csv(path_processedarticles + 'Article_sentiment_sentences_l.csv',
+                        sep='\t', index=False)
+df_long_articles2.to_excel(path_processedarticles + 'Article_sentiment_sentences_l.xlsx')
 
 end_time2 = time.process_time()
 
@@ -120,6 +145,6 @@ print('timer2: Elapsed time is {} seconds.'.format(round(end_time2-start_time2, 
 print('Overall elapsed time is {} seconds.'.format(round(end_time2-start_time0, 2)))
 
 # Clean up to keep RAM small
-del df_articles, df_long_articles, stopwords, drop_words
+#del df_articles, df_long_articles, stopwords, drop_words
 
 ###

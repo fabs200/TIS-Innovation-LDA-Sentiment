@@ -13,7 +13,7 @@ df_paragraphs = pandas.read_feather(path_processedarticles + 'feather/auto_parag
 
 ######
 # TEMP keep first 100 articles
-df_paragraphs_TEMP = df_paragraphs[df_paragraphs['Art_ID']<101]
+df_paragraphs_TEMP = df_paragraphs[df_paragraphs['Art_ID']<10]
 ######
 
 # Write all paragraphs into a list of lists
@@ -85,7 +85,7 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 start_time1 = time.process_time()
 
 ### Fork sentences for Sentiment Analysis
-df_articles['Article_sentiment_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: ProcessforSentiment(x))
+#df_articles['Article_sentiment_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: ProcessforSentiment(x))
 end_time1 = time.process_time()
 
 print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
@@ -103,23 +103,26 @@ df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph'].apply(
 df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less
-df_articles['Article_paragraph_nouns_cleaned'] = df_articles['Article_paragraph_nouns'].apply(TokensCleaner,
+df_articles['paragraphs_for_lda_{}'.format(POStag_type)] = df_articles['Article_paragraph_nouns'].apply(TokensCleaner,
                                                                                               minwordinsent=2,
                                                                                               minwordlength=2)
 
 ### Export data to csv (will be read in again in LDACalibration.py)
-df_articles[['ID_incr', 'Art_ID', 'Date', 'Article_paragraph_nouns_cleaned', 'Article_sentiment_paragraph']].to_csv(
+df_articles[['ID_incr', 'Art_ID', 'Date', 'paragraphs_for_lda_{}'.format(POStag_type)]].to_csv(
     path_processedarticles + 'csv/paragraphs_for_lda_{}.csv'.format(POStag_type), sep='\t', index=False)
 
-### Export as Excel and add Raw Articles (previous file name Article_paragraphs_nouns_cleaned.xlsx)
-pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_paragraph_nouns_cleaned']).to_excel(
+### Export as Excel and add Raw Articles
+pandas.DataFrame(df_articles, columns=['Article_backup', 'paragraphs_for_lda_{}'.format(POStag_type)]).to_excel(
     path_processedarticles + 'paragraphs_for_lda_{}.xlsx'.format(POStag_type))
 
+
+df_articles['Temp'] = df_articles['paragraphs_for_lda_{}'.format(POStag_type)]
+
 # Make Longfile
-df_long_articles = df_articles.Article_paragraph_nouns_cleaned.apply(pandas.Series)\
+df_long_articles = df_articles.Temp.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
-    .melt(id_vars = ['ID_incr'], value_name = 'Article_paragraph_nouns_cleaned')\
-    .dropna(subset=['Article_paragraph_nouns_cleaned'])\
+    .melt(id_vars = ['ID_incr'], value_name = 'paragraphs_{}_for_lda'.format(POStag_type))\
+    .dropna(subset=['paragraphs_{}_for_lda'.format(POStag_type)])\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 ### Export longfile to csv (will be read in later)
@@ -134,7 +137,6 @@ print('timer2: Elapsed time is {} seconds.'.format(round(end_time2-start_time2, 
 print('Overall elapsed time is {} seconds.'.format(round(end_time2-start_time0, 2)))
 
 # Clean up to keep RAM small
-del df_articles, df_long_articles, df_paragraphs, df_paragraphs_TEMP, stopwords, drop_words, df_paragraphs_lists, \
-    df_paragraphs_lists
+# del df_articles, df_long_articles, df_paragraphs, df_paragraphs_TEMP, stopwords, drop_words
 
 ###

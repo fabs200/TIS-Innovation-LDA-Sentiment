@@ -86,23 +86,26 @@ df_articles['Article_nouns'] = df_articles['Article'].apply(lambda x: POStagger(
 df_articles['Article_nouns'] = df_articles['Article_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less
-df_articles['Article_nouns_cleaned'] = df_articles['Article_nouns'].apply(TokensCleaner,
+df_articles['articles{}_for_lda'.format(POStag_type)] = df_articles['Article_nouns'].apply(TokensCleaner,
                                                                           minwordinsent=2,
                                                                           minwordlength=2)
 
 ### Export data to csv (will be read in again in LDACalibration.py)
-df_articles[['ID_incr', 'ID', 'Date', 'Article_nouns_cleaned', 'Article_sentiment']].to_csv(
+df_articles[['ID_incr', 'ID', 'Date', 'articles{}_for_lda'.format(POStag_type), 'Article_sentiment']].to_csv(
     path_processedarticles + 'csv/articles_for_lda_{}.csv'.format(POStag_type), sep='\t', index=False)
 
-### Export as Excel and add Raw Articles (old file name: Article_nouns_cleaned.xlsx)
-pandas.DataFrame(df_articles, columns=['Article_backup', 'Article_nouns_cleaned']).to_excel(
+### Export as Excel and add Raw Articles
+pandas.DataFrame(df_articles, columns=['Article_backup', 'articles{}_for_lda'.format(POStag_type)]).to_excel(
     path_processedarticles + 'articles_for_lda_{}.xlsx'.format(POStag_type))
 
+df_articles['Temp'] = df_articles['articles{}_for_lda'.format(POStag_type)]
+
+
 # Make Longfile
-df_long_articles = df_articles.Article_nouns_cleaned.apply(pandas.Series)\
+df_long_articles = df_articles.Temp.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
-    .melt(id_vars = ['ID_incr'], value_name = 'Article_nouns_cleaned')\
-    .dropna(subset=['Article_nouns_cleaned'])\
+    .melt(id_vars = ['ID_incr'], value_name = 'articles_{}_for_lda'.format(POStag_type))\
+    .dropna(subset=['articles_{}_for_lda'.format(POStag_type)])\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 ### Export longfile to csv (will be read in later)
@@ -116,6 +119,6 @@ print('timer2: Elapsed time is {} seconds.'.format(round(end_time2-start_time2, 
 print('Overall elapsed time is {} seconds.'.format(round(end_time2-start_time0, 2)))
 
 # Clean up to keep RAM small
-del df_articles, df_long_articles, stopwords, drop_words
+#del df_articles, df_long_articles, stopwords, drop_words
 
 ###

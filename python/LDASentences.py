@@ -4,16 +4,49 @@ from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
 from python.ProcessingFunctions import MakeListInLists
-from python.AnalysisFunctions import Load_SePL, GetSentimentScores
+from python.AnalysisFunctions import Load_SePL, GetSentimentScores, EstimateLDA, GetDomTopicOfDoc
 
 # Specify POStag type
 POStag_type = 'NN'
 
 # Read in SePL
-df_sepl = Load_SePL()
+#df_sepl = Load_SePL()
 
 # Read in output file from PreprocessingSentences.py
 df_sentences = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type), sep='\t')
+
+lda = EstimateLDA(df_sentences['Article_sentence_nouns_cleaned'])
+
+lda_model = lda[0]
+docsforlda = lda[1]
+dict_lda = lda[2]
+corpus_lda = lda[3]
+
+df_sentences['dom_topic']= df_sentences['Article_sentence_nouns_cleaned'].apply(lambda x: GetDomTopicOfDoc(x,lda_model=lda_model, dict_lda=dict_lda))
+
+df_long_
+
+GetDomTopicOfDoc(tokenized_doc, lda_model)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sentences = df_sentences['Article_sentence_nouns_cleaned'].to_list()
 

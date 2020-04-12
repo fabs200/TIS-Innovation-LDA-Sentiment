@@ -210,17 +210,38 @@ def Lemmatization(listOfSents):
     return lemmalist
 
 
-def SentenceTokenizer(listOfSents):
+def SentenceTokenizer(sent):
+    """
+
+    :param sent: 1 sentence as string (after preprocessing!)
+    :return: sentence as list of tokens without punctuation
+    """
+
+    tokenizedlist = []
+    #Set up tokenizer
+    tokenizer = Tokenizer(nlp.vocab)
+    tokenizer = nlp.Defaults.create_tokenizer(nlp)
+    tokens = tokenizer(sent)
+
+    for token in tokens:
+        # ignore punctuation
+        if len(token.text) > 1:
+            tokenizedlist.append(token.text)
+    return tokenizedlist
+
+def SentenceListTokenizer(listOfSents):
     """
     load SetupTokenizer() first
     """
+
     # Set up tokenizer
     tokenizer = Tokenizer(nlp.vocab)
     tokenizer = nlp.Defaults.create_tokenizer(nlp)
 
     tokenizedlist = []
     for sent in listOfSents:
-        tokenizedlist.append(tokenizer(sent))
+        token = tokenizer(sent)
+        tokenizedlist.append(token.text)
     return tokenizedlist
 
 
