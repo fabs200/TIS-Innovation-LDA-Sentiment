@@ -8,8 +8,13 @@ from python.AnalysisFunctions_new2 import EstimateLDA, Load_SePL, GetTopicsOfDoc
 from python.ProcessingFunctions import SentenceTokenizer
 
 
+
+#load df_articles_long2 form sentences processing (line 118) - or save it as dataset and load in again
+
 #Todo: problems with load sepl function
 df_sepl = Load_SePL
+
+
 
 
 df_sepl = pandas.read_csv(path_processedarticles + 'SePL/SePL_v1.1.csv', sep=';')
