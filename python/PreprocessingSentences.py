@@ -13,7 +13,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first 100 articles
-df_articles = df_articles[df_articles['ID']<10]
+df_articles = df_articles[df_articles['ID']<100]
 ######
 
 # convert all words to lower case
@@ -69,8 +69,7 @@ start_time1 = time.process_time()
 
 # TODO: remove Process for Sentiments - s
 ### Fork sentences for Sentiment Analysis
-#df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence'].apply(lambda x: ProcessforSentiment(x))
-df_articles['Article_sentiment_sentences'] = df_articles['Article_sentence']
+df_articles['sentences_for_sentiment'] = df_articles['Article_sentence']
 
 end_time1 = time.process_time()
 
@@ -94,7 +93,7 @@ df_articles['sentences_{}_for_lda'.format(POStag_type)] = df_articles['Article_s
                                                                                             minwordlength=2)
 
 ### Export data to csv
-df_articles[['ID_incr', 'ID', 'Date', 'sentences_{}_for_lda'.format(POStag_type), 'Article_sentiment_sentences']].to_csv(
+df_articles[['ID_incr', 'ID', 'Date', 'sentences_{}_for_lda'.format(POStag_type), 'sentences_for_sentiment']].to_csv(
     path_processedarticles + 'csv/sentences_for_lda_{}.csv'.format(POStag_type),
     sep='\t', index=False)
 
@@ -111,32 +110,25 @@ df_long_articles1 = df_articles.Temp.apply(pandas.Series)\
     .dropna(subset=['sentences_{}_for_lda'.format(POStag_type)])\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
-# TODO: Add Article_sentiment_sentences to df_long_articles & merge (??)
 # TODO: rename all files: articles vs sentences vs paragraphs
 
 # Make Longfile
-df_long_articles2 = df_articles.Article_sentiment_sentences.apply(pandas.Series)\
+df_long_articles2 = df_articles.sentences_for_sentiment.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
-    .melt(id_vars = ['ID_incr'], value_name = 'Article_sentiment_sentences')\
-    .dropna(subset=['Article_sentiment_sentences'])\
+    .melt(id_vars = ['ID_incr'], value_name = 'sentences_for_sentiment')\
+    .dropna(subset=['sentences_for_sentiment'])\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 
-
-df_long_articles3 = df_articles.Article_sentence.apply(pandas.Series)\
-    .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
-    .melt(id_vars = ['ID_incr'], value_name = 'Article_sentence')\
-    .dropna(subset=['Article_sentence'])\
-    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 ### Export longfile to csv (will be read in later)
 df_long_articles1.to_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
                         sep='\t', index=False)
 df_long_articles1.to_excel(path_processedarticles + 'sentences_for_lda_{}_l.xlsx'.format(POStag_type))
 
-df_long_articles2.to_csv(path_processedarticles + 'Article_sentiment_sentences_l.csv',
+df_long_articles2.to_csv(path_processedarticles + 'sentences_for_sentiment_l.csv',
                         sep='\t', index=False)
-df_long_articles2.to_excel(path_processedarticles + 'Article_sentiment_sentences_l.xlsx')
+df_long_articles2.to_excel(path_processedarticles + 'sentences_for_sentiment_l.xlsx')
 
 end_time2 = time.process_time()
 
