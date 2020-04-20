@@ -30,6 +30,8 @@ def MakeListInLists(string):
 # function to flatten lists
 FlattenList = lambda l: [element for sublist in l for element in sublist]
 
+def ListtoString(list):
+    return ''.join(list)
 
 def GetUniqueStrings(list, threshold=.9, verbose=False):
     """

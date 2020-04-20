@@ -40,7 +40,7 @@ df_articles = df_articles.drop(columns=['Par_ID', 'Paragraph'])
 df_articles.drop_duplicates(subset=['Headline'], inplace=True)
 
 # Make Backup
-df_articles['Article_paragraph_backup'] = df_articles['Article_paragraph']
+df_articles['Article_paragraph_backup_raw'] = df_articles['Article_paragraph']
 
 # convert all words to lower case
 df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: [i.lower() for i in x])
@@ -97,6 +97,10 @@ df_articles['Article_paragraph'] = df_articles['Article_paragraph'].apply(lambda
 
 # not solving hyphenation as no univeral rule found
 
+# Fork textbody for LDA GetTopics and flatten to string
+df_articles['Article_paragraph_backup'] = df_articles['Article_paragraph'].apply(lambda x: ListtoString(x))
+
+
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
 df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph'].apply(lambda x: POStagger(x, POStag='NN'))
 df_articles['Article_paragraph_nouns'] = df_articles['Article_paragraph_nouns'].apply(lambda x: Lemmatization(x))
@@ -125,15 +129,31 @@ df_long_articles = df_articles.Temp.apply(pandas.Series)\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
 ### Export longfile to csv (will be read in later)
-df_long_articles.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
-                        sep='\t', index=False)
+df_long_articles.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type), sep='\t', index=False)
 df_long_articles.to_excel(path_processedarticles + 'paragraphs_for_lda_{}_l.xlsx'.format(POStag_type))
+
+
+df_articles['Temp'] = df_articles['Article_paragraph_backup']
+
+df_long_articles2 = df_articles.Temp.apply(pandas.Series)\
+    .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
+    .melt(id_vars = ['ID_incr'], value_name = 'paragraph_text')\
+    .dropna(subset=['paragraph_text'])\
+    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
+
+df_long_articles2.to_csv(path_processedarticles + 'csv/paragraphs_text.csv'.format(POStag_type), sep='\t', index=False)
+df_long_articles2.to_excel(path_processedarticles + 'paragraphs_text.xlsx'.format(POStag_type))
+
+
 
 end_time2 = time.process_time()
 
 print('timer2: Elapsed time is {} seconds.'.format(round(end_time2-start_time2, 2)))
 
 print('Overall elapsed time is {} seconds.'.format(round(end_time2-start_time0, 2)))
+
+
+
 
 # Clean up to keep RAM small
 # del df_articles, df_long_articles, df_paragraphs, df_paragraphs_TEMP, stopwords, drop_words

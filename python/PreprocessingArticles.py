@@ -65,7 +65,7 @@ end_time0 = time.process_time()
 
 print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 2)))
 
-start_time1 = time.process_time()
+
 
 
 
@@ -75,8 +75,8 @@ df_articles['Article'] = df_articles['Article'].apply(lambda x: SpecialCharClean
 
 
 # Fork textbody for LDA GetTopics and flatten to string
-df_articles['Article_backup'] = df_articles['Article']
-# ToDo: convert list to string
+df_articles['Article_backup'] = df_articles['Article'].apply(lambda x: ListtoString(x))
+
 
 
 # not solving hyphenation as no universal rule found
@@ -127,12 +127,6 @@ df_long_articles2.to_csv(path_processedarticles + 'csv/articles_text.csv'.format
 df_long_articles2.to_excel(path_processedarticles + 'articles_text.xlsx'.format(POStag_type))
 
 
-
-end_time2 = time.process_time()
-
-print('timer2: Elapsed time is {} seconds.'.format(round(end_time2-start_time2, 2)))
-
-print('Overall elapsed time is {} seconds.'.format(round(end_time2-start_time0, 2)))
 
 # Clean up to keep RAM small
 #del df_articles, df_long_articles, stopwords, drop_words
