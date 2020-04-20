@@ -67,7 +67,6 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 
 start_time1 = time.process_time()
 
-# TODO: remove Process for Sentiments - s
 ### Fork sentences for Sentiment Analysis
 df_articles['sentences_for_sentiment'] = df_articles['Article_sentence']
 

@@ -229,6 +229,7 @@ def SentenceTokenizer(sent):
             tokenizedlist.append(token.text)
     return tokenizedlist
 
+#ToDo: delete Sentencelisttokenizer??
 def SentenceListTokenizer(listOfSents):
     """
     load SetupTokenizer() first

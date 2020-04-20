@@ -84,8 +84,7 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 
 start_time1 = time.process_time()
 
-### Fork sentences for Sentiment Analysis
-#df_articles['Article_sentiment_paragraph'] = df_articles['Article_paragraph'].apply(lambda x: ProcessforSentiment(x))
+
 end_time1 = time.process_time()
 
 print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))

@@ -358,34 +358,46 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     return lda_model, docsforlda, dict_lda, corpus_lda
 
 
-def GetTopicsOfDoc(sent, lda_model, dict_lda):
+def GetTopicsOfDoc(doc, lda_model, dict_lda):
     """
 
     :param sent: 1 sentence from long df after preprocessing
     :param lda_model: estimated LDA model
     :return:
     """
-    # tokenize sentence
-    tokenized_doc = SentenceTokenizer(sent)
+    # lemmatize doc
+    doc = nlp2(doc)
+
+    # loop over all tokens in sentence and lemmatize them, disregard punctuation
+    lemmatized_doc = []
+    for token in doc:
+        if len(token.text) > 1:
+            lemmatized_doc.append(token.lemma_)
 
     # Create BOW representation of doc to use as input for the LDA model
-    doc_bow = dict_lda.doc2bow(tokenized_doc)
+    doc_bow = dict_lda.doc2bow(lemmatized_doc)
 
     return lda_model.get_document_topics(doc_bow)
 
 
-def GetDomTopicOfDoc(sent, lda_model, dict_lda):
+def GetDomTopicOfDoc(doc, lda_model, dict_lda):
     """
 
-    :param sent: 1 sentence from long df after preprocessing
+    :param doc: 1 document as a string
     :param lda_model: estimated LDA model
-    :return:
+    :return: dominant topic and its probability
     """
-    # tokenize sentence
-    tokenized_doc = SentenceTokenizer(sent)
+    # lemmatize doc
+    doc = nlp2(doc)
+
+    # loop over all tokens in sentence and lemmatize them, disregard punctuation
+    lemmatized_doc = []
+    for token in doc:
+        if len(token.text) > 1:
+            lemmatized_doc.append(token.lemma_)
 
     # Create BOW representation of doc to use as input for the LDA model
-    doc_bow = dict_lda.doc2bow(tokenized_doc)
+    doc_bow = dict_lda.doc2bow(lemmatized_doc)
 
     doc_topics = lda_model.get_document_topics(doc_bow)
 

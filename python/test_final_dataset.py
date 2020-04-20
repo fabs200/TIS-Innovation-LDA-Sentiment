@@ -41,7 +41,6 @@ dict_lda = lda_sentence[2]
 corpus_lda = lda_sentence[3]
 
 # Estimate Topic distribution of sentiment sentences and append to long file
-# Todo: pandas df does not lead - not all arguments converted during string formatting
 df_long_articles2['Dom_topic_lda_sentence'] = df_long_articles2['sentences_for_sentiment'].apply(lambda x: GetDomTopicOfDoc(x,lda_model=lda_model, dict_lda=dict_lda))
 
 #####
@@ -83,5 +82,10 @@ df_long_articles2['Sentiment'] = df_long_articles2['sentences_for_sentiment'].ap
 df_long_articles2.to_excel(path_processedarticles + 'test_final_dataset_{}_l.xlsx'.format(POStag_type))
 
 ##########################################
+
+#TEST: Topic Distribution on article and paragraph level
+df_article_text = pandas.read_csv(path_processedarticles + 'csv/articles_text.csv', sep='\t')
+
+df_article_text['Article_Dom_topic_lda_article'] = df_article_text['article_text'].apply(lambda x: GetDomTopicOfDoc(x,lda_model=lda_model, dict_lda=dict_lda))
 
 

@@ -13,7 +13,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first 100 articles
-#df_articles = df_articles[df_articles['ID']<101]
+df_articles = df_articles[df_articles['ID']<10]
 ######
 
 # convert all words to lower case
@@ -32,7 +32,7 @@ df_articles['Article'] = [re.compile(r'deliverynotification').sub(
     lambda m: (m.group(1) if m.group(1) else " "), x) for x in df_articles['Article'].tolist()]
 
 # Make Backup
-df_articles['Article_backup'] = df_articles['Article']
+df_articles['Article_backup_raw'] = df_articles['Article']
 
 # Create id increasing (needed to merge help files later)
 df_articles.insert(0, 'ID_incr', range(1, 1 + len(df_articles)))
@@ -67,19 +67,19 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 
 start_time1 = time.process_time()
 
-### Fork sentences for Sentiment Analysis
-df_articles['Article_sentiment'] = df_articles['Article'].apply(lambda x: ProcessforSentiment(x))
-end_time1 = time.process_time()
 
-print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
-
-start_time2 = time.process_time()
 
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['Article'] = df_articles['Article'].apply(lambda x: SpecialCharCleaner(x))
 
-# not solving hyphenation as no univeral rule found
+
+# Fork textbody for LDA GetTopics and flatten to string
+df_articles['Article_backup'] = df_articles['Article']
+# ToDo: convert list to string
+
+
+# not solving hyphenation as no universal rule found
 
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
 df_articles['Article_nouns'] = df_articles['Article'].apply(lambda x: POStagger(x, POStag=POStag_type))
@@ -91,7 +91,7 @@ df_articles['articles{}_for_lda'.format(POStag_type)] = df_articles['Article_nou
                                                                           minwordlength=2)
 
 ### Export data to csv (will be read in again in LDACalibration.py)
-df_articles[['ID_incr', 'ID', 'Date', 'articles{}_for_lda'.format(POStag_type), 'Article_sentiment']].to_csv(
+df_articles[['ID_incr', 'ID', 'Date', 'articles{}_for_lda'.format(POStag_type)]].to_csv(
     path_processedarticles + 'csv/articles_for_lda_{}.csv'.format(POStag_type), sep='\t', index=False)
 
 ### Export as Excel and add Raw Articles
@@ -108,9 +108,25 @@ df_long_articles = df_articles.Temp.apply(pandas.Series)\
     .dropna(subset=['articles_{}_for_lda'.format(POStag_type)])\
     .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
 
+
+df_articles['Temp'] = df_articles['Article_backup']
+
+df_long_articles2 = df_articles.Temp.apply(pandas.Series)\
+    .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
+    .melt(id_vars = ['ID_incr'], value_name = 'article_text')\
+    .dropna(subset=['article_text'])\
+    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')
+
+
+
 ### Export longfile to csv (will be read in later)
 df_long_articles.to_csv(path_processedarticles + 'csv/articles_for_lda_{}_l.csv'.format(POStag_type), sep='\t', index=False)
 df_long_articles.to_excel(path_processedarticles + 'articles_for_lda_{}_l.xlsx'.format(POStag_type))
+
+df_long_articles2.to_csv(path_processedarticles + 'csv/articles_text.csv'.format(POStag_type), sep='\t', index=False)
+df_long_articles2.to_excel(path_processedarticles + 'articles_text.xlsx'.format(POStag_type))
+
+
 
 end_time2 = time.process_time()
 
