@@ -18,6 +18,9 @@ df_sepl = Load_SePL()
 
 df_long_articles2 = pandas.read_csv(path_processedarticles + 'sentences_for_sentiment_l.csv', sep='\t')
 
+df_long_articles2= df_long_articles2[df_long_articles2['ID_incr']<3]
+
+
 #ToDo: check all three dataframes for lda
 
 ######################################
@@ -69,6 +72,7 @@ corpus_lda = lda_article[3]
 df_long_articles2['Dom_topic_lda_article'] = df_long_articles2['sentences_for_sentiment'].apply(lambda x: GetDomTopicOfDoc(x,lda_model=lda_model, dict_lda=dict_lda))
 
 
+
 ##########Sentiment Analysis
 
 
@@ -83,9 +87,15 @@ df_long_articles2.to_excel(path_processedarticles + 'test_final_dataset_{}_l.xls
 
 ##########################################
 
+#ToDO: merge the following df to final dataset, rename df_long_articles2 to df_sentence_text
 #TEST: Topic Distribution on article and paragraph level
 df_article_text = pandas.read_csv(path_processedarticles + 'csv/articles_text.csv', sep='\t')
 
+
 df_article_text['Article_Dom_topic_lda_article'] = df_article_text['article_text'].apply(lambda x: GetDomTopicOfDoc(x,lda_model=lda_model, dict_lda=dict_lda))
 
+
+
+df_paragraph_text = pandas.read_csv(path_processedarticles + 'csv/paragraphs_text.csv', sep='\t')
+df_paragraph_text['Paragraph_Dom_topic_lda_article'] = df_paragraph_text['paragraph_text'].apply(lambda x: GetDomTopicOfDoc(x,lda_model=lda_model, dict_lda=dict_lda))
 
