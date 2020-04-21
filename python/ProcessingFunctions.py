@@ -7,7 +7,7 @@ from textdistance import jaro
 from spacy.lang.de import German
 from spacy.tokenizer import Tokenizer
 from germalemma import GermaLemma
-
+import pandas
 
 def MakeListInLists(string):
     """
@@ -245,23 +245,32 @@ def SentenceListTokenizer(listOfSents):
         tokenizedlist.append(token.text)
     return tokenizedlist
 
-
-def TokensCleaner(listOfSents, minwordinsent, minwordlength):
+def TokensCleaner(listOfSents, minwordinsent, minwordlength, drop=False):
     """
-    drop sentences (=sent) which are too short and have only 2 or less words
+    this function filters out lists that contain too less and to short tokenized words, specified with minwordinsent,
+    minwordlength, else, if drop=True, also keeps filtered out lists, but empty (needed for having same dimension
+    when making long)
+    Run after POStagger() and after Lemmatization(), final step before exporting.
+
+    :param listOfSents: list, elements are sentences
+    :param minwordinsent: int, min word that should be contained in a sentence
+    :param minwordlength: int, min length of words that should be contained in a sentence
+    :param drop: True, False, if True, drop empty lists
+    :return: list if tokenized words with specified minwordinsent, minwordlength
     """
     cleanedlistOfSents = []
     for sent in listOfSents:
         filteredSent = []
-        # if sentence (list) is empty, skip it. More precise: Drop if list-length<3 and word-length<3
-        if (len(sent) >= minwordinsent):
-            for word in sent:
-                # filter out stop words and blanks elements
-                if len(word) >= minwordlength:
-                    filteredSent.append(word)
-            # append filtered sentence list to cleaned list of sentences only if it still contained 3 words or more
-            if (len(filteredSent) >= minwordinsent):
-                cleanedlistOfSents.append(filteredSent)
+        # Only append if e.g. list-length<3 and word-length<3
+        for word in sent:
+            # filter out stop words and blanks elements
+            if (len(sent) >= minwordinsent) and (len(word) >= minwordlength):
+                filteredSent.append(word)
+        # append filtered sentence list to cleaned list of sentences only if it still contained 3 words or more
+        if (len(filteredSent) >= minwordinsent):
+            cleanedlistOfSents.append(filteredSent)
+        elif not drop:
+                cleanedlistOfSents.append([])
     return cleanedlistOfSents
 
 
