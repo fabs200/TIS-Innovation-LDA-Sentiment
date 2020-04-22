@@ -25,7 +25,7 @@ df_articles.drop_duplicates(subset=['Headline'], inplace=True)
 
 # Remove text which defines end of articles
 for splitstring in ['graphic', 'foto: classification language', 'classification language', 'kommentar seite ',
-                    'publication-type', 'classification', 'language: german; deutsch']: #TODO: @Daniel 'classification' hier auch?
+                    'publication-type', 'classification', 'language: german; deutsch', 'bericht - seite ']: #TODO: @Daniel 'classification' hier auch?
     df_articles['Article'] = df_articles['Article'].str.split(splitstring).str[0]
 df_articles['Article'] = [re.compile(r'(kommentar seite \d+)').sub(
     lambda m: (m.group(1) if m.group(1) else " "), x) for x in df_articles['Article'].tolist()]

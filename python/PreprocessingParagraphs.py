@@ -35,19 +35,19 @@ df_articles = df_articles_TEMP.merge(df_articles_lists, left_on='Art_ID', right_
 # Drop unnecessary vars
 df_articles = df_articles.drop(columns=['Par_ID', 'Paragraph'])
 
-# Drop duplicates (TEMP do not drop any observations, when merging to other long-files, only join inner)
-# df_articles.drop_duplicates(subset=['Article', 'Date'], inplace=True)
-# df_articles.drop_duplicates(subset=['Headline'], inplace=True)
-
 # Make Backup
 df_articles['paragraph_backup'] = df_articles['paragraph']
 
 # convert all words to lower case
 df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: [i.lower() for i in x])
 
+# Drop duplicates (TEMP do not drop any observations, when merging to other long-files, only join inner)
+# df_articles.drop_duplicates(subset=['paragraph', 'Date'], inplace=True)
+df_articles.drop_duplicates(subset=['Headline'], inplace=True)
+
 # Remove text which defines end of articles
 splittingstrings = ['graphic', 'foto: classification language', 'classification language', 'kommentar seite ',
-                    'publication-type', 'classification', 'language: german; deutsch'] #TODO: @Daniel 'classification' hier auch?
+                    'publication-type', 'classification', 'language: german; deutsch', 'bericht - seite '] #TODO: @Daniel 'classification' hier auch?
 df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: ParagraphSplitter(x, splitAt=splittingstrings))
 
 # Create id increasing (needed to merge help files later)

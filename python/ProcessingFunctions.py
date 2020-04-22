@@ -101,11 +101,17 @@ def Sentencizer(string):
     nlp = German()
     sbd = nlp.create_pipe('sentencizer')
     nlp.add_pipe(sbd)
+
+    for some single strings nlp() cannot process (rare, e.g. 'nan'), exclude those; except pass solve later
     """
-    doc = nlp(string)
     sents_list = []
-    for sent in doc.sents:
-        sents_list.append(sent.text)
+    try:
+        doc = nlp(string)
+        for sent in doc.sents:
+            sents_list.append(sent.text)
+    except:
+        print("###\tempty list was passed as nlp() could not read string: '{}'".format(string))
+        pass
     return sents_list
 
 def ArticlesToLists(string):
