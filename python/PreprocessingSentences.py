@@ -13,7 +13,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first 100 articles
-# df_articles = df_articles[df_articles['ID']<100]
+# df_articles = df_articles[df_articles['Art_ID']<100]
 ######
 
 # convert all words to lower case
@@ -86,7 +86,7 @@ df_articles['sentences_{}_for_lda'.format(POStag_type)] = df_articles['sentence_
                                                                                               drop=False)
 
 ### Export data to csv
-# df_articles[['ID_incr', 'ID', 'Date', 'sentences_{}_for_lda'.format(POStag_type), 'sentences_for_sentiment']].to_csv(
+# df_articles[['ID_incr', 'Art_ID', 'Date', 'sentences_{}_for_lda'.format(POStag_type), 'sentences_for_sentiment']].to_csv(
 #     path_processedarticles + 'csv/sentences_for_lda_{}.csv'.format(POStag_type), sep='\t', index=False)
 
 ### Export as Excel and add Raw Articles
@@ -102,7 +102,12 @@ df_long = df_articles.sentences_for_sentiment.apply(pandas.Series)\
     .merge(df_articles['sentences_{}_for_lda'.format(POStag_type)].apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
     .melt(id_vars = ['ID_incr'], value_name = 'sentences_{}_for_lda'.format(POStag_type))\
-    .dropna(subset=['sentences_{}_for_lda'.format(POStag_type)]))
+    .dropna(subset=['sentences_{}_for_lda'.format(POStag_type)]))\
+    .rename(columns={"variable": "Sent_ID"})\
+    .drop(columns=['ID_incr'])
+
+# Sort columns
+df_long = df_long[['Art_ID', 'Sent_ID', 'Newspaper', 'Date', 'sentences_for_sentiment', 'sentences_{}_for_lda'.format(POStag_type)]]
 
 ### Export longfile to csv (will be read in later)
 df_long.to_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type), sep='\t', index=False)

@@ -116,7 +116,14 @@ df_long = df_articles.paragraphs_for_sentiment.apply(pandas.Series)\
     .merge(df_articles['paragraphs_{}_for_lda'.format(POStag_type)].apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
     .melt(id_vars = ['ID_incr'], value_name = 'paragraphs_{}_for_lda'.format(POStag_type))\
-    .dropna(subset=['paragraphs_{}_for_lda'.format(POStag_type)]))
+    .dropna(subset=['paragraphs_{}_for_lda'.format(POStag_type)]))\
+    .drop(columns=['ID_incr', 'variable'])
+
+# Generate Par_ID
+df_long['Par_ID'] = df_long.groupby(['Art_ID']).cumcount()+1
+
+# Sort columns
+df_long = df_long[['Art_ID', 'Par_ID', 'Newspaper', 'Date', 'paragraphs_for_sentiment', 'paragraphs_{}_for_lda'.format(POStag_type)]]
 
 ### Export longfile to csv (will be read in later)
 df_long.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
