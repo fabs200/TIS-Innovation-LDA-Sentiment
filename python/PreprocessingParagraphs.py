@@ -35,9 +35,9 @@ df_articles = df_articles_TEMP.merge(df_articles_lists, left_on='Art_ID', right_
 # Drop unnecessary vars
 df_articles = df_articles.drop(columns=['Par_ID', 'Paragraph'])
 
-# Drop duplicates
+# Drop duplicates (TEMP do not drop any observations, when merging to other long-files, only join inner)
 # df_articles.drop_duplicates(subset=['Article', 'Date'], inplace=True)
-df_articles.drop_duplicates(subset=['Headline'], inplace=True)
+# df_articles.drop_duplicates(subset=['Headline'], inplace=True)
 
 # Make Backup
 df_articles['paragraph_backup'] = df_articles['paragraph']
@@ -46,7 +46,8 @@ df_articles['paragraph_backup'] = df_articles['paragraph']
 df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: [i.lower() for i in x])
 
 # Remove text which defines end of articles
-splittingstrings = ['graphic', 'foto: classification language', 'classification language', 'kommentar seite ']
+splittingstrings = ['graphic', 'foto: classification language', 'classification language', 'kommentar seite ',
+                    'publication-type', 'classification', 'language: german; deutsch'] #TODO: @Daniel 'classification' hier auch?
 df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: ParagraphSplitter(x, splitAt=splittingstrings))
 
 # Create id increasing (needed to merge help files later)
@@ -111,7 +112,7 @@ df_long = df_articles.paragraphs_for_sentiment.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
     .melt(id_vars = ['ID_incr'], value_name = 'paragraphs_for_sentiment')\
     .dropna(subset=['paragraphs_for_sentiment'])\
-    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')\
+    .merge(df_articles[['ID_incr', 'Art_ID', 'Date', 'Newspaper']], how='inner', on='ID_incr')\
     .merge(df_articles['paragraphs_{}_for_lda'.format(POStag_type)].apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
     .melt(id_vars = ['ID_incr'], value_name = 'paragraphs_{}_for_lda'.format(POStag_type))\

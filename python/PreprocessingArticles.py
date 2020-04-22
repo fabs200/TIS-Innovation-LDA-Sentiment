@@ -24,7 +24,8 @@ df_articles.drop_duplicates(subset=['Article', 'Date'], inplace=True)
 df_articles.drop_duplicates(subset=['Headline'], inplace=True)
 
 # Remove text which defines end of articles
-for splitstring in ['graphic', 'foto: classification language', 'classification language']:
+for splitstring in ['graphic', 'foto: classification language', 'classification language', 'kommentar seite ',
+                    'publication-type', 'classification', 'language: german; deutsch']: #TODO: @Daniel 'classification' hier auch?
     df_articles['Article'] = df_articles['Article'].str.split(splitstring).str[0]
 df_articles['Article'] = [re.compile(r'(kommentar seite \d+)').sub(
     lambda m: (m.group(1) if m.group(1) else " "), x) for x in df_articles['Article'].tolist()]
@@ -97,7 +98,7 @@ df_long = df_articles.articles_for_sentiment.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
     .melt(id_vars = ['ID_incr'], value_name = 'articles_for_sentiment')\
     .dropna(subset=['articles_for_sentiment'])\
-    .merge(df_articles[['ID_incr', 'Date', 'Newspaper']], how='inner', on='ID_incr')\
+    .merge(df_articles[['ID_incr', 'Art_ID', 'Date', 'Newspaper']], how='inner', on='ID_incr')\
     .merge(df_articles['articles_{}_for_lda'.format(POStag_type)].apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
     .melt(id_vars = ['ID_incr'], value_name = 'articles_{}_for_lda'.format(POStag_type))\

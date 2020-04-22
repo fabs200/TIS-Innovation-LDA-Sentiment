@@ -67,9 +67,12 @@ for (i in 2:nbrarticles) {
 
 }
 
+# Make identital ID of both dataframes
+names(df_articles)[names(df_articles)=="ID"] <- "Art_ID"
+
 # Select variables
 cols <- c("Source_File", "Newspaper", "Date", "Length", "Headline")
-df_articles_export <- df_articles[ , c("ID", "Article", cols)]
+df_articles_export <- df_articles[ , c("Art_ID", "Article", cols)]
 df_paragraphs_export <- df_paragraphs[ , c("Art_ID", "Par_ID", "Paragraph", cols)]
 
 # Export df_articles as feather/csv file
