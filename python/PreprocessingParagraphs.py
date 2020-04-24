@@ -12,7 +12,7 @@ start_time0 = time.process_time()
 df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_paragraphs_withbattery.feather')
 
 ######
-# TEMP keep first 100 articles
+# TEMP keep first x articles
 # df_articles = df_articles[df_articles['Art_ID']<10]
 ######
 
@@ -82,7 +82,7 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 start_time1 = time.process_time()
 
 ### Fork paragraphs for Sentiment Analysis
-df_articles['paragraphs_for_sentiment'] = df_articles['paragraph']
+df_articles['paragraphs_text'] = df_articles['paragraph']
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: SpecialCharCleaner(x))
@@ -93,7 +93,7 @@ df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: SpecialCharC
 df_articles['paragraph_nouns'] = df_articles['paragraph'].apply(lambda x: POStagger(x, POStag='NN'))
 df_articles['paragraph_nouns'] = df_articles['paragraph_nouns'].apply(lambda x: Lemmatization(x))
 
-# Cleaning: drop stop words, drop if sentence contain only two words or less
+# Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
 df_articles['paragraphs_{}_for_lda'.format(POStag_type)] = df_articles['paragraph_nouns'].apply(TokensCleaner,
                                                                                                 minwordinsent=2,
                                                                                                 minwordlength=2,
@@ -108,10 +108,10 @@ df_articles['paragraphs_{}_for_lda'.format(POStag_type)] = df_articles['paragrap
 #     path_processedarticles + 'paragraphs_for_lda_{}.xlsx'.format(POStag_type))
 
 # Make long file
-df_long = df_articles.paragraphs_for_sentiment.apply(pandas.Series)\
+df_long = df_articles.paragraphs_text.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
-    .melt(id_vars = ['ID_incr'], value_name = 'paragraphs_for_sentiment')\
-    .dropna(subset=['paragraphs_for_sentiment'])\
+    .melt(id_vars = ['ID_incr'], value_name = 'paragraphs_text')\
+    .dropna(subset=['paragraphs_text'])\
     .merge(df_articles[['ID_incr', 'Art_ID', 'Date', 'Newspaper']], how='inner', on='ID_incr')\
     .merge(df_articles['paragraphs_{}_for_lda'.format(POStag_type)].apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
@@ -123,7 +123,7 @@ df_long = df_articles.paragraphs_for_sentiment.apply(pandas.Series)\
 df_long['Par_ID'] = df_long.groupby(['Art_ID']).cumcount()+1
 
 # Sort columns
-df_long = df_long[['Art_ID', 'Par_ID', 'Newspaper', 'Date', 'paragraphs_for_sentiment', 'paragraphs_{}_for_lda'.format(POStag_type)]]
+df_long = df_long[['Art_ID', 'Par_ID', 'Newspaper', 'Date', 'paragraphs_text', 'paragraphs_{}_for_lda'.format(POStag_type)]]
 
 ### Export longfile to csv (will be read in later)
 df_long.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),

@@ -6,10 +6,11 @@ import numpy as np
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 import pprint as pp
-from python.ProcessingFunctions import MakeListInLists
+from python.ProcessingFunctions import MakeListInLists, FlattenList, SentenceTokenizer
 from gensim.matutils import jaccard, hellinger
 from gensim.models.coherencemodel import CoherenceModel
 import matplotlib.pyplot as plt
+
 
 def Load_SePL():
     """
@@ -85,6 +86,7 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
         if verbose: print('final negations:', candidates)
 
     return candidates
+
 
 def ReadSePLSentiments(candidates, df_sepl=None, verbose=False):
     """
@@ -310,7 +312,6 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
 
 
-
 # todo: describe functions
 def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
                 eval_every=10, iterations=50, random_state=None):
@@ -358,37 +359,50 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     return lda_model, docsforlda, dict_lda, corpus_lda
 
 
-def GetTopicsOfDoc(tokenized_doc, lda_model, dict_lda):
+def GetTopics(doc, lda_model, dict_lda):
     """
 
-    :param tokenized_doc: iterable list of tokenized words
-    :param lda_model:
+    :param sent: 1 sentence from long df after preprocessing
+    :param lda_model: estimated LDA model
     :return:
     """
+    # lemmatize doc
+    doc = nlp2(doc)
+
+    # loop over all tokens in sentence and lemmatize them, disregard punctuation
+    lemmatized_doc = []
+    for token in doc:
+        if len(token.text) > 1:
+            lemmatized_doc.append(token.lemma_)
 
     # Create BOW representation of doc to use as input for the LDA model
-    doc_bow = dict_lda.doc2bow(tokenized_doc)
+    doc_bow = dict_lda.doc2bow(lemmatized_doc)
 
     return lda_model.get_document_topics(doc_bow)
 
 
-def GetDomTopicOfDoc(tokenized_doc, lda_model, dict_lda):
+def GetDomTopic(doc, lda_model, dict_lda):
     """
 
-    :param tokenized_doc:
-    :param lda_model:
-    :return:
+    :param doc: 1 document as a string
+    :param lda_model: estimated LDA model
+    :return: dominant topic and its probability
     """
+    # lemmatize doc
+    doc = nlp2(doc)
 
-    doc_bow = dict_lda.doc2bow(tokenized_doc)
+    # loop over all tokens in sentence and lemmatize them, disregard punctuation
+    lemmatized_doc = []
+    for token in doc:
+        if len(token.text) > 1:
+            lemmatized_doc.append(token.lemma_)
+
+    # Create BOW representation of doc to use as input for the LDA model
+    doc_bow = dict_lda.doc2bow(lemmatized_doc)
 
     doc_topics = lda_model.get_document_topics(doc_bow)
 
     return max(doc_topics, key=lambda item: item[1])
-
-
-
-
 
 
 def MakeTopicsBOW(topic, dict_lda):
@@ -477,6 +491,7 @@ def LDAJaccard(lda_model, topn=10):
 
     return sum / lda_model.num_topics
 
+
 def LDACoherence(lda_model, corpus, dictionary, texts):
 
     # we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation with human interpretability
@@ -519,3 +534,128 @@ def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, top
         plt.show()
 
     return model_list, metric_values
+
+
+##############################################################################
+
+def ProcessforSentiment_long(sent):
+    """
+    Process sentences before running Sentiment Analysis, replace ;: KON by , and drop .!? and lemmatize
+    :param listOfSents: list of sentences where sentences are str
+    :return: listOfSentenceparts
+        [['sentencepart1', 'sentencepart2', ...], [], [], ...]
+        which are split by ,
+    """
+    listOfSents = [sent] #new line
+    temp_article, processed_article, final_article = [], [], []
+    for sent in listOfSents:
+        # First drop .?! and brackets
+        temp_sent = sent.replace('.', '').replace('!', '').replace('?', '').replace('(', '').replace(')', '').replace('[', '').replace(']', '')
+        # Replace :; by ,
+        temp_sent = temp_sent.replace(';', ',').replace(':', ',')
+        # apply nlp2 to temp_sent
+        temp_sent_nlp = nlp2(temp_sent)
+        # process each token and 'translate' konjunction or ;: to ,
+        temp_sent = []
+        for token in temp_sent_nlp:
+            if token.tag_=='KON':
+                temp_sent.append(',')
+            else:
+                temp_sent.append(token.text)
+
+        # put all tokens to a string (but split later by normalized ,)
+        sent_string = ' '.join(temp_sent)
+
+        # prepare for lemmatization
+        sent_string = nlp2(sent_string)
+
+        # Second, loop over all tokens in sentence and lemmatize them
+        sent_tokens = []
+        for token in sent_string:
+            sent_tokens.append(token.lemma_)
+        processed_article.append(sent_tokens)
+
+    # Put together tokenized, lemmatized elements of lists to a string
+    processed_article = [' '.join(i) for i in processed_article]
+    # Split by normalized commas
+    for sent in processed_article:
+        final_article.append(sent.split(','))
+
+    # Flatten list
+    final_article = FlattenList(final_article)
+
+    # strip strings
+    final_article = [x.strip() for x in final_article]
+
+    # drop empty elements
+    final_article = [x for x in final_article if x != '']
+    # final_article = [x.strip() for x in final_article if x.strip()]
+
+    #  return a string with lemmatized words and united sentence splits to ,
+    return final_article
+
+
+def GetSentimentScores_long(sent, df_sepl):
+    """
+    Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
+    Note: Apply this function on the final long file only!
+
+    Includes following function:
+
+    1. Load_SePL() to load SePL
+    2. MakeCandidates() to make candidates- and candidates_negation-lists
+    3. ReadSePLSentiments() which reads in candidates- and candidates_negation-lists and retrieves sentiment scores
+        from SePL
+    4. ProcessSentimentScores() to process the retrieved sentiment scores and to return a unified score per sentence
+
+    :param listOfSentenceparts
+        input must be processed by ProcessforSentiment() where listOfSentenceparts equals 1 sentence
+        ['sentencepart', 'sentencepart', ...]
+    :return: return 1 value per Article, return 1 list with sentiments of each sentence, 1 list w/ opinion relev. words
+    """
+    listOfSentenceparts = ProcessforSentiment_long(sent) #new line
+    listOfSentiScores, listOfseplphrs = [], []
+
+    for sentpart in listOfSentenceparts:
+
+        """
+        first step: identification of suitable candidates for opinionated phrases suitable candidates: 
+        nouns, adjectives, adverbs and verbs
+        """
+        candidates = MakeCandidates(sentpart, df_sepl, get='candidates')
+        negation_candidates = MakeCandidates(sentpart, df_sepl, get='negation')
+
+        """
+        second step: extraction of possible opinion-bearing phrases from a candidate starting from a candidate, 
+        check all left and right neighbours to extract possible phrases. The search is terminated on a comma (POS tag $,), 
+        a punctuation terminating a sentence (POS tag $.), a conjunction (POS-Tag KON) or an opinion-bearing word that is 
+        already tagged. (Max distance determined by sentence lenght)
+        If one of the adjacent words is included in the SePL, together with the previously extracted phrase, it is added to 
+        the phrase.
+        """
+
+        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, df_sepl)
+
+        """
+        third step: compare extracted phrases with SePL After all phrases have been extracted, they are compared with the 
+        entries in the SePL. (everything lemmatized!) If no  match is found, the extracted Phrase is shortened by the last 
+        added element and compared again with the SePL. This is repeated until a match is found.
+        """
+
+        # Make sure sepl_phrase, negation_candidates, sentimentscores are of same size
+        assert len(raw_sepl_phrase) == len(raw_sentimentscores) == len(candidates) == len(negation_candidates)
+
+        # export processed, flattened lists
+        sentimentscores = ProcessSentimentScores(raw_sepl_phrase, negation_candidates, raw_sentimentscores)
+        sepl_phrase = ProcessSePLphrases(raw_sepl_phrase)
+
+        listOfSentiScores.append(sentimentscores)
+        listOfseplphrs.append(sepl_phrase)
+
+    # create flat, non-empty list with scores
+    sentiscores = np.array([i for i in listOfSentiScores if i])
+
+    # Retrieve statistics
+    ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
+
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs

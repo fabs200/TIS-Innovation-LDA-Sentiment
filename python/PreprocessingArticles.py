@@ -12,7 +12,7 @@ start_time0 = time.process_time()
 df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_articles_withbattery.feather')
 
 ######
-# TEMP keep first 100 articles
+# TEMP keep first x articles
 # df_articles = df_articles[df_articles['Art_ID']<10]
 ######
 
@@ -68,7 +68,7 @@ print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 
 start_time1 = time.process_time()
 
 ### Fork paragraphs for Sentiment Analysis
-df_articles['articles_for_sentiment'] = df_articles['article']
+df_articles['articles_text'] = df_articles['article']
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['article'] = df_articles['article'].apply(lambda x: SpecialCharCleaner(x))
@@ -79,14 +79,14 @@ df_articles['article'] = df_articles['article'].apply(lambda x: SpecialCharClean
 df_articles['article_nouns'] = df_articles['article'].apply(lambda x: POStagger(x, POStag=POStag_type))
 df_articles['article_nouns'] = df_articles['article_nouns'].apply(lambda x: Lemmatization(x))
 
-# Cleaning: drop stop words, drop if sentence contain only two words or less
+# Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
 df_articles['articles_{}_for_lda'.format(POStag_type)] = df_articles['article_nouns'].apply(TokensCleaner,
                                                                                            minwordinsent=2,
                                                                                            minwordlength=2,
                                                                                            drop=False)
 
 ### Export data to csv
-# df_articles[['ID_incr', 'Art_ID', 'Date', 'articles_{}_for_lda'.format(POStag_type), 'articles_for_sentiment']].to_csv(
+# df_articles[['ID_incr', 'Art_ID', 'Date', 'articles_{}_for_lda'.format(POStag_type), 'articles_text']].to_csv(
 #     path_processedarticles + 'csv/articles_for_lda_{}.csv'.format(POStag_type), sep='\t', index=False)
 
 ### Export as Excel and add Raw Articles
@@ -94,10 +94,10 @@ df_articles['articles_{}_for_lda'.format(POStag_type)] = df_articles['article_no
 #     path_processedarticles + 'articles_for_lda_{}.xlsx'.format(POStag_type))
 
 # Make long file
-df_long = df_articles.articles_for_sentiment.apply(pandas.Series)\
+df_long = df_articles.articles_text.apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
-    .melt(id_vars = ['ID_incr'], value_name = 'articles_for_sentiment')\
-    .dropna(subset=['articles_for_sentiment'])\
+    .melt(id_vars = ['ID_incr'], value_name = 'articles_text')\
+    .dropna(subset=['articles_text'])\
     .merge(df_articles[['ID_incr', 'Art_ID', 'Date', 'Newspaper']], how='inner', on='ID_incr')\
     .merge(df_articles['articles_{}_for_lda'.format(POStag_type)].apply(pandas.Series)\
     .merge(df_articles[['ID_incr']], left_index = True, right_index = True)\
@@ -106,7 +106,7 @@ df_long = df_articles.articles_for_sentiment.apply(pandas.Series)\
     .drop(columns=['ID_incr', 'variable'])
 
 # Sort columns
-df_long = df_long[['Art_ID', 'Newspaper', 'Date', 'articles_for_sentiment', 'articles_{}_for_lda'.format(POStag_type)]]
+df_long = df_long[['Art_ID', 'Newspaper', 'Date', 'articles_text', 'articles_{}_for_lda'.format(POStag_type)]]
 
 ### Export longfile to csv (will be read in later)
 df_long.to_csv(path_processedarticles + 'csv/articles_for_lda_{}_l.csv'.format(POStag_type), sep='\t', index=False)

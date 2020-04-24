@@ -12,7 +12,7 @@ start_time0 = time.process_time()
 df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_articles_withbattery.feather')
 
 ######
-# TEMP keep first 100 articles
+# TEMP keep first x articles
 # df_articles = df_articles[df_articles['Art_ID']<100]
 ######
 
@@ -79,7 +79,7 @@ df_articles['sentence'] = df_articles['sentence'].apply(lambda x: SpecialCharCle
 df_articles['sentence_nouns'] = df_articles['sentence'].apply(lambda x: POStagger(x, POStag='NN'))
 df_articles['sentence_nouns'] = df_articles['sentence_nouns'].apply(lambda x: Lemmatization(x))
 
-# Cleaning: drop stop words, drop if sentence contain only two words or less
+# Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
 df_articles['sentences_{}_for_lda'.format(POStag_type)] = df_articles['sentence_nouns'].apply(TokensCleaner,
                                                                                               minwordinsent=2,
                                                                                               minwordlength=2,

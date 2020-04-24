@@ -413,7 +413,7 @@ def NormalizeWords(string):
                                                                                                              'zuzüglich')
 
     # other
-    string = string.replace('vdi nachrichten', ' ').replace('siehe grafik', ' ')
+    string = string.replace('vdi nachrichten', ' ').replace('siehe grafik', ' ').replace(' nan ', ' ')
 
     # put last rules here which are not affected by above ones
     string = string.replace('%', 'prozent').replace('€', 'euro').replace('$', 'dollar')
