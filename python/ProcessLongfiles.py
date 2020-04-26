@@ -121,25 +121,41 @@ start_time4 = time.process_time()
 df_sepl = Load_SePL()
 
 # Extract sentiment score
-print('Extracting sentiment score')
+print('Extract sentiment scores')
 IgnoreWarnings()
-
-df_long_complete['Sentiment_sent'] = \
+df_long_complete['Sentiment_score_dict'] = \
     df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_long(sent=x, df_sepl=df_sepl))
+
+# Split columns from 'Sentiment_score_temp' and concatenate df_temp
+df_long_complete = \
+    pandas.concat([df_long_complete, pandas.json_normalize(df_long_complete['Sentiment_score_dict'])], axis=1)
 
 end_time4 = time.process_time()
 print('\ttimer4: Elapsed time is {} seconds.'.format(round(end_time4-start_time4, 2)))
 
 start_time5 = time.process_time()
 
-### 10. Order vars
+### 10. Rename and order vars
 print('Order vars')
-df_long_complete = df_long_complete[['Art_ID', 'Par_ID', 'Sent_ID', 'Art_unique', 'Par_unique',
-                                     'year', 'quarter', 'month', 'Newspaper',
-                                     'sentences_for_sentiment', 'sentences_{}_for_lda'.format(POStag_type),
-                                     'paragraphs_text', 'paragraphs_{}_for_lda'.format(POStag_type),
-                                     'articles_text', 'articles_{}_for_lda'.format(POStag_type), 'Sentiment_sent']]
+df_long_complete = df_long_complete.rename(columns={'mean': 'sentiscore_mean',
+                                                    'median': 'sentiscore_median',
+                                                    'n': 'sentiscore_n',
+                                                    'sd': 'sentiscore_sd',
+                                                    'SentiScores': 'sentiscore_scores',
+                                                    'seplphrs': 'sentiscore_seplphrs'})
 
+df_long_complete = df_long_complete[[
+    # IDs
+    'Art_ID', 'Par_ID', 'Sent_ID', 'Art_unique', 'Par_unique',
+    # article infos
+    'year', 'quarter', 'month', 'Newspaper',
+    # text
+    'sentences_for_sentiment', 'sentences_{}_for_lda'.format(POStag_type),
+    'paragraphs_text', 'paragraphs_{}_for_lda'.format(POStag_type),
+    'articles_text', 'articles_{}_for_lda'.format(POStag_type),
+    # Sentiment Scores
+    'sentiscore_mean', 'sentiscore_median', 'sentiscore_n', 'sentiscore_sd', 'sentiscore_scores', 'sentiscore_seplphrs'
+]]
 
 ### 11. Export longfile to csv (will be read in later)
 print('Save final df_long_complete')

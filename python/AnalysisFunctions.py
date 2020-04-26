@@ -664,4 +664,4 @@ def GetSentimentScores_long(sent, df_sepl, verbose=False):
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
     if verbose: print('\tstats:', ss_mean, ss_median, ss_n, ss_sd, end='\n\n')
 
-    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'SentiScores': listOfSentiScores, 'seplphrs': listOfseplphrs}
