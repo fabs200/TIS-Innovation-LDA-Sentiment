@@ -1,13 +1,15 @@
-"""
-Create help functions to call when running scripts
-"""
-from python.ConfigUser import path_project
-import spacy, re
+import spacy, re, pandas, warnings
 from textdistance import jaro
 from spacy.lang.de import German
 from spacy.tokenizer import Tokenizer
 from germalemma import GermaLemma
-import pandas
+
+"""
+------------------------
+ProcessingFunctions.py
+------------------------
+Create help functions to call when running scripts
+"""
 
 def MakeListInLists(string):
     """
@@ -94,7 +96,7 @@ nlp = German()
 sbd = nlp.create_pipe('sentencizer')
 nlp.add_pipe(sbd)
 
-def Sentencizer(string):
+def Sentencizer(string, verbose=False):
     """
     requires from importing language from spacy and loading of sentence boundary detection:
     from spacy.lang.de import German
@@ -110,7 +112,7 @@ def Sentencizer(string):
         for sent in doc.sents:
             sents_list.append(sent.text)
     except:
-        print("###\tempty list was passed as nlp() could not read string: '{}'".format(string))
+        if verbose: print("###\tSentencizer(): nlp() could not read string: '{}'".format(string))
         pass
     return sents_list
 
@@ -269,10 +271,12 @@ def TokensCleaner(listOfSents, minwordinsent, minwordlength, drop=False):
     cleanedlistOfSents = []
     for sent in listOfSents:
         filteredSent = []
+        # first check whether 'nan' included
+        tempsent = [x for x in sent if x!='nan']
         # Only append if e.g. list-length<3 and word-length<3
-        for word in sent:
+        for word in tempsent:
             # filter out stop words and blanks elements
-            if (len(sent) >= minwordinsent) and (len(word) >= minwordlength):
+            if (len(tempsent) >= minwordinsent) and (len(word) >= minwordlength):
                 filteredSent.append(word)
         # append filtered sentence list to cleaned list of sentences only if it still contained 3 words or more
         if (len(filteredSent) >= minwordinsent):
@@ -498,3 +502,10 @@ def ProcessforSentiment(listOfSents):
 
     #  return a string with lemmatized words and united sentence splits to ,
     return final_article
+
+def IgnoreWarnings():
+    # ignore by messages when extracting sentiment scores
+    warnings.filterwarnings("ignore", message="Mean of empty slice.")
+    warnings.filterwarnings("ignore", message="Degrees of freedom <= 0 for slice")
+    # warnings.filterwarnings("ignore", category=FutureWarning)
+    return print('Ignoring warnings when extracting sentiment scores')

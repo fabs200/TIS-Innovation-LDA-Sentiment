@@ -1,12 +1,10 @@
-# Help functions for LDA and Sentiment Analysis
-import spacy
 from python.ConfigUser import path_processedarticles
-import pandas
+import spacy, pandas
 import numpy as np
+import pprint as pp
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
-import pprint as pp
-from python.ProcessingFunctions import MakeListInLists, FlattenList, SentenceTokenizer
+from python.ProcessingFunctions import MakeListInLists, FlattenList
 from gensim.matutils import jaccard, hellinger
 from gensim.models.coherencemodel import CoherenceModel
 import matplotlib.pyplot as plt
@@ -314,7 +312,7 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
 
 # todo: describe functions
 def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
-                eval_every=10, iterations=50, random_state=None):
+                eval_every=10, iterations=50, random_state=None, verbose=True):
     """
 
     :param dataframecolumn:
@@ -333,28 +331,25 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     templist = dataframecolumn.tolist()
     docsforlda = MakeListInLists(templist)
     # Create a dictionary representation of the documents and frequency filter
-
     dict_lda = Dictionary(docsforlda)
     dict_lda.filter_extremes(no_below=no_below, no_above=no_above)
-
     # Bag-of-words representation of the documents
     corpus_lda = [dict_lda.doc2bow(doc) for doc in docsforlda]
     # Make a index to word dictionary
     temp = dict_lda[0]  # This is only to "load" the dictionary
     id2word_lda = dict_lda.id2token
-
     # Display corpus for lda
-    pp.pprint(dict_lda.token2id)
-    pp.pprint(id2word_lda)
-    print('Number of unique tokens: {}'.format(len(dict_lda)))
-    print('Number of documents: {}'.format(len(corpus_lda)))
+    # pp.pprint(dict_lda.token2id)
+    # pp.pprint(id2word_lda)
+    if verbose: print('Number of unique tokens: {}'.format(len(dict_lda)))
+    if verbose: print('Number of documents: {}'.format(len(corpus_lda)))
     # TODO: save corpus and dictionary to disk and load them back (necessary?)
 
     lda_model = LdaModel(corpus=corpus_lda, id2word=id2word_lda, num_topics=num_topics, alpha=alpha, eta=eta,
                          eval_every=eval_every, iterations=iterations, random_state=random_state)
     # Print the topic keywords
-    lda_model.print_topics(-1)
-    pp.pprint(lda_model.print_topics())
+    if verbose: lda_model.print_topics(-1)
+    if verbose: pp.pprint(lda_model.print_topics())
 
     return lda_model, docsforlda, dict_lda, corpus_lda
 
@@ -381,7 +376,7 @@ def GetTopics(doc, lda_model, dict_lda):
     return lda_model.get_document_topics(doc_bow)
 
 
-def GetDomTopic(doc, lda_model, dict_lda):
+def GetDomTopic(doc, lda_model, dict_lda, verbose=False):
     """
 
     :param doc: 1 document as a string
@@ -389,6 +384,7 @@ def GetDomTopic(doc, lda_model, dict_lda):
     :return: dominant topic and its probability
     """
     # lemmatize doc
+    # try:
     doc = nlp2(doc)
 
     # loop over all tokens in sentence and lemmatize them, disregard punctuation
@@ -399,10 +395,13 @@ def GetDomTopic(doc, lda_model, dict_lda):
 
     # Create BOW representation of doc to use as input for the LDA model
     doc_bow = dict_lda.doc2bow(lemmatized_doc)
+    domdoc = max(lda_model.get_document_topics(doc_bow), key=lambda item: item[1])
+    # except:
+    #     if verbose: print("###\tGetDomTopic(): nlp() could not read string '{}'".format(doc))
+    #     domdoc = ()
+    #     pass
 
-    doc_topics = lda_model.get_document_topics(doc_bow)
-
-    return max(doc_topics, key=lambda item: item[1])
+    return domdoc
 
 
 def MakeTopicsBOW(topic, dict_lda):
@@ -595,7 +594,7 @@ def ProcessforSentiment_long(sent):
     return final_article
 
 
-def GetSentimentScores_long(sent, df_sepl):
+def GetSentimentScores_long(sent, df_sepl, verbose=False):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
     Note: Apply this function on the final long file only!
@@ -613,7 +612,8 @@ def GetSentimentScores_long(sent, df_sepl):
         ['sentencepart', 'sentencepart', ...]
     :return: return 1 value per Article, return 1 list with sentiments of each sentence, 1 list w/ opinion relev. words
     """
-    listOfSentenceparts = ProcessforSentiment_long(sent) #new line
+    if verbose: print('### sent:', sent)
+    listOfSentenceparts = ProcessforSentiment_long(sent)
     listOfSentiScores, listOfseplphrs = [], []
 
     for sentpart in listOfSentenceparts:
@@ -622,9 +622,11 @@ def GetSentimentScores_long(sent, df_sepl):
         first step: identification of suitable candidates for opinionated phrases suitable candidates: 
         nouns, adjectives, adverbs and verbs
         """
+        # if verbose: print('\tsentpart:', sentpart, end='\r')
         candidates = MakeCandidates(sentpart, df_sepl, get='candidates')
         negation_candidates = MakeCandidates(sentpart, df_sepl, get='negation')
-
+        # if verbose: print('\tcandidates:', candidates, end='\r')
+        # if verbose: print('\tnegation_candidates:', negation_candidates)
         """
         second step: extraction of possible opinion-bearing phrases from a candidate starting from a candidate, 
         check all left and right neighbours to extract possible phrases. The search is terminated on a comma (POS tag $,), 
@@ -635,6 +637,7 @@ def GetSentimentScores_long(sent, df_sepl):
         """
 
         raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, df_sepl)
+        # if verbose: print('\traw_sentimentscores:', raw_sentimentscores, 'raw_sepl_phrase:', raw_sepl_phrase)
 
         """
         third step: compare extracted phrases with SePL After all phrases have been extracted, they are compared with the 
@@ -647,7 +650,9 @@ def GetSentimentScores_long(sent, df_sepl):
 
         # export processed, flattened lists
         sentimentscores = ProcessSentimentScores(raw_sepl_phrase, negation_candidates, raw_sentimentscores)
+        # if verbose: print('\tsentimentscores:', sentimentscores, end='\r')
         sepl_phrase = ProcessSePLphrases(raw_sepl_phrase)
+        # if verbose: print('\tsepl_phrase:', sepl_phrase)
 
         listOfSentiScores.append(sentimentscores)
         listOfseplphrs.append(sepl_phrase)
@@ -657,5 +662,6 @@ def GetSentimentScores_long(sent, df_sepl):
 
     # Retrieve statistics
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
+    if verbose: print('\tstats:', ss_mean, ss_median, ss_n, ss_sd, end='\n\n')
 
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
