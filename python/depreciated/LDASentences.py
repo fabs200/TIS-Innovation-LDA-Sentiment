@@ -3,11 +3,11 @@ import pprint as pp
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
-from python.ProcessingFunctions import MakeListInLists
-from python.AnalysisFunctions import Load_SePL, GetSentimentScores, EstimateLDA, GetDomTopicOfDoc
+from python._AnalysisFunctions import EstimateLDA, GetDomTopic
+import python.params as p
 
-# Specify POStag type
-POStag_type = 'NN'
+# unpack POStag type
+POStag_type = p['POStag_type']
 
 # Read in SePL
 #df_sepl = Load_SePL()
@@ -22,11 +22,11 @@ docsforlda = lda[1]
 dict_lda = lda[2]
 corpus_lda = lda[3]
 
-df_sentences['dom_topic']= df_sentences['Article_sentence_nouns_cleaned'].apply(lambda x: GetDomTopicOfDoc(x,lda_model=lda_model, dict_lda=dict_lda))
+df_sentences['dom_topic']= df_sentences['Article_sentence_nouns_cleaned'].apply(lambda x: GetDomTopic(x,lda_model=lda_model, dict_lda=dict_lda))
 
 df_long_
 
-GetDomTopicOfDoc(tokenized_doc, lda_model)
+GetDomTopic(tokenized_doc, lda_model)
 
 
 

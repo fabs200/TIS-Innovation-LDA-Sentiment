@@ -4,11 +4,11 @@ import numpy as np
 import pprint as pp
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
-from python.ProcessingFunctions import MakeListInLists, FlattenList
+from python._ProcessingFunctions import MakeListInLists, FlattenList
 from gensim.matutils import jaccard, hellinger
 from gensim.models.coherencemodel import CoherenceModel
 import matplotlib.pyplot as plt
-
+import python.params as p
 
 def Load_SePL():
     """
@@ -310,9 +310,13 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
 
 
+
 # todo: describe functions
 def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
-                eval_every=10, iterations=50, random_state=None, verbose=True):
+                eval_every=10, iterations=50, random_state=None, verbose=True,
+                distributed=False, chunksize=2000, passes=1, update_every=1, decay=0.5, offset=1.0,
+                gamma_threshold=0.001, minimum_probability=0.01, ns_conf=None, minimum_phi_value=0.01,
+                per_word_topics=False, callbacks=None, dtype=np.float32):
     """
 
     :param dataframecolumn:
@@ -345,8 +349,17 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     if verbose: print('Number of documents: {}'.format(len(corpus_lda)))
     # TODO: save corpus and dictionary to disk and load them back (necessary?)
 
-    lda_model = LdaModel(corpus=corpus_lda, id2word=id2word_lda, num_topics=num_topics, alpha=alpha, eta=eta,
-                         eval_every=eval_every, iterations=iterations, random_state=random_state)
+    lda_model = LdaModel(corpus=corpus_lda, id2word=id2word_lda, num_topics=num_topics,
+                         alpha=alpha, eta=eta,
+                         eval_every=eval_every, iterations=iterations, random_state=random_state,
+                         distributed=distributed, chunksize=chunksize, passes=passes,
+                         update_every=update_every,
+                         decay=decay, offset=offset, gamma_threshold=gamma_threshold,
+                         minimum_probability=minimum_probability, ns_conf=ns_conf,
+                         minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics,
+                         callbacks=callbacks, dtype=dtype
+                         )
+
     # Print the topic keywords
     if verbose: lda_model.print_topics(-1)
     if verbose: pp.pprint(lda_model.print_topics())
@@ -384,7 +397,6 @@ def GetDomTopic(doc, lda_model, dict_lda, verbose=False):
     :return: dominant topic and its probability
     """
     # lemmatize doc
-    # try:
     doc = nlp2(doc)
 
     # loop over all tokens in sentence and lemmatize them, disregard punctuation
@@ -396,10 +408,6 @@ def GetDomTopic(doc, lda_model, dict_lda, verbose=False):
     # Create BOW representation of doc to use as input for the LDA model
     doc_bow = dict_lda.doc2bow(lemmatized_doc)
     domdoc = max(lda_model.get_document_topics(doc_bow), key=lambda item: item[1])
-    # except:
-    #     if verbose: print("###\tGetDomTopic(): nlp() could not read string '{}'".format(doc))
-    #     domdoc = ()
-    #     pass
 
     return domdoc
 
@@ -493,15 +501,18 @@ def LDAJaccard(lda_model, topn=10):
 
 def LDACoherence(lda_model, corpus, dictionary, texts):
 
-    # we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation with human interpretability
+    # we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation
+    # with human interpretability
     lda_model_cm = CoherenceModel(model=lda_model, corpus=corpus, dictionary=dictionary, coherence="u_mass")
     #lda_model_cm = CoherenceModel(model=lda_model, texts=texts, dictionary=dictionary, coherence='c_v')
     print(lda_model_cm.get_coherence())
 
     return lda_model_cm.get_coherence()
 
-def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, topn, num_words, metric, no_below=0.1, no_above=0.9, alpha='symmetric', eta=None,
-                eval_every=10, iterations=50, random_state=None, verbose=False, display_plot=True):
+
+def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, topn, num_words, metric,
+                   no_below=0.1, no_above=0.9, alpha='symmetric', eta=None, eval_every=10, iterations=50,
+                   random_state=None, verbose=False, display_plot=True):
 
     metric_values = []
     model_list = []
@@ -535,9 +546,11 @@ def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, top
     return model_list, metric_values
 
 
-##############################################################################
+"""
+################## Sentiment score functions to apply to long files ##################
+"""
 
-def ProcessforSentiment_long(sent):
+def ProcessforSentiment_l(sent):
     """
     Process sentences before running Sentiment Analysis, replace ;: KON by , and drop .!? and lemmatize
     :param listOfSents: list of sentences where sentences are str
@@ -594,7 +607,7 @@ def ProcessforSentiment_long(sent):
     return final_article
 
 
-def GetSentimentScores_long(sent, df_sepl, verbose=False):
+def GetSentimentScores_l(sent, df_sepl, verbose=False):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
     Note: Apply this function on the final long file only!
@@ -613,7 +626,7 @@ def GetSentimentScores_long(sent, df_sepl, verbose=False):
     :return: return 1 value per Article, return 1 list with sentiments of each sentence, 1 list w/ opinion relev. words
     """
     if verbose: print('### sent:', sent)
-    listOfSentenceparts = ProcessforSentiment_long(sent)
+    listOfSentenceparts = ProcessforSentiment_l(sent)
     listOfSentiScores, listOfseplphrs = [], []
 
     for sentpart in listOfSentenceparts:

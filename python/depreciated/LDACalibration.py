@@ -5,9 +5,9 @@ import pprint as pp
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
-from python.ProcessingFunctions import MakeListInLists
-from python.AnalysisFunctions import MakeTopicsBOW, LDAHellinger
-from python.AnalysisFunctions import EstimateLDA, LDAJaccard, LDACoherence, LDACalibration
+from python._ProcessingFunctions import MakeListInLists
+from python._AnalysisFunctions import MakeTopicsBOW, LDAHellinger
+from python._AnalysisFunctions import EstimateLDA, LDAJaccard, LDACoherence, LDACalibration
 from gensim.matutils import jaccard, hellinger
 from gensim.models.coherencemodel import CoherenceModel
 

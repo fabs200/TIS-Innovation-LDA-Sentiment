@@ -3,7 +3,7 @@ Testing functions
 """
 from python.ConfigUser import path_project
 import pandas, xlsxwriter
-from python.AnalysisFunctions import MakeCandidates, ReadSePLSentiments, Load_SePL
+from python._AnalysisFunctions import MakeCandidates, ReadSePLSentiments, Load_SePL
 
 df_sepl = Load_SePL()
 

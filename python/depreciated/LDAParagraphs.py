@@ -3,7 +3,7 @@ import pprint as pp
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
 from python.ConfigUser import path_processedarticles
-from python.ProcessingFunctions import MakeListInLists
+from python._ProcessingFunctions import MakeListInLists
 
 # Specify POStag type
 POStag_type = 'NN'

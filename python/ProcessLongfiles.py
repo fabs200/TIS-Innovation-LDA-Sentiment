@@ -1,7 +1,8 @@
 import pandas, time, dtale
 from python.ConfigUser import path_processedarticles
-from python.ProcessingFunctions import Sentencizer, IgnoreWarnings
-from python.AnalysisFunctions import Load_SePL, GetSentimentScores_long
+from python._ProcessingFunctions import Sentencizer, IgnoreWarnings
+from python._AnalysisFunctions import Load_SePL, GetSentimentScores_l
+import python.params as p
 
 """
 ---------------------
@@ -14,8 +15,8 @@ ProcessLongfiles.py
 * Save long-file
 """
 
-# Specify POStag type
-POStag_type = 'NN'
+# unpack POStag type
+POStag_type = p['POStag_type']
 
 start_time0 = time.process_time()
 print('loading files')
@@ -124,7 +125,7 @@ df_sepl = Load_SePL()
 print('Extract sentiment scores')
 IgnoreWarnings()
 df_long_complete['Sentiment_score_dict'] = \
-    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_long(sent=x, df_sepl=df_sepl))
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, df_sepl=df_sepl))
 
 # Split columns from 'Sentiment_score_temp' and concatenate df_temp
 df_long_complete = \

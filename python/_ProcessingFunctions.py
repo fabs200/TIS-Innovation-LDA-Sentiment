@@ -6,7 +6,7 @@ from germalemma import GermaLemma
 
 """
 ------------------------
-ProcessingFunctions.py
+_ProcessingFunctions.py
 ------------------------
 Create help functions to call when running scripts
 """

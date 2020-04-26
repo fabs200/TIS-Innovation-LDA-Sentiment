@@ -1,10 +1,11 @@
 import pandas, time
 from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
-from python.ProcessingFunctions import *
+from python._ProcessingFunctions import *
+import python.params as p
 
-# Specify POStag type
-POStag_type = 'NN'
+# unpack POStag type
+POStag_type = p['POStag_type']
 
 start_time0 = time.process_time()
 
