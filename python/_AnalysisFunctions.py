@@ -16,7 +16,7 @@ def Load_SePL():
     GetSentiments()
     """
     # Read in SePL
-    df_sepl = pandas.read_csv(path_processedarticles + 'SePL/SePL_v1.1.csv', sep=';')
+    df_sepl = pandas.read_csv(path_processedarticles + 'SePL/SePL_v1.1_negated_modified.csv', sep=';')
 
     # convert all words to lower case
     df_sepl['phrase'] = [i.lower() for i in df_sepl['phrase']]
@@ -26,7 +26,7 @@ def Load_SePL():
 
     return df_sepl
 
-df_sepl = Load_SePL
+df_sepl = Load_SePL()
 
 nlp2 = spacy.load('de_core_news_md', disable=['ner', 'parser'])
 
