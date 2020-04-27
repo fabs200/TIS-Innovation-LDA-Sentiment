@@ -177,27 +177,24 @@ def POStagger(listOfSents, POStag='NN'):
     """
     POS tag words in sentences
 
-    :param listOfSents: nested list of articles where senteces are nesetd
-    :param POStag: str, list; e.g. 'NN', or ['NN', 'NE']
+    :param listOfSents: nested list of articles where sentences are nested
+    :param POStag: str or list; e.g. 'NN', or 'NNV'
     :return: listOfSents
     """
     POStaggedlist = []
+    # catch POStag
+    if POStag == 'NN':
+        POStaglist = ['NN']
+    if POStag == 'NNV':
+        POStaglist = ['NN', 'VAFIN', 'VAIMP', 'VAINF', 'VAPP', 'VMFIN', 'VMINF',
+                      'VMPP', 'VVFIN', 'VVIMP', 'VVINF', 'VVIZU', 'VVPP']
 
-    # In case POStag is a list
-    if isinstance(POStag, (list, tuple)):
-        for sent in listOfSents:
-            sent_nlp2, sent_tokens = nlp2(sent), []
-            for token in sent_nlp2:
-                if token.tag_ in POStag: sent_tokens.append(token)
-            POStaggedlist.append(sent_tokens)
-
-    # In case POStag is a string, only one tag specified
-    else:
-        for sent in listOfSents:
-            sent_nlp2, sent_tokens = nlp2(sent), []
-            for token in sent_nlp2:
-                if token.tag_.startswith(POStag): sent_tokens.append(token)
-            POStaggedlist.append(sent_tokens)
+    # loop over each sentence and its tokens and append only if POStag matches
+    for sent in listOfSents:
+        sent_nlp2, sent_tokens = nlp2(sent), []
+        for token in sent_nlp2:
+            if token.tag_ in POStaglist: sent_tokens.append(token)
+        POStaggedlist.append(sent_tokens)
 
     return POStaggedlist
 
