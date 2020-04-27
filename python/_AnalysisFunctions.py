@@ -8,7 +8,7 @@ from python._ProcessingFunctions import MakeListInLists, FlattenList
 from gensim.matutils import jaccard, hellinger
 from gensim.models.coherencemodel import CoherenceModel
 import matplotlib.pyplot as plt
-import python.params as p
+from python.params import params as p
 
 def Load_SePL():
     """

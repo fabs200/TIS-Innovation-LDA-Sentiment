@@ -2,7 +2,7 @@ import pandas, time, dtale
 from python.ConfigUser import path_processedarticles
 from python._ProcessingFunctions import Sentencizer, IgnoreWarnings
 from python._AnalysisFunctions import Load_SePL, GetSentimentScores_l
-import python.params as p
+from python.params import params as p
 
 """
 ---------------------

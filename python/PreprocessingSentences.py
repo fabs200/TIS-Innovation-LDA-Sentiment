@@ -2,7 +2,7 @@ import pandas, time
 from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
 from python._ProcessingFunctions import *
-import python.params as p
+from python.params import params as p
 
 # unpack POStag type
 POStag_type = p['POStag_type']
