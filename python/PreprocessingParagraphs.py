@@ -96,8 +96,8 @@ df_articles['paragraph_nouns'] = df_articles['paragraph_nouns'].apply(lambda x: 
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
 df_articles['paragraphs_{}_for_lda'.format(POStag_type)] = df_articles['paragraph_nouns'].apply(TokensCleaner,
-                                                                                                minwordinsent=2,
-                                                                                                minwordlength=2,
+                                                                                           minwordinsent=p['minwordinsent'],
+                                                                                           minwordlength=p['minwordlength'],
                                                                                                 drop=False)
 
 ### Export data to csv (will be read in again in LDACalibration.py)

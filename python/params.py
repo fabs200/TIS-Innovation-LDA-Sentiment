@@ -10,12 +10,12 @@ params = {
     'POStag_type':  'NN',
 
     # Specify on which level to fit lda
-    'lda_level_fit':        ['sentence'],
-    # 'lda_level_fit':      ['sentence', 'paragraph', 'article'],
+    # 'lda_level_fit':        ['sentence'],
+    'lda_level_fit':      ['sentence', 'paragraph', 'article'],
 
     # Specify of which level get domain topics
-    'lda_level_domtopic':     ['sentence'],
-    # 'lda_level_domtopic': ['sentence', 'paragraph', 'article'],
+    # 'lda_level_domtopic':     ['sentence'],
+    'lda_level_domtopic': ['sentence', 'paragraph', 'article'],
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'no_below':     .1, # filter extremes (words occurring in less than 20 docs, or in more than 50% of the docs)
@@ -41,6 +41,10 @@ params = {
     'per_word_topics':False,
     'callbacks':    None,
     'dtype':        np.float32,
-    'verbose':      True
+    'verbose':      True,
+
+    # Preprocessing parameters
+    'minwordinsent':2,
+    'minwordlength':2
 }
 

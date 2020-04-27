@@ -82,8 +82,8 @@ df_articles['article_nouns'] = df_articles['article_nouns'].apply(lambda x: Lemm
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
 df_articles['articles_{}_for_lda'.format(POStag_type)] = df_articles['article_nouns'].apply(TokensCleaner,
-                                                                                           minwordinsent=2,
-                                                                                           minwordlength=2,
+                                                                                           minwordinsent=p['minwordinsent'],
+                                                                                           minwordlength=p['minwordlength'],
                                                                                            drop=False)
 
 ### Export data to csv
