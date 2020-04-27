@@ -24,22 +24,23 @@ violation of LexisNexis user policy. Use at your own legal risk.
   - [x]   Leibler divergence (Li et al. 2019)
   - [ ]   or 'auto'/'symmetric' as lda args (eyeballing)
 - [x] update and adjust SePL by manneg phrs
-- [ ] write lda as class()
-- [ ] add manneg phrs to ProcessSePLphrases(raw_sepl_phrase) and return it, too
-- [ ] final programming routine to create final analysis df long (colums: sentence/parag/article, topic distr, dom. topic, avg sent, med sent, sd sent, n sent(/phr), list phrs)
+- [x] add manneg phrs to ProcessSePLphrases(raw_sepl_phrase) and return it, too
+- [x] final programming routine to create final analysis df long (colums: sentence/parag/article, topic distr, dom. topic, avg sent, med sent, sd sent, n sent(/phr), list phrs)
+- [x] create one Analysis file (lda + sentiment analysis)
+- [x] config_LDA.py: set up dictionary with parameters
+- [x] Test lds on Paragraph-level
+- [x] when LDA_TEST_get_topics.py checked -> set up code
+- [ ] topic modelling vizualization ([link](https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/), word doc)
+- [ ] clean up data files in cloud
+- [ ] additional doc types
 - [ ] plot: lda time series
 - [ ] Get large dataset
 - [ ] Check Frequency:
     - [ ] all SePL phrs
     - [ ] SePL phrs by topics
-- [ ] create one Analysis file (lda + sentiment analysis)
 
 ## Tasks later
-- [ ] config_LDA.py: set up dictionary with parameters
-- [ ] when LDA_TEST_get_topics.py checked -> set up code
-- [ ] create guidedLDA.py, config_guidedLDA.py
-- [ ] Lda multicore for faster processing
-- [ ] Bigram/trigram lda model
 - [ ] TD-IDF lda model (instead of doc2bow)
 - [ ] Drop duplicate articles based on similarity 
-- [ ] Test lds on Pragraph-level
+- [ ] write lda as class()
+- [ ] Sentiment Analysis accuracy
