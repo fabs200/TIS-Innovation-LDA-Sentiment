@@ -318,20 +318,21 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
                 gamma_threshold=0.001, minimum_probability=0.01, ns_conf=None, minimum_phi_value=0.01,
                 per_word_topics=False, callbacks=None, dtype=np.float32):
     """
+    Estimates lda model based on the given training corpus (article, sentence or paragraph level)
 
-    :param dataframecolumn:
-    :param no_below:
-    :param no_above:
-    :param num_topics:
-    :param alpha:
-    :param eta:
-    :param eval_every:
-    :param iterations:
-    :param random_state:
-    :return:
+    :param dataframecolumn: documents in string format to use as training corpus for the lda model
+    :param no_below: cutoff words in the training corpus with frequency below a certain number
+    :param no_above: cutoff words in the training corpus with frequency above a certain number
+    :param num_topics: number of topcis to be estimated in the lda model
+    :param alpha: a priori belief about topic probablities- specify 'auto' to learn asymmetric prior from data
+    :param eta: a priori belief about word probabilities - specify 'auto' to learn asymmetric prior from data
+    :param eval_every: log proplecity estimation frequency, higher values slows down training
+    :param iterations: maximum number of iterations through the corpus when inferring the topic distribution
+    :param random_state: set seed to generate random state - useful for reproducibility
+    :return: returns tuple of estimated lda model and text objects used for estimation
     """
 
-    # Read in datafram column and convert to list of lists
+    # Read in dataframe column and convert to list of lists
     templist = dataframecolumn.tolist()
     docsforlda = MakeListInLists(templist)
     # Create a dictionary representation of the documents and frequency filter
@@ -369,10 +370,11 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
 
 def GetTopics(doc, lda_model, dict_lda):
     """
+    Uses a previously trained lda model to estimate the topic distribution of a document
 
     :param sent: 1 sentence from long df after preprocessing
     :param lda_model: estimated LDA model
-    :return:
+    :return: Topic distribution for the document. list of tupels with topic id and its probability
     """
     # lemmatize doc
     doc = nlp2(doc)
@@ -391,10 +393,11 @@ def GetTopics(doc, lda_model, dict_lda):
 
 def GetDomTopic(doc, lda_model, dict_lda, verbose=False):
     """
+    Uses a previously trained lda model to estimate the dominant topic of a document
 
     :param doc: 1 document as a string
     :param lda_model: estimated LDA model
-    :return: dominant topic and its probability
+    :return: dominant topic id and its probability as a tupel
     """
     # lemmatize doc
     doc = nlp2(doc)
@@ -446,7 +449,7 @@ def LDAHellinger(lda_model, dict_lda, num_topics=None, num_words=10):
     1. MakeTopicsBOW to create BOW representation of the LDA topic distributions
 
     :param lda_model: LDA model for which the distance metrics should be computed
-    :param topn: number of most relevant words in each topic to compare
+    :param num_words: number of most relevant words in each topic to compare
     :return: float, returns average distance metric over all topic pairs with values between 0 and 1
     """
 
@@ -500,11 +503,21 @@ def LDAJaccard(lda_model, topn=10):
 
 
 def LDACoherence(lda_model, corpus, dictionary, texts):
+    """
+    Calculates coherence score for a lda model
+
+    :param lda_model: previously trained lda model
+    :param corpus: training corpus of the previously estimated lda model
+    :param dictionary: dictionary corpus of the previously estimated lda model
+    :param texts: documents used for the training corpus
+    :return: coherence value c_v (see Röder et al. 2015)
+    """
 
     # we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation
     # with human interpretability
-    lda_model_cm = CoherenceModel(model=lda_model, corpus=corpus, dictionary=dictionary, coherence="u_mass")
-    #lda_model_cm = CoherenceModel(model=lda_model, texts=texts, dictionary=dictionary, coherence='c_v')
+
+    #lda_model_cm = CoherenceModel(model=lda_model, corpus=corpus, dictionary=dictionary, coherence="u_mass")
+    lda_model_cm = CoherenceModel(model=lda_model, texts=texts, dictionary=dictionary, coherence='c_v')
     print(lda_model_cm.get_coherence())
 
     return lda_model_cm.get_coherence()
@@ -513,6 +526,27 @@ def LDACoherence(lda_model, corpus, dictionary, texts):
 def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, topn, num_words, metric,
                    no_below=0.1, no_above=0.9, alpha='symmetric', eta=None, eval_every=10, iterations=50,
                    random_state=None, verbose=False, display_plot=True):
+    """
+    Computes one of three evaluation metrics (jaccard, hellinger or coherence c_v)
+    for a series of lda models using a topic range. The computed values for the metrics are displayed in a plot.
+
+    :param topics_start: start of topic range
+    :param topics_limit: end of topic range
+    :param topics_step: steps in topic range
+    :param dataframecolumn: documents in string format to use as training corpus for the lda model
+    :param topn: number of most relevant words in each topic to compare (Jaccard)
+    :param num_words: number of most relevant words in each topic to compare (Hellinger)
+    :param metric: specify which metric to use (jaccard, hellinger or coherence)
+    :param no_below: cutoff words in the training corpus with frequency below a certain number
+    :param no_above: cutoff words in the training corpus with frequency above a certain number
+    :param alpha: a priori belief about topic probablities- specify 'auto' to learn asymmetric prior from data
+    :param eta: a priori belief about word probabilities - specify 'auto' to learn asymmetric prior from data
+    :param eval_every: log proplecity estimation frequency, higher values slows down training
+    :param iterations: maximum number of iterations through the corpus when inferring the topic distribution
+    :param random_state: set seed to generate random state - useful for reproducibility
+    :param display_plot: set to false to not display a plot of the computed metric
+    :return: plots evaluation metric for lda models over the specified topic range
+    """
 
     metric_values = []
     model_list = []
