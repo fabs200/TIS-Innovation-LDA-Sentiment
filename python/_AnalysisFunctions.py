@@ -310,8 +310,6 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
 
 
-
-# todo: describe functions
 def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
                 eval_every=10, iterations=50, random_state=None, verbose=True,
                 distributed=False, chunksize=2000, passes=1, update_every=1, decay=0.5, offset=1.0,
@@ -391,7 +389,7 @@ def GetTopics(doc, lda_model, dict_lda):
     return lda_model.get_document_topics(doc_bow)
 
 
-def GetDomTopic(doc, lda_model, dict_lda, verbose=False):
+def GetDomTopic(doc, lda_model, dict_lda):
     """
     Uses a previously trained lda model to estimate the dominant topic of a document
 
@@ -541,7 +539,7 @@ def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, top
     :param no_above: cutoff words in the training corpus with frequency above a certain number
     :param alpha: a priori belief about topic probablities- specify 'auto' to learn asymmetric prior from data
     :param eta: a priori belief about word probabilities - specify 'auto' to learn asymmetric prior from data
-    :param eval_every: log proplecity estimation frequency, higher values slows down training
+    :param eval_every: log perplexity estimation frequency, higher values slows down training
     :param iterations: maximum number of iterations through the corpus when inferring the topic distribution
     :param random_state: set seed to generate random state - useful for reproducibility
     :param display_plot: set to false to not display a plot of the computed metric
@@ -553,7 +551,7 @@ def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, top
 
     for num_topics in range(topics_start, topics_limit, topics_step):
         lda_results = EstimateLDA(dataframecolumn, no_below, no_above, num_topics, alpha, eta,
-                eval_every, iterations, random_state)
+                                  eval_every, iterations, random_state)
         lda_model = lda_results[0]
         docsforlda = lda_results[1]
         dict_lda = lda_results[2]
