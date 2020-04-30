@@ -3,7 +3,7 @@ import spacy, pandas
 import numpy as np
 import pprint as pp
 from gensim.corpora import Dictionary
-from gensim.models import LdaModel
+from gensim.models import LdaModel, TfidfModel
 from python._ProcessingFunctions import MakeListInLists, FlattenList
 from gensim.matutils import jaccard, hellinger
 from gensim.models.coherencemodel import CoherenceModel
@@ -310,7 +310,7 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
 
 
-def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
+def EstimateLDA(dataframecolumn, type='standard', no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
                 eval_every=10, iterations=50, random_state=None, verbose=True,
                 distributed=False, chunksize=2000, passes=1, update_every=1, decay=0.5, offset=1.0,
                 gamma_threshold=0.001, minimum_probability=0.01, ns_conf=None, minimum_phi_value=0.01,
@@ -338,6 +338,12 @@ def EstimateLDA(dataframecolumn, no_below=0.1, no_above=0.9, num_topics=5, alpha
     dict_lda.filter_extremes(no_below=no_below, no_above=no_above)
     # Bag-of-words representation of the documents
     corpus_lda = [dict_lda.doc2bow(doc) for doc in docsforlda]
+
+    if type=='tfidf':
+        tfidf = TfidfModel(corpus_lda)
+        corpus_lda = tfidf[corpus_lda]
+
+
     # Make a index to word dictionary
     temp = dict_lda[0]  # This is only to "load" the dictionary
     id2word_lda = dict_lda.id2token
@@ -520,8 +526,9 @@ def LDACoherence(lda_model, corpus, dictionary, texts):
 
     return lda_model_cm.get_coherence()
 
-
-def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, topn, num_words, metric,
+#todo: describe new parametrs: type in estimate lda and ldacali
+def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step=1,
+                   topn=10, num_words=25, metric='hellinger', type='standard',
                    no_below=0.1, no_above=0.9, alpha='symmetric', eta=None, eval_every=10, iterations=50,
                    random_state=None, verbose=False, display_plot=True):
     """
@@ -550,8 +557,16 @@ def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, top
     model_list = []
 
     for num_topics in range(topics_start, topics_limit, topics_step):
-        lda_results = EstimateLDA(dataframecolumn, no_below, no_above, num_topics, alpha, eta,
-                                  eval_every, iterations, random_state)
+        lda_results = EstimateLDA(dataframecolumn=dataframecolumn,
+                                  no_below=no_below,
+                                  no_above=no_above,
+                                  num_topics=num_topics,
+                                  alpha=alpha,
+                                  eta=eta,
+                                  eval_every=eval_every,
+                                  iterations=iterations,
+                                  random_state=random_state,
+                                  type=type)
         lda_model = lda_results[0]
         docsforlda = lda_results[1]
         dict_lda = lda_results[2]
@@ -568,11 +583,12 @@ def LDACalibration(topics_start, topics_limit, topics_step, dataframecolumn, top
         if verbose: print('num_topics: {}, metric: {}, metric values: {}'.format(num_topics, metric, metric_values))
 
     if display_plot:
-
-        plt.plot(range(topics_start, topics_limit, topics_step), metric_values)
-        plt.xlabel('Num Topics')
-        plt.ylabel('{} score'.format(metric))
-        # plt.legend(('metric'), loc='best')
+        fig = plt.figure()
+        ax = plt.subplot(111)
+        ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
+                label='type="{}", no_below={}, no_above={}, alpha="{}", eta="{}"'.format(type, no_below, no_above, alpha, eta))
+        plt.title('Legend inside')
+        ax.legend()
         plt.show()
 
     return model_list, metric_values

@@ -20,12 +20,12 @@ params = {
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'no_below':     .1, # filter extremes (words occurring in less than 20 docs, or in more than 50% of the docs)
     'no_above':     .9,
-    'num_topics':   5,
-    'alpha':        'symmetric',
-    'eta':          None,
+    'num_topics':   10,
+    'alpha':        'auto',
+    'eta':          'auto',
     'eval_every':   10,
     'iterations':   50,
-    'random_state': None,
+    'random_state': 123456,
 
     # further parameters passed to LdaModel()
     'distributed':  False,
