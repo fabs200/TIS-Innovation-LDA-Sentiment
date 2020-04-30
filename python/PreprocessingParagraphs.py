@@ -91,7 +91,7 @@ df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: SpecialCharC
 # not solving hyphenation as no univeral rule found
 
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
-df_articles['paragraph_nouns'] = df_articles['paragraph'].apply(lambda x: POStagger(x, POStag='NN'))
+df_articles['paragraph_nouns'] = df_articles['paragraph'].apply(lambda x: POStagger(x, POStag=p['POStag_type']))
 df_articles['paragraph_nouns'] = df_articles['paragraph_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
