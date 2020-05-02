@@ -30,8 +30,8 @@ complete_for_lda = pandas.read_csv(path_processedarticles + 'csv/complete_for_ld
 
 _metric = 'coherence'
 
-for b in np.arange(.1, .5, .1):
-    for a in np.arange(.6, .9, .1):
+for b in np.arange(.4, .5, .1):
+    for a in np.arange(.8, .9, .1):
 
         results_lda_std = LDACalibration(
                                 type='standard',

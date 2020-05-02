@@ -1,5 +1,4 @@
 import pandas, time
-from nltk.corpus import stopwords
 from python.ConfigUser import path_processedarticles
 from python._ProcessingFunctions import *
 from python.params import params as p
@@ -14,7 +13,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first x articles
-# df_articles = df_articles[df_articles['Art_ID']<10]
+# df_articles = df_articles[df_articles['Art_ID']==5]
 ######
 
 # convert all words to lower case
