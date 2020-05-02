@@ -3,6 +3,7 @@ from textdistance import jaro
 from spacy.lang.de import German
 from spacy.tokenizer import Tokenizer
 from germalemma import GermaLemma
+from python.params import params as p
 
 """
 ------------------------
@@ -10,6 +11,9 @@ _ProcessingFunctions.py
 ------------------------
 Create help functions to call when running scripts
 """
+
+# TODO: Clean up POStagger to POSlemmatizer
+# TODO: delete unnecessary fct (Lemmeatizer(), Lemmatization() because included in POSlemmatizer)
 
 def MakeListInLists(string):
     """
@@ -173,9 +177,9 @@ def SpecialCharCleaner(listOfSents):
 nlp2 = spacy.load('de_core_news_md') #, disable=['ner', 'parser']
 
 
-def POSlemmatizer(listOfSents, POStag='NN'):
+def POSlemmatizer(listOfSents, POStag=p['POStag_type']):
     """
-    POS tag words in sentences
+    POS tag words in sentences, lemmatize words, remove stop words
 
     :param listOfSents: nested list of articles where sentences are nested
     :param POStag: str or list; e.g. 'NN', or 'NNV'
@@ -189,11 +193,11 @@ def POSlemmatizer(listOfSents, POStag='NN'):
         POStaglist = ['NN', 'VAFIN', 'VAIMP', 'VAINF', 'VAPP', 'VMFIN', 'VMINF',
                       'VMPP', 'VVFIN', 'VVIMP', 'VVINF', 'VVIZU', 'VVPP']
 
-    # First, POStag words
+    # First, POStag words and remove stop words
     for sent in listOfSents:
         sent_nlp2, sent_POStagged, sent_tokens = nlp2(sent), [], []
         for token in sent_nlp2:
-            if token.tag_ in POStaglist:
+            if token.tag_ in POStaglist and not token.is_stop:
                 sent_POStagged.append(token)
 
         # Second, lemmatize words from first step
@@ -203,12 +207,15 @@ def POSlemmatizer(listOfSents, POStag='NN'):
                 for t in temp_:
                     sent_tokens.append(t.lemma_)
             else:
-                temp_ = nlp2(token)
+                temp_ = nlp2(token.string)
                 for t in temp_:
                     sent_tokens.append(t.lemma_)
 
-        # Third, add all POStagged words to final list
-        POStaggedlist.append(sent_tokens)
+        # Third, make back lower again
+        sent_tokens_lower = [i.lower() for i in sent_tokens]
+
+        # Forth, add all POStagged words to final list
+        POStaggedlist.append(sent_tokens_lower)
 
     return POStaggedlist
 
@@ -288,7 +295,7 @@ def TokensCleaner(listOfSents, minwordinsent, minwordlength, drop=False):
         tempsent = [x for x in sent if x!='nan']
         # Only append if e.g. list-length<3 and word-length<3
         for word in tempsent:
-            # filter out stop words and blanks elements
+            # filter out short words and short sentences
             if (len(tempsent) >= minwordinsent) and (len(word) >= minwordlength):
                 filteredSent.append(word)
         # append filtered sentence list to cleaned list of sentences only if it still contained 3 words or more
