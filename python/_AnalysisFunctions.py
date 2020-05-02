@@ -587,7 +587,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         fig = plt.figure()
         ax = plt.subplot(111)
         ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
-                label='metric: {}, type="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(metric, type, no_below, no_above, alpha, eta, code))
+                label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(metric, type, p['POStag_type'], no_below, no_above, alpha, eta, code))
         ax.legend()
         plt.show()
 
