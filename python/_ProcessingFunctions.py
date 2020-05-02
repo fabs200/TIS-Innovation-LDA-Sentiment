@@ -170,10 +170,10 @@ def SpecialCharCleaner(listOfSents):
     return [p.sub(lambda m: (m.group(1) if m.group(1) else " "), x) for x in listOfSents]
 
 
-nlp2 = spacy.load('de_core_news_md', disable=['ner', 'parser'])
+nlp2 = spacy.load('de_core_news_md') #, disable=['ner', 'parser']
 
 
-def POStagger(listOfSents, POStag='NN'):
+def POSlemmatizer(listOfSents, POStag='NN'):
     """
     POS tag words in sentences
 
@@ -189,18 +189,32 @@ def POStagger(listOfSents, POStag='NN'):
         POStaglist = ['NN', 'VAFIN', 'VAIMP', 'VAINF', 'VAPP', 'VMFIN', 'VMINF',
                       'VMPP', 'VVFIN', 'VVIMP', 'VVINF', 'VVIZU', 'VVPP']
 
-    # loop over each sentence and its tokens and append only if POStag matches
+    # First, POStag words
     for sent in listOfSents:
-        sent_nlp2, sent_tokens = nlp2(sent), []
+        sent_nlp2, sent_POStagged, sent_tokens = nlp2(sent), [], []
         for token in sent_nlp2:
-            if token.tag_ in POStaglist: sent_tokens.append(token)
+            if token.tag_ in POStaglist:
+                sent_POStagged.append(token)
+
+        # Second, lemmatize words from first step
+        for token in sent_POStagged:
+            if token.tag_ == 'NN':
+                temp_ = nlp2(token.string.title())
+                for t in temp_:
+                    sent_tokens.append(t.lemma_)
+            else:
+                temp_ = nlp2(token)
+                for t in temp_:
+                    sent_tokens.append(t.lemma_)
+
+        # Third, add all POStagged words to final list
         POStaggedlist.append(sent_tokens)
 
     return POStaggedlist
 
 
 # Load Lemmatizer
-lemmatizer = GermaLemma()
+# lemmatizer = GermaLemma()
 
 
 def Lemmatization(listOfSents):
@@ -210,8 +224,10 @@ def Lemmatization(listOfSents):
     lemmalist = []
     for sent in listOfSents:
         lemmalist.append([])
+        sent_ = nlp2(sent)
         for token in sent:
-            token_lemma = lemmatizer.find_lemma(token.text, token.tag_)
+            # token_lemma = lemmatizer.find_lemma(token.text, token.tag_)
+            token_lemma = token.lemma_
             token_lemma = token_lemma.lower()
             lemmalist[-1].append(token_lemma)
     return lemmalist
@@ -298,7 +314,7 @@ def NormalizeWords(string):
     string = string.replace('g/cm³', 'grammprokubikmeter').replace('cm³', 'kubikmeter')
     string = string.replace('/km', 'prokilometer').replace('km', 'kilometer')
     string = string.replace('m-s', 'meterprosekunde').replace('m/s', 'meterprosekunde')
-    string = string.replace('mio.', 'millionen').replace('mrd.', 'milliarden').replace('mill.', 'millionen')
+    string = string.replace('mio.', 'million').replace('mrd.', 'milliarde').replace('mill.', 'million')
     string = string.replace('kwh', 'kilowattstunde').replace('mwh', 'megawattstunde').replace('kw/h', 'kilowattstunde')
     string = string.replace('kw/', 'kilowatt').replace(' kw ', ' kilowatt ').replace('-kw-', 'kilowatt')
     string = string.replace('mw/h', 'megawattstunde').replace('kw-h', 'kilowattstunde').replace('mw-h',
@@ -389,8 +405,7 @@ def NormalizeWords(string):
     string = string.replace('n.n.', 'nomennescio').replace('nr.', 'nummer').replace('o.a.', 'oben angegeben')
     string = string.replace('o.ä.', 'oder ähnliches').replace('o.g.', 'oben genannt')
     string = string.replace('o. ä.', 'oder ähnliches').replace('o. g.', 'oben genannt')
-    string = string.replace('p.a.', 'proanno').replace('pos.', 'position').replace('pp.', 'perprocura').replace('rd.',
-                                                                                                                'rund')
+    string = string.replace('p.a.', 'proanno').replace('pos.', 'position').replace('pp.', 'perprocura')
     string = string.replace('rs.', 'rechtssache').replace('rspr.', 'rechtsprechung').replace('sog.', 'sogenannt')
     string = string.replace('s.a.', 'siehe auch').replace('s.o.', 'siehe oben').replace('s.u.', 'siehe unten')
     string = string.replace('s. a.', 'siehe auch').replace('s. o.', 'siehe oben').replace('s. u.', 'siehe unten')
@@ -438,10 +453,6 @@ def ParagraphSplitter(listOfPars, splitAt):
         else:
             break
     return splitPars
-
-
-# Load Lemmatization
-lemmatizer = GermaLemma()
 
 
 def ProcessforSentiment(listOfSents):

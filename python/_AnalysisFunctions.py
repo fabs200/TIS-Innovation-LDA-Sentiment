@@ -9,6 +9,7 @@ from gensim.matutils import jaccard, hellinger
 from gensim.models.coherencemodel import CoherenceModel
 import matplotlib.pyplot as plt
 from python.params import params as p
+import traceback
 
 def Load_SePL():
     """
@@ -553,6 +554,9 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
     :return: plots evaluation metric for lda models over the specified topic range
     """
 
+    stack = traceback.extract_stack()
+    filename, lineno, function_name, code = stack[-2]
+
     metric_values = []
     model_list = []
 
@@ -567,10 +571,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
                                   iterations=iterations,
                                   random_state=random_state,
                                   type=type)
-        lda_model = lda_results[0]
-        docsforlda = lda_results[1]
-        dict_lda = lda_results[2]
-        corpus_lda = lda_results[3]
+        lda_model, docsforlda, dict_lda, corpus_lda = lda_results[0], lda_results[1], lda_results[2], lda_results[3]
         model_list.append(lda_model)
 
         if metric == 'coherence':
@@ -586,8 +587,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         fig = plt.figure()
         ax = plt.subplot(111)
         ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
-                label='type="{}", no_below={}, no_above={}, alpha="{}", eta="{}"'.format(type, no_below, no_above, alpha, eta))
-        plt.title('Legend inside')
+                label='metric: {}, type="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(metric, type, no_below, no_above, alpha, eta, code))
         ax.legend()
         plt.show()
 
