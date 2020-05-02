@@ -16,13 +16,14 @@ df_long_complete = pandas.read_csv(path_processedarticles + 'csv/complete_for_ld
 
 # Drop old column
 df_long_complete = df_long_complete.drop(columns=['articles_{}_for_lda'.format(POStag_type)])
+df_long_complete = df_long_complete.drop(columns=['_merge'])
 
 # Update column from df_long_arti
 df_long_complete = pandas.merge(df_long_complete, df_long_arti[['Art_ID', 'articles_{}_for_lda'.format(POStag_type)]],
                                 how='inner', on=['Art_ID'], indicator=True)
 
 ### Export longfile to csv (will be read in later)
-print('Save upaded final df_long_complete')
+print('Save updated final df_long_complete')
 df_long_complete.to_csv(path_processedarticles + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
                         sep='\t', index=False)
 df_long_complete.to_excel(path_processedarticles + 'complete_for_lda_{}_l.xlsx'.format(POStag_type))
