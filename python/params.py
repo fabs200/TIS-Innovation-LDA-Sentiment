@@ -45,6 +45,6 @@ params = {
 
     # Preprocessing parameters
     'minwordinsent':2,
-    'minwordlength':2
+    'minwordlength':3
 }
 
