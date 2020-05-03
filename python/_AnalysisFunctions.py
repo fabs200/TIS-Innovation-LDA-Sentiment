@@ -396,36 +396,62 @@ def GetTopics(doc, lda_model, dict_lda):
     return lda_model.get_document_topics(doc_bow)
 
 
+# def GetDomTopic(doc, lda_model, dict_lda):
+#     """
+#     Uses a previously trained lda model to estimate the dominant topic of a document
+#
+#     :param doc: 1 document as a string
+#     :param lda_model: estimated LDA model
+#     :return: dominant topic id and its probability as a tupel
+#     """
+#     # initialize in spacy
+#     doc = nlp2(doc)
+#
+#     # loop over all tokens in doc, capitalize for Pos-tag NN, disregard punctuation (length>1)
+#     postagged_doc, lemmatized_doc = [], []
+#     for token in doc:
+#         if len(token.text) > 1 and token.tag_ == 'NN':
+#             postagged_doc.append(token.string.title())
+#             # loop over capitalized NN tags and lemmatize
+#         elif len(token.text) > 1:
+#             postagged_doc.append(token.string)
+#
+#     # lemmatize
+#     for doc in postagged_doc:
+#         temp_ = nlp2(doc)
+#         for t in temp_:
+#             lemmatized_doc.append(t.lemma_)
+#
+#     # make back lower again
+#     lemmatized_doc_lower = [i.lower() for i in lemmatized_doc]
+#
+#     # Create BOW representation of doc to use as input for the LDA model
+#     doc_bow = dict_lda.doc2bow(lemmatized_doc_lower)
+#     domdoc = max(lda_model.get_document_topics(doc_bow), key=lambda item: item[1])
+#
+#     return domdoc
+
 def GetDomTopic(doc, lda_model, dict_lda):
     """
     Uses a previously trained lda model to estimate the dominant topic of a document
 
-    :param doc: 1 document as a string
+    :param doc: 1 document as a string (e.g. articles_text, capitalized nouns, from PreprocessingArticles.py)
     :param lda_model: estimated LDA model
     :return: dominant topic id and its probability as a tupel
     """
     # initialize in spacy
     doc = nlp2(doc)
 
-    # loop over all tokens in doc, capitalize for Pos-tag NN, disregard punctuation (length>1)
-    postagged_doc, lemmatized_doc = [], []
+    # loop over all tokens in doc, disregard punctuation (length>1); note for lemmatiz. tokens need to be capitalized
+    lemmatized_doc = []
     for token in doc:
-        if len(token.text) > 1 and token.tag_ == 'NN':
-            postagged_doc.append(token.string.title())
-            # loop over capitalized NN tags and lemmatize
-        elif len(token.text) > 1:
-            postagged_doc.append(token.string)
-
-    # lemmatize
-    for doc in postagged_doc:
-        temp_ = nlp2(doc)
-        for t in temp_:
-            lemmatized_doc.append(t.lemma_)
+        if len(token.text) > 1:
+            lemmatized_doc.append(token.lemma_)
 
     # make back lower again
     lemmatized_doc_lower = [i.lower() for i in lemmatized_doc]
 
-    # Create BOW representation of doc to use as input for the LDA model
+    # Create BOW representation of doc to use as input for the LDA model and retrieve dominant topic
     doc_bow = dict_lda.doc2bow(lemmatized_doc_lower)
     domdoc = max(lda_model.get_document_topics(doc_bow), key=lambda item: item[1])
 

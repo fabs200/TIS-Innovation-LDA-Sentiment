@@ -524,3 +524,26 @@ def IgnoreWarnings():
     warnings.filterwarnings("ignore", message="Degrees of freedom <= 0 for slice")
     # warnings.filterwarnings("ignore", category=FutureWarning)
     return print('Ignoring warnings when extracting sentiment scores')
+
+def CapitalizeNouns(doc):
+    """
+    help function for Spacy when lemmatizing, make nouns capitalized
+    :param doc: str, doc
+    :return: str, doc but with capitalized nouns
+    """
+    # # initialize doc in nlp2()
+    # doc_temp, doc_capitalized = nlp2(doc), []
+    # # loop over all elements and capitalize if tag is 'NN'
+    # for token in doc_temp:
+    #     if token.tag_ == 'NN':
+    #         doc_capitalized.append(token.string.title())
+    #     else:
+    #         doc_capitalized.append(token.string)
+    # return ' '.join(doc_capitalized)
+    doc_cap = []
+    for d in doc:
+        tagged_sent = [(w.text, w.tag_) for w in nlp2(d)]
+        normalized_sent = [w.capitalize() if t in ["NN", "NNS", 'NE'] else w for (w, t) in tagged_sent]
+        normalized_sent[0] = normalized_sent[0].capitalize()
+        doc_cap.append(' '.join(normalized_sent))
+    return doc_cap
