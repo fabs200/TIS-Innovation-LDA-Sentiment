@@ -115,7 +115,7 @@ start_time1 = time.process_time()
 
 ######
 # TEMP keep first x articles
-df_long_test = df_long[df_long['Art_ID']<10]
+# df_long = df_long[df_long['Art_ID']<101]
 ######
 
 
@@ -224,10 +224,11 @@ if 'article' in p['lda_level_domtopic'] and 'article' in p['lda_level_fit']:
     print('\nretrieving dominant topics from articles (estimated lda on article)')
     start_domtopic_arti_arti = time.process_time()
     df_long['DomTopic_arti_arti'] = \
-        df_long.apply(lambda row: GetDomTopic(row['articles_text'],
-                                              lda_model=ldamodel_arti, dict_lda=ldadict_arti), axis=1)
+        df_long.apply(lambda row:
+                      GetDomTopic(row['articles_text'], lda_model=ldamodel_arti, dict_lda=ldadict_arti)
+                      if row['Art_unique']==1 else '', axis=1)
     df_long['DomTopic_arti_arti_id'] = df_long['DomTopic_arti_arti'].str[0]
-    df_long['DomTopic_arti_arti_prob'] = df_long['DomTopic_arti_sent'].str[1]
+    df_long['DomTopic_arti_arti_prob'] = df_long['DomTopic_arti_arti'].str[1]
 
     print('\tretrieving dominant topics from articles took {} seconds'.format(
         round(time.process_time()-start_domtopic_arti_arti, 2)))

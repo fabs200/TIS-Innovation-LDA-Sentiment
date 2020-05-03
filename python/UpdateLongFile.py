@@ -15,10 +15,13 @@ df_long_complete = pandas.read_csv(path_processedarticles + 'csv/complete_for_ld
                                    sep='\t', na_filter=False)
 
 # Drop old column
-df_long_complete = df_long_complete.drop(columns=['articles_{}_for_lda'.format(POStag_type), '_merge'])
+df_long_complete = df_long_complete.drop(columns=['articles_{}_for_lda'.format(POStag_type),
+                                                  'articles_text',
+                                                  '_merge'])
 
 # Update column from df_long_arti
-df_long_complete = pandas.merge(df_long_complete, df_long_arti[['Art_ID', 'articles_{}_for_lda'.format(POStag_type)]],
+df_long_complete = pandas.merge(df_long_complete,
+                                df_long_arti[['Art_ID', 'articles_{}_for_lda'.format(POStag_type), 'articles_text']],
                                 how='inner', on=['Art_ID'], indicator=True)
 
 ### Export longfile to csv (will be read in later)
