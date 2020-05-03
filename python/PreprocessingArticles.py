@@ -13,7 +13,7 @@ df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_article
 
 ######
 # TEMP keep first x articles
-# df_articles = df_articles[df_articles['Art_ID']==5]
+# df_articles = df_articles[df_articles['Art_ID']<11]
 ######
 
 # convert all words to lower case
@@ -62,16 +62,19 @@ df_articles['article'] = df_articles['article'].apply(lambda x: WordRemover(x, d
 df_articles['article'] = df_articles['article'].apply(lambda x: LinkRemover(x))
 df_articles['article'] = df_articles['article'].apply(lambda x: MailRemover(x))
 
-end_time0 = time.process_time()
-print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 2)))
+print('timer0: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time0, 2)))
 
 start_time1 = time.process_time()
 
-### Fork paragraphs for Sentiment Analysis
-df_articles['articles_text'] = df_articles['article']
+### Fork articles for Sentiment Analysis and capitalize nouns
+df_articles['articles_text'] = df_articles['article'].apply(lambda x: CapitalizeNouns(x))
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['article'] = df_articles['article'].apply(lambda x: SpecialCharCleaner(x))
+
+print('timer1: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time1, 2)))
+
+start_time2 = time.process_time()
 
 # not solving hyphenation as no universal rule found
 
@@ -79,11 +82,15 @@ df_articles['article'] = df_articles['article'].apply(lambda x: SpecialCharClean
 df_articles['article_nouns'] = df_articles['article'].apply(lambda x: POSlemmatizer(x, POStag=p['POStag_type']))
 # df_articles['article_nouns'] = df_articles['article_nouns'].apply(lambda x: Lemmatization(x))
 
-# Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
+# Cleaning: drop stop words, drop if sentence contain only two words or less #
 df_articles['articles_{}_for_lda'.format(POStag_type)] = df_articles['article_nouns'].apply(TokensCleaner,
                                                                                            minwordinsent=p['minwordinsent'],
                                                                                            minwordlength=p['minwordlength'],
                                                                                            drop=False)
+
+print('timer2: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time2, 2)))
+
+start_time3 = time.process_time()
 
 ### Export data to csv
 # df_articles[['ID_incr', 'Art_ID', 'Date', 'articles_{}_for_lda'.format(POStag_type), 'articles_text']].to_csv(
@@ -112,8 +119,7 @@ df_long = df_long[['Art_ID', 'Newspaper', 'Date', 'articles_text', 'articles_{}_
 df_long.to_csv(path_processedarticles + 'csv/articles_for_lda_{}_l.csv'.format(POStag_type), sep='\t', index=False)
 df_long.to_excel(path_processedarticles + 'articles_for_lda_{}_l.xlsx'.format(POStag_type))
 
-end_time1 = time.process_time()
-print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
-print('Overall elapsed time is {} seconds.'.format(round(end_time1-start_time0, 2)))
+print('Overall elapsed time is {} seconds.'.format(round(time.process_time()-start_time3, 2)))
+print('Overall elapsed time is {} seconds.'.format(round(time.process_time()-start_time0, 2)))
 
 ###

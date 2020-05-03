@@ -22,7 +22,7 @@ df_long = pandas.read_csv(path_processedarticles + 'csv/complete_for_lda_{}_l.cs
 
 ######
 # TEMP keep first x articles
-# df_long = df_long[df_long['Art_ID']<10]
+# df_long = df_long[df_long['Art_ID']<100]
 ######
 
 """
@@ -113,6 +113,12 @@ print('\ttimer0: Elapsed time is {} seconds'.format(round(end_time0-start_time0,
 start_time1 = time.process_time()
 
 
+######
+# TEMP keep first x articles
+df_long_test = df_long[df_long['Art_ID']<10]
+######
+
+
 ### Estimate Topic distribution of sentiment sentences and append to long file
 ## lda model based on sentences (*_sent_*)
 # apply to sentences (*_sent_sent)
@@ -120,7 +126,10 @@ if 'sentence' in p['lda_level_domtopic'] and 'sentence' in p['lda_level_fit']:
     print('\nretrieving dominant topics from sentences (estimated lda on sentence)')
     start_domtopic_sent_sent = time.process_time()
     df_long['DomTopic_sent_sent'] = \
-        df_long['sentences_for_sentiment'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_sent, dict_lda=ldadict_sent))
+        df_long.apply(lambda row: GetDomTopic(row['sentences_for_sentiment'],
+                                              lda_model=ldamodel_sent, dict_lda=ldadict_sent), axis=1)
+    df_long['DomTopic_sent_sent_id'] = df_long['DomTopic_sent_sent'].str[0]
+    df_long['DomTopic_sent_sent_prob'] = df_long['DomTopic_sent_sent'].str[1]
     print('\tretrieving dominant topics from sentences took {} seconds,'.format(
         round(time.process_time()-start_domtopic_sent_sent, 2)))
 
@@ -129,7 +138,10 @@ if 'paragraph' in p['lda_level_domtopic'] and 'sentence' in p['lda_level_fit']:
     print('\nretrieving dominant topics from paragraphs (estimated lda on sentence)')
     start_domtopic_sent_para = time.process_time()
     df_long['DomTopic_sent_para'] = \
-        df_long['paragraphs_text'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_sent, dict_lda=ldadict_sent))
+        df_long.apply(lambda row: GetDomTopic(row['paragraphs_text'],
+                                              lda_model=ldamodel_sent, dict_lda=ldadict_sent), axis=1)
+    df_long['DomTopic_sent_para_id'] = df_long['DomTopic_sent_para'].str[0]
+    df_long['DomTopic_sent_para_prob'] = df_long['DomTopic_sent_para'].str[1]
     print('\tretrieving dominant topics from paragraph took {} seconds'.format(
         round(time.process_time()-start_domtopic_sent_para, 2)))
 
@@ -138,7 +150,10 @@ if 'article' in p['lda_level_domtopic'] and 'sentence' in p['lda_level_fit']:
     print('\nretrieving dominant topics from articles (estimated lda on sentence)')
     start_domtopic_sent_arti = time.process_time()
     df_long['DomTopic_sent_arti'] = \
-        df_long['articles_text'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_sent, dict_lda=ldadict_sent))
+        df_long.apply(lambda row: GetDomTopic(row['articles_text'],
+                                              lda_model=ldamodel_sent, dict_lda=ldadict_sent), axis=1)
+    df_long['DomTopic_sent_arti_id'] = df_long['DomTopic_sent_arti'].str[0]
+    df_long['DomTopic_sent_arti_prob'] = df_long['DomTopic_sent_arti'].str[1]
     print('\tretrieving dominant topics from articles took {} seconds'.format(
         round(time.process_time()-start_domtopic_sent_arti, 2)))
 
@@ -148,7 +163,10 @@ if 'senctence' in p['lda_level_domtopic'] and 'paragraph' in p['lda_level_fit']:
     print('\nretrieving dominant topics from sentences (estimated lda on paragraph)')
     start_domtopic_para_sent = time.process_time()
     df_long['DomTopic_para_sent'] = \
-        df_long['sentences_for_sentiment'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_para, dict_lda=ldadict_para))
+        df_long.apply(lambda row: GetDomTopic(row['sentences_for_sentiment'],
+                                              lda_model=ldamodel_para, dict_lda=ldadict_para), axis=1)
+    df_long['DomTopic_para_sent_id'] = df_long['DomTopic_para_sent'].str[0]
+    df_long['DomTopic_para_sent_prob'] = df_long['DomTopic_para_sent'].str[1]
     print('\tretrieving dominant topics from sentences took {} seconds'.format(
         round(time.process_time()-start_domtopic_para_sent, 2)))
 
@@ -157,7 +175,10 @@ if 'paragraph' in p['lda_level_domtopic'] and 'paragraph' in p['lda_level_fit']:
     print('\nretrieving dominant topics from paragraph (estimated lda on paragraph)')
     start_domtopic_para_para = time.process_time()
     df_long['DomTopic_para_para'] = \
-        df_long['paragraphs_text'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_para, dict_lda=ldadict_para))
+        df_long.apply(lambda row: GetDomTopic(row['paragraphs_text'],
+                                              lda_model=ldamodel_para, dict_lda=ldadict_para), axis=1)
+    df_long['DomTopic_para_para_id'] = df_long['DomTopic_para_para'].str[0]
+    df_long['DomTopic_para_para_prob'] = df_long['DomTopic_para_para'].str[1]
     print('\tretrieving dominant topics from paragraphs took {} seconds'.format(
         round(time.process_time()-start_domtopic_para_para, 2)))
 
@@ -166,7 +187,10 @@ if 'article' in p['lda_level_domtopic'] and 'paragraph' in p['lda_level_fit']:
     print('\nretrieving dominant topics from article (estimated lda on paragraph)')
     start_domtopic_para_arti = time.process_time()
     df_long['DomTopic_para_arti'] = \
-        df_long['articles_text'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_para, dict_lda=ldadict_para))
+        df_long.apply(lambda row: GetDomTopic(row['articles_text'],
+                                              lda_model=ldamodel_para, dict_lda=ldadict_para), axis=1)
+    df_long['DomTopic_para_arti_id'] = df_long['DomTopic_para_arti'].str[0]
+    df_long['DomTopic_para_arti_prob'] = df_long['DomTopic_para_arti'].str[1]
     print('\tretrieving dominant topics from articles took {} seconds'.format(
         round(time.process_time()-start_domtopic_para_arti, 2)))
 
@@ -176,7 +200,10 @@ if 'sentence' in p['lda_level_domtopic'] and 'article' in p['lda_level_fit']:
     print('\nretrieving dominant topics from sentences (estimated lda on article)')
     start_domtopic_arti_sent = time.process_time()
     df_long['DomTopic_arti_sent'] = \
-        df_long['sentences_for_sentiment'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_arti, dict_lda=ldadict_arti))
+        df_long.apply(lambda row: GetDomTopic(row['sentences_for_sentiment'],
+                                              lda_model=ldamodel_arti, dict_lda=ldadict_arti), axis=1)
+    df_long['DomTopic_arti_sent_id'] = df_long['DomTopic_arti_sent'].str[0]
+    df_long['DomTopic_arti_sent_prob'] = df_long['DomTopic_arti_sent'].str[1]
     print('\tretrieving dominant topics from sentences took {} seconds'.format(
         round(time.process_time()-start_domtopic_arti_sent, 2)))
 
@@ -185,7 +212,10 @@ if 'paragraph' in p['lda_level_domtopic'] and 'article' in p['lda_level_fit']:
     print('\nretrieving dominant topics from paragraphs (estimated lda on article)')
     start_domtopic_arti_para = time.process_time()
     df_long['DomTopic_arti_para'] = \
-        df_long['paragraphs_text'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_arti, dict_lda=ldadict_arti))
+        df_long.apply(lambda row: GetDomTopic(row['paragraphs_text'],
+                                              lda_model=ldamodel_arti, dict_lda=ldadict_arti), axis=1)
+    df_long['DomTopic_arti_para_id'] = df_long['DomTopic_arti_para'].str[0]
+    df_long['DomTopic_arti_para_prob'] = df_long['DomTopic_arti_para'].str[1]
     print('\tretrieving dominant topics from paragraphs took {} seconds'.format(
         round(time.process_time()-start_domtopic_arti_para, 2)))
 
@@ -194,7 +224,11 @@ if 'article' in p['lda_level_domtopic'] and 'article' in p['lda_level_fit']:
     print('\nretrieving dominant topics from articles (estimated lda on article)')
     start_domtopic_arti_arti = time.process_time()
     df_long['DomTopic_arti_arti'] = \
-        df_long['articles_text'].apply(lambda x: GetDomTopic(x, lda_model=ldamodel_arti, dict_lda=ldadict_arti))
+        df_long.apply(lambda row: GetDomTopic(row['articles_text'],
+                                              lda_model=ldamodel_arti, dict_lda=ldadict_arti), axis=1)
+    df_long['DomTopic_arti_arti_id'] = df_long['DomTopic_arti_arti'].str[0]
+    df_long['DomTopic_arti_arti_prob'] = df_long['DomTopic_arti_sent'].str[1]
+
     print('\tretrieving dominant topics from articles took {} seconds'.format(
         round(time.process_time()-start_domtopic_arti_arti, 2)))
 
