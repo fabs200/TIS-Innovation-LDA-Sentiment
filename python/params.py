@@ -7,25 +7,26 @@ import numpy as np
 params = {
 
     # Specify POStag type
-    'POStag_type':  'NNV',
+    'POStag_type':  'NN',
 
     # Specify on which level to fit lda
-    'lda_level_fit':        ['sentence'],
+    'lda_level_fit':        ['article'],
     # 'lda_level_fit':      ['sentence', 'paragraph', 'article'],
 
     # Specify of which level get dominant topics
-    'lda_level_domtopic':     ['sentence'],
+    'lda_level_domtopic':     ['article'],
     # 'lda_level_domtopic': ['sentence', 'paragraph', 'article'],
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
-    'no_below':     .1, # filter extremes (words occurring in less than 20 docs, or in more than 50% of the docs)
-    'no_above':     .9,
-    'num_topics':   10,
+    'type':         'standard',
+    'no_below':     75, # filter extremes (words occurring in less than 20 docs, or in more than 50% of the docs)
+    'no_above':     .5,
+    'num_topics':   8,
     'alpha':        'auto',
     'eta':          'auto',
-    'eval_every':   10,
-    'iterations':   50,
-    'random_state': 123456,
+    'eval_every':   5,
+    'iterations':   250,
+    'random_state': 123,
 
     # further parameters passed to LdaModel()
     'distributed':  False,

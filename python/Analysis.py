@@ -32,11 +32,12 @@ df_long = pandas.read_csv(path_processedarticles + 'csv/complete_for_lda_{}_l.cs
 start_time0 = time.process_time()
 
 # lda on sentence lda_level
-if 'sentence' in lda_level_fit:
+if 'sentence' in p['lda_level_fit']:
     print('\nestimating lda on sentence lda_level')
     start_ldafit_sent = time.process_time()
     ldamodel_sent, docsforlda_sent, ldadict_sent, ldacorpus_sent \
         = EstimateLDA(df_long['sentences_{}_for_lda'.format(POStag_type)],
+                      type=p['type'],
                       no_below=p['no_below'],
                       no_above=p['no_above'],
                       num_topics=p['num_topics'],
@@ -57,11 +58,12 @@ if 'sentence' in lda_level_fit:
 
 
 # lda on paragraph lda_level
-if 'paragraph' in lda_level_fit:
+if 'paragraph' in p['lda_level_fit']:
     print('\nestimating lda on paragraph lda_level')
     start_ldafit_para = time.process_time()
     ldamodel_para, docsforlda_para, ldadict_para, ldacorpus_para \
         = EstimateLDA(df_long[df_long['Par_unique'] == 1]['paragraphs_{}_for_lda'.format(POStag_type)],
+                      type=p['type'],
                       no_below=p['no_below'],
                       no_above=p['no_above'],
                       num_topics=p['num_topics'],
@@ -81,11 +83,12 @@ if 'paragraph' in lda_level_fit:
     print('\testimating lda on paragraph lda_level took {} seconds'.format(round(time.process_time()-start_ldafit_para, 2)))
 
 # lda on article lda_level
-if 'article' in lda_level_fit:
+if 'article' in p['lda_level_fit']:
     print('\nestimating lda on article lda_level')
     start_ldafit_arti = time.process_time()
     ldamodel_arti, docsforlda_arti, ldadict_arti, ldacorpus_arti \
         = EstimateLDA(df_long[df_long['Art_unique'] == 1]['articles_{}_for_lda'.format(POStag_type)],
+                      type=p['type'],
                       no_below=p['no_below'],
                       no_above=p['no_above'],
                       num_topics=p['num_topics'],
@@ -113,7 +116,7 @@ start_time1 = time.process_time()
 ### Estimate Topic distribution of sentiment sentences and append to long file
 ## lda model based on sentences (*_sent_*)
 # apply to sentences (*_sent_sent)
-if 'sentence' in lda_level_domtopic and 'sentence' in lda_level_fit:
+if 'sentence' in p['lda_level_domtopic'] and 'sentence' in p['lda_level_fit']:
     print('\nretrieving dominant topics from sentences (estimated lda on sentence)')
     start_domtopic_sent_sent = time.process_time()
     df_long['DomTopic_sent_sent'] = \
@@ -122,7 +125,7 @@ if 'sentence' in lda_level_domtopic and 'sentence' in lda_level_fit:
         round(time.process_time()-start_domtopic_sent_sent, 2)))
 
 # apply to paragraphs (*_sent_para)
-if 'paragraph' in lda_level_domtopic and 'sentence' in lda_level_fit:
+if 'paragraph' in p['lda_level_domtopic'] and 'sentence' in p['lda_level_fit']:
     print('\nretrieving dominant topics from paragraphs (estimated lda on sentence)')
     start_domtopic_sent_para = time.process_time()
     df_long['DomTopic_sent_para'] = \
@@ -131,7 +134,7 @@ if 'paragraph' in lda_level_domtopic and 'sentence' in lda_level_fit:
         round(time.process_time()-start_domtopic_sent_para, 2)))
 
 # apply to articles (*_sent_arti)
-if 'article' in lda_level_domtopic and 'sentence' in lda_level_fit:
+if 'article' in p['lda_level_domtopic'] and 'sentence' in p['lda_level_fit']:
     print('\nretrieving dominant topics from articles (estimated lda on sentence)')
     start_domtopic_sent_arti = time.process_time()
     df_long['DomTopic_sent_arti'] = \
@@ -141,7 +144,7 @@ if 'article' in lda_level_domtopic and 'sentence' in lda_level_fit:
 
 ## lda model based on paragraphs (*_para_*)
 # apply to sentences (*_para_sent)
-if 'senctence' in lda_level_domtopic and 'paragraph' in lda_level_fit:
+if 'senctence' in p['lda_level_domtopic'] and 'paragraph' in p['lda_level_fit']:
     print('\nretrieving dominant topics from sentences (estimated lda on paragraph)')
     start_domtopic_para_sent = time.process_time()
     df_long['DomTopic_para_sent'] = \
@@ -150,7 +153,7 @@ if 'senctence' in lda_level_domtopic and 'paragraph' in lda_level_fit:
         round(time.process_time()-start_domtopic_para_sent, 2)))
 
 # apply to paragraphs (*_para_para)
-if 'paragraph' in lda_level_domtopic and 'paragraph' in lda_level_fit:
+if 'paragraph' in p['lda_level_domtopic'] and 'paragraph' in p['lda_level_fit']:
     print('\nretrieving dominant topics from paragraph (estimated lda on paragraph)')
     start_domtopic_para_para = time.process_time()
     df_long['DomTopic_para_para'] = \
@@ -159,7 +162,7 @@ if 'paragraph' in lda_level_domtopic and 'paragraph' in lda_level_fit:
         round(time.process_time()-start_domtopic_para_para, 2)))
 
 # apply to articles (*_para_arti)
-if 'article' in lda_level_domtopic and 'paragraph' in lda_level_fit:
+if 'article' in p['lda_level_domtopic'] and 'paragraph' in p['lda_level_fit']:
     print('\nretrieving dominant topics from article (estimated lda on paragraph)')
     start_domtopic_para_arti = time.process_time()
     df_long['DomTopic_para_arti'] = \
@@ -169,7 +172,7 @@ if 'article' in lda_level_domtopic and 'paragraph' in lda_level_fit:
 
 ## lda model based on articles (*_arti_*)
 # apply to sentences (*_arti_sent)
-if 'sentence' in lda_level_domtopic and 'article' in lda_level_fit:
+if 'sentence' in p['lda_level_domtopic'] and 'article' in p['lda_level_fit']:
     print('\nretrieving dominant topics from sentences (estimated lda on article)')
     start_domtopic_arti_sent = time.process_time()
     df_long['DomTopic_arti_sent'] = \
@@ -178,7 +181,7 @@ if 'sentence' in lda_level_domtopic and 'article' in lda_level_fit:
         round(time.process_time()-start_domtopic_arti_sent, 2)))
 
 # apply to paragraphs (*_arti_para)
-if 'paragraph' in lda_level_domtopic and 'article' in lda_level_fit:
+if 'paragraph' in p['lda_level_domtopic'] and 'article' in p['lda_level_fit']:
     print('\nretrieving dominant topics from paragraphs (estimated lda on article)')
     start_domtopic_arti_para = time.process_time()
     df_long['DomTopic_arti_para'] = \
@@ -187,7 +190,7 @@ if 'paragraph' in lda_level_domtopic and 'article' in lda_level_fit:
         round(time.process_time()-start_domtopic_arti_para, 2)))
 
 # apply to articles (*_arti_arti)
-if 'article' in lda_level_domtopic and 'article' in lda_level_fit:
+if 'article' in p['lda_level_domtopic'] and 'article' in p['lda_level_fit']:
     print('\nretrieving dominant topics from articles (estimated lda on article)')
     start_domtopic_arti_arti = time.process_time()
     df_long['DomTopic_arti_arti'] = \
