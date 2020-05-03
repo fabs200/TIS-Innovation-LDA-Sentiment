@@ -311,7 +311,7 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
 
 
-def EstimateLDA(dataframecolumn, type='standard', no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
+def EstimateLDA(dataframecolumn, type=p['type'], no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
                 eval_every=10, iterations=50, random_state=None, verbose=True,
                 distributed=False, chunksize=2000, passes=1, update_every=1, decay=0.5, offset=1.0,
                 gamma_threshold=0.001, minimum_probability=0.01, ns_conf=None, minimum_phi_value=0.01,
@@ -404,17 +404,29 @@ def GetDomTopic(doc, lda_model, dict_lda):
     :param lda_model: estimated LDA model
     :return: dominant topic id and its probability as a tupel
     """
-    # lemmatize doc
+    # initialize in spacy
     doc = nlp2(doc)
 
-    # loop over all tokens in sentence and lemmatize them, disregard punctuation
-    lemmatized_doc = []
+    # loop over all tokens in doc, capitalize for Pos-tag NN, disregard punctuation (length>1)
+    postagged_doc, lemmatized_doc = [], []
     for token in doc:
-        if len(token.text) > 1:
-            lemmatized_doc.append(token.lemma_)
+        if len(token.text) > 1 and token.tag_ == 'NN':
+            postagged_doc.append(token.string.title())
+            # loop over capitalized NN tags and lemmatize
+        elif len(token.text) > 1:
+            postagged_doc.append(token.string)
+
+    # lemmatize
+    for doc in postagged_doc:
+        temp_ = nlp2(doc)
+        for t in temp_:
+            lemmatized_doc.append(t.lemma_)
+
+    # make back lower again
+    lemmatized_doc_lower = [i.lower() for i in lemmatized_doc]
 
     # Create BOW representation of doc to use as input for the LDA model
-    doc_bow = dict_lda.doc2bow(lemmatized_doc)
+    doc_bow = dict_lda.doc2bow(lemmatized_doc_lower)
     domdoc = max(lda_model.get_document_topics(doc_bow), key=lambda item: item[1])
 
     return domdoc
