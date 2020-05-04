@@ -544,6 +544,9 @@ def CapitalizeNouns(doc):
     for d in doc:
         tagged_sent = [(w.text, w.tag_) for w in nlp2(d)]
         normalized_sent = [w.capitalize() if t in ["NN", "NNS", 'NE'] else w for (w, t) in tagged_sent]
-        normalized_sent[0] = normalized_sent[0].capitalize()
+        try:
+            normalized_sent[0] = normalized_sent[0].capitalize()
+        except IndexError:
+            normalized_sent = ''
         doc_cap.append(' '.join(normalized_sent))
     return doc_cap

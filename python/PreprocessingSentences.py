@@ -67,13 +67,13 @@ print('timer0: Elapsed time is {} seconds.'.format(round(time.process_time()-sta
 start_time1 = time.process_time()
 
 ### Fork sentences for Sentiment Analysis
-df_articles['sentences_for_sentiment'] = df_articles['sentence']
-
-print('timer1: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time1, 2)))
-start_time2 = time.process_time()
+df_articles['sentences_for_sentiment'] = df_articles['sentence'].apply(lambda x: CapitalizeNouns(x))
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['sentence'] = df_articles['sentence'].apply(lambda x: SpecialCharCleaner(x))
+
+print('timer1: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time1, 2)))
+start_time2 = time.process_time()
 
 # not solving hyphenation as no universal rule found
 
