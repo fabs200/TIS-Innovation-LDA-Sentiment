@@ -63,7 +63,6 @@ df_articles['article'] = df_articles['article'].apply(lambda x: LinkRemover(x))
 df_articles['article'] = df_articles['article'].apply(lambda x: MailRemover(x))
 
 print('timer0: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time0, 2)))
-
 start_time1 = time.process_time()
 
 ### Fork articles for Sentiment Analysis and capitalize nouns
@@ -73,7 +72,6 @@ df_articles['articles_text'] = df_articles['article'].apply(lambda x: Capitalize
 df_articles['article'] = df_articles['article'].apply(lambda x: SpecialCharCleaner(x))
 
 print('timer1: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time1, 2)))
-
 start_time2 = time.process_time()
 
 # not solving hyphenation as no universal rule found

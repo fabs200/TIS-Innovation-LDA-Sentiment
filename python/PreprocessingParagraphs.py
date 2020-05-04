@@ -77,21 +77,22 @@ df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: WordRemover(
 df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: LinkRemover(x))
 df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: MailRemover(x))
 
-end_time0 = time.process_time()
-print('timer0: Elapsed time is {} seconds.'.format(round(end_time0-start_time0, 2)))
-
+print('timer0: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time0, 2)))
 start_time1 = time.process_time()
 
 ### Fork paragraphs for Sentiment Analysis
-df_articles['paragraphs_text'] = df_articles['paragraph']
+df_articles['paragraphs_text'] = df_articles['paragraph'].apply(lambda x: CapitalizeNouns(x))
 
 ### Remove punctuation except hyphen and apostrophe between words, special characters
 df_articles['paragraph'] = df_articles['paragraph'].apply(lambda x: SpecialCharCleaner(x))
 
+print('timer1: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time1, 2)))
+start_time2 = time.process_time()
+
 # not solving hyphenation as no univeral rule found
 
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
-df_articles['paragraph_nouns'] = df_articles['paragraph'].apply(lambda x: POStagger(x, POStag=p['POStag_type']))
+df_articles['paragraph_nouns'] = df_articles['paragraph'].apply(lambda x: POSlemmatizer(x, POStag=p['POStag_type']))
 df_articles['paragraph_nouns'] = df_articles['paragraph_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
@@ -131,8 +132,7 @@ df_long.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format
                sep='\t', index=False)
 df_long.to_excel(path_processedarticles + 'paragraphs_for_lda_{}_l.xlsx'.format(POStag_type))
 
-end_time1 = time.process_time()
-print('timer1: Elapsed time is {} seconds.'.format(round(end_time1-start_time1, 2)))
-print('Overall elapsed time is {} seconds.'.format(round(end_time1-start_time0, 2)))
+print('timer2: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time2, 2)))
+print('Overall elapsed time is {} seconds.'.format(round(time.process_time()-start_time0, 2)))
 
 ###
