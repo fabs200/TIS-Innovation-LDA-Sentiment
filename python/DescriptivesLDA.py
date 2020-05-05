@@ -2,7 +2,6 @@ import pandas
 from python.ConfigUser import path_processedarticles
 from python.params import params as p
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Todo: look up/implement LDAvis
 # https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
@@ -16,29 +15,41 @@ df_long = pandas.read_csv(path_processedarticles + 'csv/lda_results_{}_l.csv'.fo
                           sep='\t', na_filter=False)
 
 # Select articles
-df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id', 'year',
-                                               'sentiscore_mean', 'sentiscore_median']]
-# to numeric
+df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id', 'month', 'sentiscore_mean']]
+
+# convert dtypes
+df_long['month'] = pandas.to_datetime(df_long['month'], format='%Y-%m')
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
-df_long['sentiscore_median'] = pandas.to_numeric(df_long['sentiscore_median'], errors='coerce')
 
-df = df_long.groupby(['DomTopic_arti_arti_id', 'year'])[['sentiscore_mean', 'sentiscore_median']].mean().reset_index()
+# select date range
+df_long = df_long[(df_long['month'] > '2007-1-1')]
 
-# to integer
-df['DomTopic_arti_arti_id'] = pandas.to_numeric(df['DomTopic_arti_arti_id'], errors='coerce')
-df['DomTopic_arti_arti_id'] = df['DomTopic_arti_arti_id'].astype(int)
+# group by topics and reshape long to wide to make plottable
+df_long = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
+    index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
 
-line_chart0 = plt.plot(df[df['DomTopic_arti_arti_id']==0]['year'].to_list(), df[df['DomTopic_arti_arti_id']==0]['sentiscore_mean'].to_list(), '--')
-line_chart1 = plt.plot(df[df['DomTopic_arti_arti_id']==1]['year'].to_list(), df[df['DomTopic_arti_arti_id']==1]['sentiscore_mean'].to_list(), '-')
-line_chart2 = plt.plot(df[df['DomTopic_arti_arti_id']==2]['year'].to_list(), df[df['DomTopic_arti_arti_id']==2]['sentiscore_mean'].to_list(), '-.')
-line_chart3 = plt.plot(df[df['DomTopic_arti_arti_id']==3]['year'].to_list(), df[df['DomTopic_arti_arti_id']==3]['sentiscore_mean'].to_list(), ':')
-# line_chart4 = plt.plot(df[df['DomTopic_arti_arti_id']==4]['year'].to_list(), df[df['DomTopic_arti_arti_id']==4]['sentiscore_mean'].to_list(), '--')
-# line_chart5 = plt.plot(df[df['DomTopic_arti_arti_id']==5]['year'].to_list(), df[df['DomTopic_arti_arti_id']==5]['sentiscore_mean'].to_list(), '--')
-# line_chart6 = plt.plot(df[df['DomTopic_arti_arti_id']==6]['year'].to_list(), df[df['DomTopic_arti_arti_id']==6]['sentiscore_mean'].to_list(), '--')
-# line_chart7 = plt.plot(df[df['DomTopic_arti_arti_id']==7]['year'].to_list(), df[df['DomTopic_arti_arti_id']==7]['sentiscore_mean'].to_list(), '--')
-plt.title('Topics with sentiment over time')
-plt.xlabel('year')
-plt.ylabel('sentiment score')
-plt.legend(['topic0', 'topic1', 'topic2', 'topic3', 'topic4', 'topic5', 'toplic6', 'toplic7'], loc=4)
-plt.show()
+# make aggregation available
+df_aggr_m = df_long.groupby(pandas.Grouper(freq='M')).mean()
+df_aggr_q = df_long.groupby(pandas.Grouper(freq='Q')).mean()
+df_aggr_y = df_long.groupby(pandas.Grouper(freq='Y')).mean()
 
+# plot
+df_aggr_m.plot()
+df_aggr_q.plot()
+df_aggr_y.plot()
+
+# import numpy
+# def smoothListGaussian(list, strippedXs=False, degree=5):
+#     window = degree*2-1
+#     weight = numpy.array([1.0]*window)
+#     weightGauss = []
+#     for i in range(window):
+#         i = i-degree+1
+#         frac = i/float(window)
+#         gauss = 1/(numpy.exp((4*(frac))**2))
+#         weightGauss.append(gauss)
+#     weight = numpy.array(weightGauss)*weight
+#     smoothed = [0.0]*(len(list)-window)
+#     for i in range(len(smoothed)):
+#         smoothed[i] = sum(numpy.array(list[i:i+window])*weight)/sum(weight)
+#     return smoothed
