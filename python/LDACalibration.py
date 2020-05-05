@@ -29,14 +29,14 @@ complete_for_lda = pandas.read_csv(path_processedarticles + 'csv/complete_for_ld
 #                             display_plot=True)
 
 
-_metric = 'hellinger'
+_metric = 'coherence'
 
-for no_b in np.arange(20, 101, 20):
+for no_b in np.arange(20, 101, 10):
     for no_a in np.arange(.3, .61, .1):
         # print(no_b, no_a)
 
         results_lda_std = LDACalibration(
-                                type='tfidf',
+                                type='standard',
                                 dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag_type'])],
                                 # dataframecolumn=complete_for_lda['sentences_{}_for_lda'.format(p['POStag_type'])],
                                 topics_start=1,
