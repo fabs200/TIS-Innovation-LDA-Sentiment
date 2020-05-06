@@ -1,5 +1,5 @@
 import pandas, time
-from python.ConfigUser import path_processedarticles
+from python.ConfigUser import path_processedarticles, path_project
 from python._AnalysisFunctions import EstimateLDA, GetDomTopic
 from python.params import params as p
 
@@ -103,7 +103,8 @@ if 'article' in p['lda_level_fit']:
                       passes=p['passes'], update_every=p['update_every'], dtype=p['dtype'],
                       decay=p['decay'], offset=p['offset'], gamma_threshold=p['gamma_threshold'],
                       minimum_probability=p['minimum_probability'], ns_conf=p['ns_conf'],
-                      minimum_phi_value=p['minimum_phi_value'], per_word_topics=p['per_word_topics']
+                      minimum_phi_value=p['minimum_phi_value'], per_word_topics=p['per_word_topics'],
+                      save_model=True
                       )
     print('\testimating lda on article lda_level took {} seconds'.format(round(time.process_time()-start_ldafit_arti, 2)))
 

@@ -1,15 +1,15 @@
 from python.ConfigUser import path_processedarticles, path_project
-import spacy, pandas
+from python.params import params as p
+import spacy, pandas, traceback, os
 import numpy as np
 import pprint as pp
+from python._ProcessingFunctions import MakeListInLists, FlattenList
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel, TfidfModel
-from python._ProcessingFunctions import MakeListInLists, FlattenList
 from gensim.matutils import jaccard, hellinger
 from gensim.models.coherencemodel import CoherenceModel
+from gensim.test.utils import datapath
 import matplotlib.pyplot as plt
-from python.params import params as p
-import traceback
 
 def Load_SePL():
     """
@@ -311,23 +311,26 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
 
 
-def EstimateLDA(dataframecolumn, type=p['type'], no_below=0.1, no_above=0.9, num_topics=5, alpha='symmetric', eta=None,
+def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_topics=5, num_words=10,
+                alpha='symmetric', eta=None,
                 eval_every=10, iterations=50, random_state=None, verbose=True,
                 distributed=False, chunksize=2000, passes=1, update_every=1, decay=0.5, offset=1.0,
                 gamma_threshold=0.001, minimum_probability=0.01, ns_conf=None, minimum_phi_value=0.01,
-                per_word_topics=False, callbacks=None, dtype=np.float32):
+                per_word_topics=False, callbacks=None, dtype=np.float32, save_model=False):
     """
     Estimates lda model based on the given training corpus (article, sentence or paragraph level)
 
     :param dataframecolumn: documents in string format to use as training corpus for the lda model
-    :param no_below: cutoff words in the training corpus with frequency below a certain number
-    :param no_above: cutoff words in the training corpus with frequency above a certain number
-    :param num_topics: number of topcis to be estimated in the lda model
+    :param no_below: int, cutoff words in the training corpus with frequency below a certain number
+    :param no_above: float, cutoff words in the training corpus with frequency above a certain number
+    :param num_topics: int, number of topcis to be estimated in the lda model
+    :param num_words: int, number of topics to be included in topics when printed and saved to disk (save_model=True)
     :param alpha: a priori belief about topic probablities- specify 'auto' to learn asymmetric prior from data
     :param eta: a priori belief about word probabilities - specify 'auto' to learn asymmetric prior from data
     :param eval_every: log proplecity estimation frequency, higher values slows down training
     :param iterations: maximum number of iterations through the corpus when inferring the topic distribution
     :param random_state: set seed to generate random state - useful for reproducibility
+    :param save_model: False, model and topics will be saved to {path_project}/lda/... if set to True
     :return: returns tuple of estimated lda model and text objects used for estimation
     """
 
@@ -367,8 +370,29 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=0.1, no_above=0.9, num
                          )
 
     # Print the topic keywords
-    if verbose: lda_model.print_topics(-1)
-    if verbose: pp.pprint(lda_model.print_topics())
+    if verbose: pp.pprint(lda_model.print_topics(num_topics=num_topics, num_words=num_words))
+
+    # Save model
+    if save_model:
+        os.makedirs(path_project + "lda/model_{}_{}_{}_{}".format(type,
+                                                                  p['POStag_type'],
+                                                                  str(round(no_below, ndigits=2)),
+                                                                  str(round(no_above, ndigits=3))), exist_ok=True)
+        temp_file = datapath(path_project + "lda/model_{}_{}_{}_{}/lda_model".format(type,
+                                                                                     p['POStag_type'],
+                                                                                     str(round(no_below, ndigits=2)),
+                                                                                     str(round(no_above, ndigits=3)))
+                             )
+        # save
+        lda_model.save(temp_file)
+        # To load pretrained model: lda = LdaModel.load(temp_file)
+        # save topics
+        topics_temp = lda_model.print_topics(num_topics=num_topics, num_words=num_words)
+        with open(path_project + "lda/model_{}_{}_{}_{}/topics.txt".format(type,
+                                                                           p['POStag_type'],
+                                                                           str(round(no_below, ndigits=2)),
+                                                                           str(round(no_above, ndigits=3))), 'w') as f:
+            f.write("\n".join(map(str, topics_temp)))
 
     return lda_model, docsforlda, dict_lda, corpus_lda
 
@@ -568,8 +592,9 @@ def LDACoherence(lda_model, corpus, dictionary, texts):
 #todo: describe new parametrs: type in estimate lda and ldacali
 def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step=1,
                    topn=10, num_words=25, metric='hellinger', type='standard',
-                   no_below=0.1, no_above=0.9, alpha='symmetric', eta=None, eval_every=10, iterations=50,
-                   random_state=None, verbose=False, display_plot=True, save_plot=False):
+                   no_below=50, no_above=0.9, alpha='symmetric', eta=None, eval_every=10, iterations=50,
+                   random_state=None, verbose=False,
+                   display_num_words=10, display_plot=True, save_plot=False, save_model=False):
     """
     Computes one of three evaluation metrics (jaccard, hellinger or coherence c_v)
     for a series of lda models using a topic range. The computed values for the metrics are displayed in a plot.
@@ -589,7 +614,9 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
     :param iterations: maximum number of iterations through the corpus when inferring the topic distribution
     :param random_state: set seed to generate random state - useful for reproducibility
     :param display_plot: set to false to not display a plot of the computed metric
-    :param display_plot: set to false to not save plot
+    :param save_plot: set to false to not save plot
+    :param display_num_topics: display number of topics as specified in EstimateLDA(), Note: only to display!
+    :param save_model: save model as specified in EstimateLDA()
     :return: plots evaluation metric for lda models over the specified topic range
     """
 
@@ -609,7 +636,12 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
                                   eval_every=eval_every,
                                   iterations=iterations,
                                   random_state=random_state,
-                                  type=type)
+                                  type=type,
+
+                                  # display, save options
+                                  num_words=display_num_words,
+                                  save_model=save_model
+                                  )
         lda_model, docsforlda, dict_lda, corpus_lda = lda_results[0], lda_results[1], lda_results[2], lda_results[3]
         model_list.append(lda_model)
 
