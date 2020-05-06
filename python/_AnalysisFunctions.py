@@ -626,12 +626,17 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         fig = plt.figure()
         ax = plt.subplot(111)
         ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
-                label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(metric, type, p['POStag_type'], round(no_below), round(no_above), alpha, eta, code))
+                label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(
+                    metric, type, p['POStag_type'],
+                    round(no_below, ndigits=2), round(no_above, ndigits=2),
+                    alpha, eta, code))
         ax.legend()
         if save_plot:
             plt.savefig(path_project +
                         'calibration/calibration_{}_{}/{}/'.format(type, p['POStag_type'], metric) +
-                        'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(round(no_below), round(no_above), alpha, eta))
+                        'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(round(no_below, ndigits=2),
+                                                                              round(no_above, ndigits=2),
+                                                                              alpha, eta))
         plt.show()
 
     return model_list, metric_values
