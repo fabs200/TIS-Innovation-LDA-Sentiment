@@ -26,8 +26,8 @@ df_long_complete = df_long_complete.drop(columns=['articles_{}_for_lda'.format(P
                                                   'sentences_{}_for_lda'.format(POStag_type),
                                                   'articles_text',
                                                   'paragraphs_text',
-                                                  'sentences_for_sentiment',
-                                                  '_merge'])
+                                                  'sentences_for_sentiment'
+                                                  ])
 
 # Update column from df_long_arti and rename _merge
 df_long_complete = pandas.merge(df_long_complete,

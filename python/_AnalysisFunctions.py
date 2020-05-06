@@ -1,4 +1,4 @@
-from python.ConfigUser import path_processedarticles
+from python.ConfigUser import path_processedarticles, path_project
 import spacy, pandas
 import numpy as np
 import pprint as pp
@@ -569,7 +569,7 @@ def LDACoherence(lda_model, corpus, dictionary, texts):
 def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step=1,
                    topn=10, num_words=25, metric='hellinger', type='standard',
                    no_below=0.1, no_above=0.9, alpha='symmetric', eta=None, eval_every=10, iterations=50,
-                   random_state=None, verbose=False, display_plot=True):
+                   random_state=None, verbose=False, display_plot=True, save_plot=False):
     """
     Computes one of three evaluation metrics (jaccard, hellinger or coherence c_v)
     for a series of lda models using a topic range. The computed values for the metrics are displayed in a plot.
@@ -589,6 +589,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
     :param iterations: maximum number of iterations through the corpus when inferring the topic distribution
     :param random_state: set seed to generate random state - useful for reproducibility
     :param display_plot: set to false to not display a plot of the computed metric
+    :param display_plot: set to false to not save plot
     :return: plots evaluation metric for lda models over the specified topic range
     """
 
@@ -625,8 +626,12 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         fig = plt.figure()
         ax = plt.subplot(111)
         ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
-                label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(metric, type, p['POStag_type'], no_below, no_above, alpha, eta, code))
+                label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(metric, type, p['POStag_type'], round(no_below), round(no_above), alpha, eta, code))
         ax.legend()
+        if save_plot:
+            plt.savefig(path_project +
+                        'calibration/calibration_{}_{}/{}/'.format(type, p['POStag_type'], metric) +
+                        'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(round(no_below), round(no_above), alpha, eta))
         plt.show()
 
     return model_list, metric_values
