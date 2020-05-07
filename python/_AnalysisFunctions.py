@@ -374,24 +374,27 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
 
     # Save model
     if save_model:
-        os.makedirs(path_project + "lda/model_{}_{}_{}_{}".format(type,
-                                                                  p['POStag_type'],
-                                                                  str(round(no_below, ndigits=2)),
-                                                                  str(round(no_above, ndigits=3))), exist_ok=True)
-        temp_file = datapath(path_project + "lda/model_{}_{}_{}_{}/lda_model".format(type,
-                                                                                     p['POStag_type'],
-                                                                                     str(round(no_below, ndigits=2)),
-                                                                                     str(round(no_above, ndigits=3)))
+        os.makedirs(path_project + "lda/model_{}_{}_{}_{}_k{}".format(type,
+                                                                      p['POStag_type'],
+                                                                      str(round(no_below, ndigits=2)),
+                                                                      str(round(no_above, ndigits=3)),
+                                                                      str(round(num_topics, ndigits=0))), exist_ok=True)
+        temp_file = datapath(path_project + "lda/model_{}_{}_{}_{}_k{}/lda_model".format(type,
+                                                                                         p['POStag_type'],
+                                                                                         str(round(no_below, ndigits=2)),
+                                                                                         str(round(no_above, ndigits=3)),
+                                                                                         str(round(num_topics, ndigits=0)))
                              )
         # save
         lda_model.save(temp_file)
         # To load pretrained model: lda = LdaModel.load(temp_file)
         # save topics
         topics_temp = lda_model.print_topics(num_topics=num_topics, num_words=num_words)
-        with open(path_project + "lda/model_{}_{}_{}_{}/topics.txt".format(type,
-                                                                           p['POStag_type'],
-                                                                           str(round(no_below, ndigits=2)),
-                                                                           str(round(no_above, ndigits=3))), 'w') as f:
+        with open(path_project + "lda/model_{}_{}_{}_{}_k{}/topics.txt".format(type,
+                                                                               p['POStag_type'],
+                                                                               str(round(no_below, ndigits=2)),
+                                                                               str(round(no_above, ndigits=3)),
+                                                                               str(round(num_topics, ndigits=0))), 'w') as f:
             f.write("\n".join(map(str, topics_temp)))
 
     return lda_model, docsforlda, dict_lda, corpus_lda
