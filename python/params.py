@@ -22,6 +22,7 @@ params = {
     'no_below':     75, # filter extremes (words occurring in less than 20 docs, or in more than 50% of the docs)
     'no_above':     .5,
     'num_topics':   8,
+    'num_words':    10,
     'alpha':        'auto',
     'eta':          'auto',
     'eval_every':   5,

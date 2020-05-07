@@ -41,6 +41,7 @@ if 'sentence' in p['lda_level_fit']:
                       no_below=p['no_below'],
                       no_above=p['no_above'],
                       num_topics=p['num_topics'],
+                      num_words=p['num_words'],
                       alpha=p['alpha'],
                       eta=p['eta'],
                       eval_every=p['eval_every'],
@@ -52,7 +53,9 @@ if 'sentence' in p['lda_level_fit']:
                       passes=p['passes'], update_every=p['update_every'], dtype=p['dtype'],
                       decay=p['decay'], offset=p['offset'], gamma_threshold=p['gamma_threshold'],
                       minimum_probability=p['minimum_probability'], ns_conf=p['ns_conf'],
-                      minimum_phi_value=p['minimum_phi_value'], per_word_topics=p['per_word_topics']
+                      minimum_phi_value=p['minimum_phi_value'], per_word_topics=p['per_word_topics'],
+                      # save model
+                      save_model=True
                       )
     print('\testimating lda on sentence lda_level took {} seconds'.format(round(time.process_time()-start_ldafit_sent, 2)))
 
@@ -67,6 +70,7 @@ if 'paragraph' in p['lda_level_fit']:
                       no_below=p['no_below'],
                       no_above=p['no_above'],
                       num_topics=p['num_topics'],
+                      num_words=p['num_words'],
                       alpha=p['alpha'],
                       eta=p['eta'],
                       eval_every=p['eval_every'],
@@ -78,7 +82,9 @@ if 'paragraph' in p['lda_level_fit']:
                       passes=p['passes'], update_every=p['update_every'], dtype=p['dtype'],
                       decay=p['decay'], offset=p['offset'], gamma_threshold=p['gamma_threshold'],
                       minimum_probability=p['minimum_probability'], ns_conf=p['ns_conf'],
-                      minimum_phi_value=p['minimum_phi_value'], per_word_topics=p['per_word_topics']
+                      minimum_phi_value=p['minimum_phi_value'], per_word_topics=p['per_word_topics'],
+                      # save model
+                      save_model=True
                       )
     print('\testimating lda on paragraph lda_level took {} seconds'.format(round(time.process_time()-start_ldafit_para, 2)))
 
@@ -92,6 +98,7 @@ if 'article' in p['lda_level_fit']:
                       no_below=p['no_below'],
                       no_above=p['no_above'],
                       num_topics=p['num_topics'],
+                      num_words=p['num_words'],
                       alpha=p['alpha'],
                       eta=p['eta'],
                       eval_every=p['eval_every'],
@@ -104,6 +111,7 @@ if 'article' in p['lda_level_fit']:
                       decay=p['decay'], offset=p['offset'], gamma_threshold=p['gamma_threshold'],
                       minimum_probability=p['minimum_probability'], ns_conf=p['ns_conf'],
                       minimum_phi_value=p['minimum_phi_value'], per_word_topics=p['per_word_topics'],
+                      # save model
                       save_model=True
                       )
     print('\testimating lda on article lda_level took {} seconds'.format(round(time.process_time()-start_ldafit_arti, 2)))
