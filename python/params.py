@@ -1,5 +1,5 @@
 """
-Run preprocessing from here, adjust configurations for lda, for calibration
+Specify parameters here, adjust configurations for lda and for calibration
 """
 
 import numpy as np
@@ -18,9 +18,9 @@ params = {
     # 'lda_level_domtopic': ['sentence', 'paragraph', 'article'],
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
-    'type':         'standard',
-    'no_below':     75, # filter extremes (words occurring in less than 20 docs, or in more than 50% of the docs)
-    'no_above':     .5,
+    'type':         'tfidf',
+    'no_below':     65, # Keep tokens which are contained in at least no_below documents
+    'no_above':     .55, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
     'num_topics':   8,
     'num_words':    40,
     'alpha':        'auto',
@@ -48,5 +48,18 @@ params = {
     # Preprocessing parameters
     'minwordinsent':2,
     'minwordlength':3
+
 }
+
+
+
+# current model (don't touch this)
+currmodel = '{}_{}_{}_{}_k{}'.format(params['type'],
+                                     params['POStag'],
+                                     str(round(params['no_above'], ndigits=2)),
+                                     str(round(params['no_below'], ndigits=3)),
+                                     str(round(params['num_topics'], ndigits=0)))
+
+# update params by currmodel
+params['currmodel'] = currmodel
 

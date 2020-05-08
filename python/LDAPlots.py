@@ -1,10 +1,13 @@
-import pandas, dtale
+import pandas, os, dtale
 from python.ConfigUser import path_data, path_project
 from python.params import params as p
 import matplotlib.pyplot as plt
 import numpy as np
 
 """
+------------------------------------------
+LDAPlots.py - Overview of graphs
+------------------------------------------
 Graph 1: Sentiment score over time, by topics
 Graph 2: Frequency analysis, publication trend of articles, over time (Fritsche, Mejia)
 Graph 3: Frequency analysis, publication trend of topics, over time (Fritsche, Mejia)
@@ -22,12 +25,14 @@ Graph 11: Barplot, how many articles have a sentiment score and how many not ...
 # https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
-POStag_type, lda_level_fit, lda_level_domtopic = p['POStag'], p['lda_level_fit'], p['lda_level_domtopic']
+POStag, lda_level_fit, lda_level_domtopic = p['POStag'], p['lda_level_fit'], p['lda_level_domtopic']
+
+# create folder in graphs with currmodel
+os.makedirs(path_project + "graph/model_{}".format(p['currmodel']), exist_ok=True)
 
 # Load long file
-print('Loading lda_results_{}_l.csv'.format(POStag_type))
-df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(POStag_type),
-                          sep='\t', na_filter=False)
+print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
+df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
 # Select articles
 df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id', 'year', 'quarter', 'month', 'sentiscore_mean']]
@@ -67,9 +72,8 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.show()
-plt.savefig(path_project + 'graphs/01_sentiscore_bytopic_m_{}_noa{}_nob{}.png'.format(p['POStag'],
-                                                                                      p['no_below'], p['no_above']))
+
+plt.savefig(path_project + 'graph/model_{}/01_sentiscore_bytopics_m.png'.format(p['currmodel']))
 
 # Graph by quarter
 fig = plt.figure(figsize=(10,5))
@@ -82,10 +86,8 @@ plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'],
                                                                                 p['no_above']))
-plt.show()
-plt.savefig(path_project + 'graphs/01_sentiscore_bytopic_q_{}_noa{}_nob{}.png'.format(p['POStag'],
-                                                                                      p['no_below'],
-                                                                                      p['no_above']))
+
+plt.savefig(path_project + 'graph/model_{}/01_sentiscore_bytopics_q.png'.format(p['currmodel']))
 
 # Graph by year
 fig = plt.figure(figsize=(10,5))
@@ -97,9 +99,8 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.show()
-plt.savefig(path_project + 'graphs/01_sentiscore_bytopic_y_{}_noa{}_nob{}.png'.format(p['POStag'],
-                                                                                      p['no_below'], p['no_above']))
+
+plt.savefig(path_project + 'graph/model_{}/01_sentiscore_bytopics_y.png'.format(p['currmodel']))
 
 
 # import numpy
@@ -142,8 +143,7 @@ labels = df_senti_freq_y.iloc[:,1]
 for rect, label in zip(rects, labels):
     ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + 2, label, ha='center', va='bottom')
 
-plt.savefig(path_project + 'graphs/02_absfreqArt_y_{}_noa{}_nob{}.png'.format(p['POStag'],
-                                                                              p['no_below'], p['no_above']))
+plt.savefig(path_project + 'graph/model_{}/02_absfreqArt_y.png'.format(p['currmodel']))
 
 
 """
@@ -194,9 +194,8 @@ plt.title('Absolute frequency of articles with sentiment score over time, by top
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 
-plt.show()
-plt.savefig(path_project + 'graphs/03_absfreqArt_bytopic_m_{}_noa{}_nob{}.png'.format(p['POStag'],
-                                                                                      p['no_below'], p['no_above']))
+
+plt.savefig(path_project + 'graph/model_{}/03_absfreqArt_bytopic_m_.png'.format(p['currmodel']))
 
 
 # Graph line by quarter
@@ -217,9 +216,8 @@ for label in ax.xaxis.get_ticklabels():
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'], p['no_above']))
-plt.show()
-plt.savefig(path_project + 'graphs/03_absfreqArt_bytopic_q_{}_noa{}_nob{}.png'.format(p['POStag'],
-                                                                                      p['no_below'], p['no_above']))
+
+plt.savefig(path_project + 'graph/model_{}/03_absfreqArt_bytopic_q.png'.format(p['currmodel']))
 
 
 # Graph line by year
@@ -233,9 +231,8 @@ ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.show()
-plt.savefig(path_project + 'graphs/03_absfreqArt_bytopic_y_{}_noa{}_nob{}.png'.format(p['POStag'],
-                                                                                      p['no_below'], p['no_above']))
+
+plt.savefig(path_project + 'graph/model_{}/03_absfreqArt_bytopic_y.png'.format(p['currmodel']))
 
 
 #####

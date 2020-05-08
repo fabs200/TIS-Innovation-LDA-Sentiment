@@ -1,5 +1,5 @@
 import pandas, time
-from python.ConfigUser import path_data, path_project
+from python.ConfigUser import path_data
 from python._AnalysisFunctions import EstimateLDA, GetDomTopic
 from python.params import params as p
 
@@ -245,11 +245,10 @@ if 'article' in p['lda_level_domtopic'] and 'article' in p['lda_level_fit']:
 end_time1 = time.process_time()
 print('\ttimer1: Elapsed time is {} seconds'.format(round(end_time1-start_time1, 2)))
 
-
 # Export file
 print('\nsaving results')
-df_long.to_csv(path_data + 'csv/lda_results_{}_l.csv'.format(POStag), sep='\t', index=False)
-# df_long.to_excel(path_data + 'lda_results_{}_l.xlsx'.format(POStag))
+df_long.to_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', index=False)
+df_long.to_excel(path_data + 'lda_results_{}_l.xlsx'.format(p['currmodel']))
 
 print('Overall elapsed time:', round(time.process_time()-start_time0, 2))
 
