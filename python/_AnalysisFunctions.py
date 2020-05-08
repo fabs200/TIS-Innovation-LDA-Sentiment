@@ -1,4 +1,4 @@
-from python.ConfigUser import path_processedarticles, path_project
+from python.ConfigUser import path_data, path_project
 from python.params import params as p
 import spacy, pandas, traceback, os
 import numpy as np
@@ -17,7 +17,7 @@ def Load_SePL():
     GetSentiments()
     """
     # Read in SePL
-    df_sepl = pandas.read_csv(path_processedarticles + 'SePL/SePL_v1.1_negated_modified.csv', sep=';')
+    df_sepl = pandas.read_csv(path_data + 'SePL/SePL_v1.1_negated_modified.csv', sep=';')
 
     # convert all words to lower case
     df_sepl['phrase'] = [i.lower() for i in df_sepl['phrase']]
@@ -375,12 +375,12 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
     # Save model
     if save_model:
         os.makedirs(path_project + "lda/model_{}_{}_{}_{}_k{}".format(type,
-                                                                      p['POStag_type'],
+                                                                      p['POStag'],
                                                                       str(round(no_below, ndigits=2)),
                                                                       str(round(no_above, ndigits=3)),
                                                                       str(round(num_topics, ndigits=0))), exist_ok=True)
         temp_file = datapath(path_project + "lda/model_{}_{}_{}_{}_k{}/lda_model".format(type,
-                                                                                         p['POStag_type'],
+                                                                                         p['POStag'],
                                                                                          str(round(no_below, ndigits=2)),
                                                                                          str(round(no_above, ndigits=3)),
                                                                                          str(round(num_topics, ndigits=0)))
@@ -391,7 +391,7 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
         # save topics
         topics_temp = lda_model.print_topics(num_topics=num_topics, num_words=num_words)
         with open(path_project + "lda/model_{}_{}_{}_{}_k{}/topics.txt".format(type,
-                                                                               p['POStag_type'],
+                                                                               p['POStag'],
                                                                                str(round(no_below, ndigits=2)),
                                                                                str(round(no_above, ndigits=3)),
                                                                                str(round(num_topics, ndigits=0))), 'w') as f:
@@ -662,13 +662,13 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         ax = plt.subplot(111)
         ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
                 label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(
-                    metric, type, p['POStag_type'],
+                    metric, type, p['POStag'],
                     str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)),
                     alpha, eta, code))
         ax.legend()
         if save_plot:
             plt.savefig(path_project +
-                        'calibration/calibration_{}_{}/{}/'.format(type, p['POStag_type'], metric) +
+                        'calibration/calibration_{}_{}/{}/'.format(type, p['POStag'], metric) +
                         'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
                                                                               str(round(no_above, ndigits=3)),
                                                                               alpha, eta))

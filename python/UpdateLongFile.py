@@ -1,23 +1,23 @@
 ### Update Long file only by newly preprocessed articles_NN_for_lda
 import pandas
-from python.ConfigUser import path_processedarticles
+from python.ConfigUser import path_data
 from python.params import params as p
 
 # unpack POStag type
-POStag_type = p['POStag_type']
+POStag_type = p['POStag']
 
 # Read in article long file
-df_long_arti = pandas.read_csv(path_processedarticles + 'csv/articles_for_lda_{}_l.csv'.format(POStag_type),
+df_long_arti = pandas.read_csv(path_data + 'csv/articles_for_lda_{}_l.csv'.format(POStag_type),
                                sep='\t', na_filter=False)
 # Read in paragraph long file
-df_long_para = pandas.read_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
+df_long_para = pandas.read_csv(path_data + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
                                sep='\t', na_filter=False)
 # Read in sentence long file
-df_long_sent = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
+df_long_sent = pandas.read_csv(path_data + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
                                sep='\t', na_filter=False)
 
 # Read in exported long file from ProcessLongfiles.py
-df_long_complete = pandas.read_csv(path_processedarticles + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
+df_long_complete = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
                                    sep='\t', na_filter=False)
 
 # Drop old column
@@ -55,8 +55,8 @@ df_long_complete = df_long_complete.drop(columns=['_merge_arti', '_merge_para', 
 
 ### Export longfile to csv (will be read in later)
 print('Save updated final df_long_complete')
-df_long_complete.to_csv(path_processedarticles + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
+df_long_complete.to_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
                         sep='\t', index=False)
-df_long_complete.to_excel(path_processedarticles + 'complete_for_lda_{}_l.xlsx'.format(POStag_type))
+df_long_complete.to_excel(path_data + 'complete_for_lda_{}_l.xlsx'.format(POStag_type))
 
 ###

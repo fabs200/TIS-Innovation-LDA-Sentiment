@@ -177,7 +177,7 @@ def SpecialCharCleaner(listOfSents):
 nlp2 = spacy.load('de_core_news_md') #, disable=['ner', 'parser']
 
 
-def POSlemmatizer(listOfSents, POStag=p['POStag_type']):
+def POSlemmatizer(listOfSents, POStag=p['POStag']):
     """
     POS tag words in sentences, lemmatize words, remove stop words
 

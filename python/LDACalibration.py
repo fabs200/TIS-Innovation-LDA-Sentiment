@@ -1,11 +1,11 @@
 import pandas, time
-from python.ConfigUser import path_processedarticles
+from python.ConfigUser import path_data
 from python._AnalysisFunctions import LDACalibration, EstimateLDA
 from python.params import params as p
 import numpy as np
 
 # Read in output file from PreprocessingSentences.py
-complete_for_lda = pandas.read_csv(path_processedarticles + 'csv/complete_for_lda_{}_l.csv'.format(p['POStag_type']),
+complete_for_lda = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(p['POStag']),
                                    sep='\t', na_filter=False)
 
 _metric = 'coherence'
@@ -15,8 +15,8 @@ for no_b in np.arange(20, 101, 10):
         # print(no_b, no_a)
         results_lda_std = LDACalibration(
                                 type='tfidf',
-                                dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag_type'])],
-                                # dataframecolumn=complete_for_lda['sentences_{}_for_lda'.format(p['POStag_type'])],
+                                dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
+                                # dataframecolumn=complete_for_lda['sentences_{}_for_lda'.format(p['POStag'])],
                                 topics_start=1,
                                 topics_limit=15,
                                 topics_step=1,
@@ -39,7 +39,7 @@ for no_b in np.arange(20, 101, 10):
 
 
 # ldamodel, docsforlda, ldadict, ldacorpus \
-#         = EstimateLDA(complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag_type'])],
+#         = EstimateLDA(complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
 #                       type='tfidf',
 #                       no_below=p['no_below'],
 #                       no_above=p['no_above'],
@@ -60,7 +60,7 @@ for no_b in np.arange(20, 101, 10):
 
 # complete_for_lda_calibr_tfidf = LDACalibration(
 #                             type='tfidf',
-#                             dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag_type'])],
+#                             dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
 #                             topics_start=1,
 #                             topics_limit=15,
 #                             topics_step=1,

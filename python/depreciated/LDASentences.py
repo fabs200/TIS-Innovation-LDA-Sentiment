@@ -2,18 +2,18 @@ import pandas
 import pprint as pp
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
-from python.ConfigUser import path_processedarticles
+from python.ConfigUser import path_data
 from python._AnalysisFunctions import EstimateLDA, GetDomTopic
 import python.params as p
 
 # unpack POStag type
-POStag_type = p['POStag_type']
+POStag_type = p['POStag']
 
 # Read in SePL
 #df_sepl = Load_SePL()
 
 # Read in output file from PreprocessingSentences.py
-df_sentences = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type), sep='\t')
+df_sentences = pandas.read_csv(path_data + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type), sep='\t')
 
 lda = EstimateLDA(df_sentences['Article_sentence_nouns_cleaned'])
 

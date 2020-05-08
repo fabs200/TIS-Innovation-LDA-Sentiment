@@ -1,5 +1,5 @@
 import pandas, time, dtale
-from python.ConfigUser import path_processedarticles
+from python.ConfigUser import path_data
 from python._ProcessingFunctions import Sentencizer, IgnoreWarnings
 from python._AnalysisFunctions import Load_SePL, GetSentimentScores_l
 from python.params import params as p
@@ -16,22 +16,22 @@ ProcessLongfiles.py
 """
 
 # unpack POStag type
-POStag_type = p['POStag_type']
+POStag_type = p['POStag']
 
 start_time0 = time.process_time()
 print('loading files')
 
 ### Read in long files
 # Sentence long file
-df_long_sent = pandas.read_csv(path_processedarticles + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
+df_long_sent = pandas.read_csv(path_data + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
                                sep='\t', na_filter=False)
 
 # Paragraph long file
-df_long_para = pandas.read_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
+df_long_para = pandas.read_csv(path_data + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
                                sep='\t', na_filter=False)
 
 # Article long file
-df_long_arti = pandas.read_csv(path_processedarticles + 'csv/articles_for_lda_{}_l.csv'.format(POStag_type),
+df_long_arti = pandas.read_csv(path_data + 'csv/articles_for_lda_{}_l.csv'.format(POStag_type),
                                sep='\t', na_filter=False)
 
 ######
@@ -105,8 +105,8 @@ df_long_complete['year'] = df_long_complete['Date'].dt.to_period('Y')
 ### 8. Create unique Articles, Paragraphs (prevent double counting)
 # df_long_complete['paragraphs_text'] = np.where(df_long_complete['Par_unique']==1, df_long_complete['paragraphs_text'], '')
 # df_long_complete['articles_text'] = np.where(df_long_complete['Art_unique']==1, df_long_complete['articles_text'], '')
-# df_long_complete['paragraphs_{}_for_lda'.format(POStag_type)] = np.where(df_long_complete['Par_unique']==1, df_long_complete['paragraphs_{}_for_lda'.format(POStag_type)], '')
-# df_long_complete['articles_{}_for_lda'.format(POStag_type)] = np.where(df_long_complete['Art_unique']==1, df_long_complete['articles_{}_for_lda'.format(POStag_type)], '')
+# df_long_complete['paragraphs_{}_for_lda'.format(POStag)] = np.where(df_long_complete['Par_unique']==1, df_long_complete['paragraphs_{}_for_lda'.format(POStag)], '')
+# df_long_complete['articles_{}_for_lda'.format(POStag)] = np.where(df_long_complete['Art_unique']==1, df_long_complete['articles_{}_for_lda'.format(POStag)], '')
 
 # dtale.show(df_long_complete, ignore_duplicate=True)
 
@@ -160,9 +160,9 @@ df_long_complete = df_long_complete[[
 
 ### 11. Export longfile to csv (will be read in later)
 print('Save final df_long_complete')
-df_long_complete.to_csv(path_processedarticles + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
+df_long_complete.to_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
                         sep='\t', index=False)
-df_long_complete.to_excel(path_processedarticles + 'complete_for_lda_{}_l.xlsx'.format(POStag_type))
+df_long_complete.to_excel(path_data + 'complete_for_lda_{}_l.xlsx'.format(POStag_type))
 
 end_time5 = time.process_time()
 print('\ttimer5: Elapsed time is {} seconds.'.format(round(end_time5-start_time5, 2)))

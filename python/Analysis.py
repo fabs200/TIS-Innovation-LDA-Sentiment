@@ -1,5 +1,5 @@
 import pandas, time
-from python.ConfigUser import path_processedarticles, path_project
+from python.ConfigUser import path_data, path_project
 from python._AnalysisFunctions import EstimateLDA, GetDomTopic
 from python.params import params as p
 
@@ -13,11 +13,11 @@ Analysis.py
 """
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
-POStag_type, lda_level_fit, lda_level_domtopic = p['POStag_type'], p['lda_level_fit'], p['lda_level_domtopic']
+POStag, lda_level_fit, lda_level_domtopic = p['POStag'], p['lda_level_fit'], p['lda_level_domtopic']
 
 # Load long file
-print('Loading complete_for_lda_{}_l.csv'.format(POStag_type))
-df_long = pandas.read_csv(path_processedarticles + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
+print('Loading complete_for_lda_{}_l.csv'.format(POStag))
+df_long = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(POStag),
                           sep='\t', na_filter=False)
 
 ######
@@ -36,7 +36,7 @@ if 'sentence' in p['lda_level_fit']:
     print('\nestimating lda on sentence lda_level')
     start_ldafit_sent = time.process_time()
     ldamodel_sent, docsforlda_sent, ldadict_sent, ldacorpus_sent \
-        = EstimateLDA(df_long['sentences_{}_for_lda'.format(POStag_type)],
+        = EstimateLDA(df_long['sentences_{}_for_lda'.format(POStag)],
                       type=p['type'],
                       no_below=p['no_below'],
                       no_above=p['no_above'],
@@ -65,7 +65,7 @@ if 'paragraph' in p['lda_level_fit']:
     print('\nestimating lda on paragraph lda_level')
     start_ldafit_para = time.process_time()
     ldamodel_para, docsforlda_para, ldadict_para, ldacorpus_para \
-        = EstimateLDA(df_long[df_long['Par_unique'] == 1]['paragraphs_{}_for_lda'.format(POStag_type)],
+        = EstimateLDA(df_long[df_long['Par_unique'] == 1]['paragraphs_{}_for_lda'.format(POStag)],
                       type=p['type'],
                       no_below=p['no_below'],
                       no_above=p['no_above'],
@@ -93,7 +93,7 @@ if 'article' in p['lda_level_fit']:
     print('\nestimating lda on article lda_level')
     start_ldafit_arti = time.process_time()
     ldamodel_arti, docsforlda_arti, ldadict_arti, ldacorpus_arti \
-        = EstimateLDA(df_long[df_long['Art_unique'] == 1]['articles_{}_for_lda'.format(POStag_type)],
+        = EstimateLDA(df_long[df_long['Art_unique'] == 1]['articles_{}_for_lda'.format(POStag)],
                       type=p['type'],
                       no_below=p['no_below'],
                       no_above=p['no_above'],
@@ -248,8 +248,8 @@ print('\ttimer1: Elapsed time is {} seconds'.format(round(end_time1-start_time1,
 
 # Export file
 print('\nsaving results')
-df_long.to_csv(path_processedarticles + 'csv/lda_results_{}_l.csv'.format(POStag_type), sep='\t', index=False)
-df_long.to_excel(path_processedarticles + 'lda_results_{}_l.xlsx'.format(POStag_type))
+df_long.to_csv(path_data + 'csv/lda_results_{}_l.csv'.format(POStag), sep='\t', index=False)
+# df_long.to_excel(path_data + 'lda_results_{}_l.xlsx'.format(POStag))
 
 print('Overall elapsed time:', round(time.process_time()-start_time0, 2))
 

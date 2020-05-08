@@ -1,16 +1,16 @@
 import pandas, time
 from nltk.corpus import stopwords
-from python.ConfigUser import path_processedarticles
+from python.ConfigUser import path_data
 from python._ProcessingFunctions import *
 from python.params import params as p
 
 # unpack POStag type
-POStag_type = p['POStag_type']
+POStag_type = p['POStag']
 
 start_time0 = time.process_time()
 
 # Read in file with articles from R-Skript ProcessNexisArticles.R
-df_articles = pandas.read_feather(path_processedarticles + 'feather/auto_paragraphs_withbattery.feather')
+df_articles = pandas.read_feather(path_data + 'feather/auto_paragraphs_withbattery.feather')
 
 ######
 # TEMP keep first x articles
@@ -92,7 +92,7 @@ start_time2 = time.process_time()
 # not solving hyphenation as no univeral rule found
 
 ### POS tagging and tokenize words in sentences (time-consuming!) and run Lemmatization (Note: word get tokenized)
-df_articles['paragraph_nouns'] = df_articles['paragraph'].apply(lambda x: POSlemmatizer(x, POStag=p['POStag_type']))
+df_articles['paragraph_nouns'] = df_articles['paragraph'].apply(lambda x: POSlemmatizer(x, POStag=p['POStag']))
 df_articles['paragraph_nouns'] = df_articles['paragraph_nouns'].apply(lambda x: Lemmatization(x))
 
 # Cleaning: drop stop words, drop if sentence contain only two words or less # TODO: calibrate later
@@ -102,12 +102,12 @@ df_articles['paragraphs_{}_for_lda'.format(POStag_type)] = df_articles['paragrap
                                                                                                 drop=False)
 
 ### Export data to csv (will be read in again in LDACalibration.py)
-# df_articles[['ID_incr', 'Art_ID', 'Date', 'paragraphs_{}_for_lda'.format(POStag_type)]].to_csv(
-#     path_processedarticles + 'csv/paragraphs_for_lda_{}.csv'.format(POStag_type), sep='\t', index=False)
+# df_articles[['ID_incr', 'Art_ID', 'Date', 'paragraphs_{}_for_lda'.format(POStag)]].to_csv(
+#     path_data + 'csv/paragraphs_for_lda_{}.csv'.format(POStag), sep='\t', index=False)
 
 ### Export as Excel and add Raw Articles
-# pandas.DataFrame(df_articles, columns=['paragraph_backup', 'paragraphs_{}_for_lda'.format(POStag_type)]).to_excel(
-#     path_processedarticles + 'paragraphs_for_lda_{}.xlsx'.format(POStag_type))
+# pandas.DataFrame(df_articles, columns=['paragraph_backup', 'paragraphs_{}_for_lda'.format(POStag)]).to_excel(
+#     path_data + 'paragraphs_for_lda_{}.xlsx'.format(POStag))
 
 # Make long file
 df_long = df_articles.paragraphs_text.apply(pandas.Series)\
@@ -128,9 +128,9 @@ df_long['Par_ID'] = df_long.groupby(['Art_ID']).cumcount()+1
 df_long = df_long[['Art_ID', 'Par_ID', 'Newspaper', 'Date', 'paragraphs_text', 'paragraphs_{}_for_lda'.format(POStag_type)]]
 
 ### Export longfile to csv (will be read in later)
-df_long.to_csv(path_processedarticles + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
+df_long.to_csv(path_data + 'csv/paragraphs_for_lda_{}_l.csv'.format(POStag_type),
                sep='\t', index=False)
-df_long.to_excel(path_processedarticles + 'paragraphs_for_lda_{}_l.xlsx'.format(POStag_type))
+df_long.to_excel(path_data + 'paragraphs_for_lda_{}_l.xlsx'.format(POStag_type))
 
 print('timer2: Elapsed time is {} seconds.'.format(round(time.process_time()-start_time2, 2)))
 print('Overall elapsed time is {} seconds.'.format(round(time.process_time()-start_time0, 2)))

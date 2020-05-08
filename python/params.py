@@ -7,7 +7,7 @@ import numpy as np
 params = {
 
     # Specify POStag type
-    'POStag_type':  'NNV',
+    'POStag':  'NN',
 
     # Specify on which level to fit lda
     'lda_level_fit':        ['article'],
@@ -22,7 +22,7 @@ params = {
     'no_below':     75, # filter extremes (words occurring in less than 20 docs, or in more than 50% of the docs)
     'no_above':     .5,
     'num_topics':   8,
-    'num_words':    10,
+    'num_words':    40,
     'alpha':        'auto',
     'eta':          'auto',
     'eval_every':   5,

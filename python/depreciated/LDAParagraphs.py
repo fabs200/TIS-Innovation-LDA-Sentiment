@@ -2,14 +2,14 @@ import pandas
 import pprint as pp
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
-from python.ConfigUser import path_processedarticles
+from python.ConfigUser import path_data
 from python._ProcessingFunctions import MakeListInLists
 
 # Specify POStag type
 POStag_type = 'NN'
 
 # Read in output file from PreprocessingSentences.py
-df_paragraphs = pandas.read_csv(path_processedarticles + 'csv/paragraphs_for_lda_analysis.csv', sep='\t')
+df_paragraphs = pandas.read_csv(path_data + 'csv/paragraphs_for_lda_analysis.csv', sep='\t')
 
 paragraphs = df_paragraphs['Article_paragraph_nouns_cleaned'].to_list()
 
