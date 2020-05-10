@@ -11,8 +11,8 @@ LDAPlots.py - Overview of graphs
 Graph 1: Sentiment score over time, by topics
 Graph 2: Frequency analysis, publication trend of articles, over time (Fritsche, Mejia)
 Graph 3: Frequency analysis, publication trend of topics, over time (Fritsche, Mejia)
-Graph 4: Frequency analysis, publisher bias, over time (Mejia) TODO
-Graph 5: Frequency analysis, Annual total with 3-years-average, by topic, over time (Melton) TODO
+Graph 4: Frequency analysis, publisher bias, over time (Mejia)
+Graph 5: Frequency analysis, Annual total with 3-years-average, by topic, over time (Melton)
 Graph 6: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton) TODO
 Graph 7: Scatterplot number articles vs. sentiment polarity, over topics (Mejia) TODO
 Graph 8: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr), over time (Mejia)
@@ -348,9 +348,103 @@ plt.show()
 plt.savefig(path_project + 'graph/model_{}/04b_absfreqArt_bytopic_y.png'.format(p['currmodel']))
 
 
+"""
+############ Graph 5: Frequency analysis, Annual total with 3-years-average, by topic, over time (Melton) ############
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+
+# make aggregation available
+# df_aggr_m = df_senti_freq_agg.groupby(pandas.Grouper(freq='M')).sum().reset_index()
+df_aggr_q = df_senti_freq_agg.groupby(pandas.Grouper(freq='Q')).sum().reset_index().rename(columns={'month': 'quarter'})
+df_aggr_y = df_senti_freq_agg.groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
+
+# reformat dates (no month here anymore as too granular)
+# quarter
+df_aggr_q['quarter'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0])
+df_aggr_q['year'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0]).year
+df_aggr_q['quarter'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0]).quarter
+df_aggr_q['quarter'] = df_aggr_q.year.map(str) + '-' + df_aggr_q.quarter.map(str)
+df_aggr_q = df_aggr_q.drop('year', axis=1)
+# year
+df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
+
+# before calculating avgs, retrieve all topics
+topics = df_aggr_q.columns[1:]
+
+# 3-years-average, quarterly (window=3*4)
+for i in range(1, len(df_aggr_q.columns)):
+    topic = df_aggr_q.columns[i]
+    df_aggr_q['{}_{}'.format(topic, '3y-avg')] = df_aggr_q.iloc[:, i].rolling(window=12).mean()
+
+for t, topic in enumerate(topics):
+    # Bar plot, quarterly, with 3-years-avg
+    ax = df_aggr_q['{}'.format(topic)].\
+        plot(kind='bar', figsize=(5, 4.5), zorder=2, width=0.8)
+    ax.tick_params(axis="both", which="both", bottom="off", top="on", labelbottom="off",
+                   left="off", right="off", labelleft="on")
+    # line with 3-years-avg
+    df_aggr_q['{}_3y-avg'.format(topic)].plot(secondary_y=False, color='red')
+    # set up xticks and xtickslabels
+    ax.set_xticks(range(len(df_aggr_q.iloc[:, 0])))
+    ax.set_xticklabels(df_aggr_q.iloc[:, 0])
+    idx = 1
+    for label in ax.xaxis.get_ticklabels():
+        if (idx % 4)==0 or (idx==1):
+            label.set_rotation(90)
+        else:
+            label.set_visible(False)
+        idx += 1
+    # title
+    plt.title('Frequency of articles of topic {} with 3-years-average\n'
+              'POStag: {}, frequency: quarterly,\nno_below: {}, no_above: {}'.format(t, p['POStag'],
+                                                                                        p['no_below'], p['no_above']))
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(path_project + 'graph/model_{}/05_freq_q_topic{}_withline.png'.format(p['currmodel'], str(t)))
+    plt.close()
 
 
+# 3-years-average, yearly
+for i in range(1, len(df_aggr_y.columns)):
+    topic = df_aggr_y.columns[i]
+    df_aggr_y['{}_{}'.format(topic, '3y-avg')] = df_aggr_y.iloc[:, i].rolling(window=3, win_type='bohman').mean()
 
+for t, topic in enumerate(topics):
+    # Bar plot, quarterly, with 3-years-avg
+    ax = df_aggr_y['{}'.format(topic)].\
+        plot(kind='bar', figsize=(5, 4.5), zorder=2, width=0.8)
+    ax.tick_params(axis="both", which="both", bottom="off", top="on", labelbottom="off",
+                   left="off", right="off", labelleft="on")
+    # line with 3-years-avg
+    df_aggr_y['{}_3y-avg'.format(topic)].plot(secondary_y=False, color='red')
+    # set up xticks and xtickslabels
+    ax.set_xticks(range(len(df_aggr_y.iloc[:, 0])))
+    ax.set_xticklabels(df_aggr_y.iloc[:, 0])
+    idx = 1
+    for label in ax.xaxis.get_ticklabels():
+        if (idx % 2 != 0) or (idx==1):
+            label.set_rotation(0) #90
+        else:
+            label.set_visible(False)
+        idx += 1
+    # title
+    plt.title('Frequency of articles of topic {} with 3-years-average,\n'
+              'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(t, p['POStag'],
+                                                                                     p['no_below'], p['no_above']))
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(path_project + 'graph/model_{}/05_freq_y_topic{}_withline.png'.format(p['currmodel'], str(t)))
+    plt.close()
+
+
+"""
+Graph 6: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton)
+"""
+
+# TODO
 
 
 #####

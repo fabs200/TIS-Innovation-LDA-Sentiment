@@ -17,8 +17,7 @@ POStag, lda_level_fit, lda_level_domtopic = p['POStag'], p['lda_level_fit'], p['
 
 # Load long file
 print('Loading complete_for_lda_{}_l.csv'.format(POStag))
-df_long = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(POStag),
-                          sep='\t', na_filter=False)
+df_long = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(POStag), sep='\t', na_filter=False)
 
 ######
 # TEMP keep first x articles
