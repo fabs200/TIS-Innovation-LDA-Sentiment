@@ -1,4 +1,4 @@
-import pandas, os, dtale
+import pandas, os, time, dtale
 from python.ConfigUser import path_data, path_project
 from python.params import params as p
 import matplotlib.pyplot as plt
@@ -74,8 +74,10 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-
 plt.savefig(path_project + 'graph/model_{}/01_sentiscore_bytopics_m.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 # Graph by quarter
 fig = plt.figure(figsize=(10,5))
@@ -88,8 +90,11 @@ plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'],
                                                                                 p['no_above']))
-
 plt.savefig(path_project + 'graph/model_{}/01_sentiscore_bytopics_q.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
 
 # Graph by year
 fig = plt.figure(figsize=(10,5))
@@ -101,8 +106,11 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-
 plt.savefig(path_project + 'graph/model_{}/01_sentiscore_bytopics_y.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
 
 
 # import numpy
@@ -133,9 +141,11 @@ df_senti_freq_y = df_long.groupby(['year'])[['sentiscore_mean']].count().reset_i
 width = .75
 fig = plt.figure(figsize=(10, 5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-ax.bar(df_senti_freq_y.iloc[:,0], df_senti_freq_y.iloc[:, 1], width=width)
+ax.bar(df_senti_freq_y.iloc[:,0], df_senti_freq_y.iloc[:, 1], color='#004488', width=width)
 ax.set_ylabel('absolute frequency')
-ax.set_title('Absolute frequency of articles over time')
+ax.set_title('Absolute frequency of articles over time\n'
+             'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
+                                                                                p['no_below'], p['no_above']))
 ax.xaxis.set_ticks(np.arange(df_senti_freq_y.iloc[:,0].min(), df_senti_freq_y.iloc[:,0].max()+1, 1))
 # Access bars
 rects = ax.patches
@@ -146,6 +156,9 @@ for rect, label in zip(rects, labels):
     ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + 2, label, ha='center', va='bottom')
 
 plt.savefig(path_project + 'graph/model_{}/02_absfreqArt_y.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 """
@@ -195,10 +208,10 @@ for label in ax.xaxis.get_ticklabels():
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-
-
 plt.savefig(path_project + 'graph/model_{}/03_absfreqArt_bytopic_m_.png'.format(p['currmodel']))
-
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 # Graph line by quarter
 fig = plt.figure(figsize=(10,5))
@@ -218,8 +231,10 @@ for label in ax.xaxis.get_ticklabels():
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'], p['no_above']))
-
 plt.savefig(path_project + 'graph/model_{}/03_absfreqArt_bytopic_q.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 # Graph line by year
@@ -233,8 +248,10 @@ ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-
 plt.savefig(path_project + 'graph/model_{}/03_absfreqArt_bytopic_y.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 """
@@ -263,7 +280,7 @@ df_aggr_publisher['Newspaper__'] = df_aggr_publisher.Newspaper__.\
 # Plot Publisher's sentiment score, with Stderr
 ax = df_aggr_publisher[['Newspaper__', 'sentiscore_mean_mean_mean']].\
     sort_values(by='sentiscore_mean_mean_mean').\
-    plot(kind='barh', figsize=(7, 7.5), zorder=2, width=0.8)
+    plot(kind='barh', figsize=(7, 7.5), zorder=2, width=0.8, color='#004488')
 ax.tick_params(axis="both", which="both", bottom="off", top="on", labelbottom="off",
                left="off", right="off", labelleft="on")
 # set up ytitlelabels
@@ -315,16 +332,17 @@ plt.title('Average sentiment score by main publishers\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.show()
-
 plt.savefig(path_project + 'graph/model_{}/04a_sentiscore_bypublisher.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 
 # Plot Publisher's sentiment score, with Stderr
 ax = df_aggr_publisher[['sentiscore_mean_mean_mean', 'sentiscore_mean_mean_std']].\
     sort_values(by='sentiscore_mean_mean_mean').\
-    plot.barh(figsize=(7, 7.75), zorder=2, width=0.65, xerr='sentiscore_mean_mean_std')
+    plot.barh(figsize=(7, 7.75), zorder=2, width=0.65, xerr='sentiscore_mean_mean_std', color='#004488')
 ax.tick_params(axis="both", which="both", bottom="off", top="on", labelbottom="off",
                left="off", right="off", labelleft="on")
 # set up ytitlelabels
@@ -343,9 +361,10 @@ plt.title('Average sentiment score of publisher\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.show()
-
 plt.savefig(path_project + 'graph/model_{}/04b_absfreqArt_bytopic_y.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 """
@@ -382,7 +401,7 @@ for i in range(1, len(df_aggr_q.columns)):
 for t, topic in enumerate(topics):
     # Bar plot, quarterly, with 3-years-avg
     ax = df_aggr_q['{}'.format(topic)].\
-        plot(kind='bar', figsize=(5, 4.5), zorder=2, width=0.8)
+        plot(kind='bar', figsize=(5, 4.5), zorder=2, width=0.8, color='#004488')
     ax.tick_params(axis="both", which="both", bottom="off", top="on", labelbottom="off",
                    left="off", right="off", labelleft="on")
     # line with 3-years-avg
@@ -402,9 +421,11 @@ for t, topic in enumerate(topics):
               'POStag: {}, frequency: quarterly,\nno_below: {}, no_above: {}'.format(t, p['POStag'],
                                                                                         p['no_below'], p['no_above']))
     plt.tight_layout()
-    plt.show()
     plt.savefig(path_project + 'graph/model_{}/05_freq_q_topic{}_withline.png'.format(p['currmodel'], str(t)))
-    plt.close()
+    plt.show(block=False)
+    time.sleep(1.5)
+    plt.close('all')
+
 
 
 # 3-years-average, yearly
@@ -415,7 +436,7 @@ for i in range(1, len(df_aggr_y.columns)):
 for t, topic in enumerate(topics):
     # Bar plot, quarterly, with 3-years-avg
     ax = df_aggr_y['{}'.format(topic)].\
-        plot(kind='bar', figsize=(5, 4.5), zorder=2, width=0.8)
+        plot(kind='bar', figsize=(5, 4.5), zorder=2, width=0.8, color='#004488')
     ax.tick_params(axis="both", which="both", bottom="off", top="on", labelbottom="off",
                    left="off", right="off", labelleft="on")
     # line with 3-years-avg
@@ -435,9 +456,11 @@ for t, topic in enumerate(topics):
               'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(t, p['POStag'],
                                                                                      p['no_below'], p['no_above']))
     plt.tight_layout()
-    plt.show()
     plt.savefig(path_project + 'graph/model_{}/05_freq_y_topic{}_withline.png'.format(p['currmodel'], str(t)))
-    plt.close()
+    plt.show(block=False)
+    time.sleep(1.5)
+    plt.close('all')
+
 
 
 """
@@ -448,8 +471,6 @@ Graph 6: Positive and negative sentiment with net 3-years-average, by topic, ove
 
 
 #####
-
-
 
 
 
