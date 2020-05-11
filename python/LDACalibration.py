@@ -8,36 +8,36 @@ import numpy as np
 complete_for_lda = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(p['POStag']),
                                    sep='\t', na_filter=False)
 
-_metric = 'hellinger'
+_metric = 'perplexity'
 
-for no_b in np.arange(15, 25, 1):
-    for no_a in np.arange(.2, .3, .1):
-        # print(no_b, no_a)
-        results_lda_std = LDACalibration(
-                                type='tfidf',
-                                dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
-                                # dataframecolumn=complete_for_lda['sentences_{}_for_lda'.format(p['POStag'])],
-                                topics_start=4,
-                                topics_limit=19,
-                                topics_step=1,
-                                topn=25,
-                                num_words=20,
-                                display_num_words=20,
-                                metric=_metric,
-                                no_below=no_b,
-                                no_above=no_a,
-                                alpha='auto',
-                                eta='auto',
-                                eval_every=5,
-                                iterations=300,
-
-                                random_state=123,
-                                verbose=False,
-                                display_plot=True,
-                                save_plot=True,
-                                save_model=True)
-
-        print('############\n_metric: {}, no_below: {}, no_above: {},\n'.format(_metric, no_b, no_a), results_lda_std)
+# for no_b in np.arange(15, 25, 1):
+#     for no_a in np.arange(.2, .3, .1):
+#         # print(no_b, no_a)
+#         results_lda_std = LDACalibration(
+#                                 type='tfidf',
+#                                 dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
+#                                 # dataframecolumn=complete_for_lda['sentences_{}_for_lda'.format(p['POStag'])],
+#                                 topics_start=4,
+#                                 topics_limit=19,
+#                                 topics_step=1,
+#                                 topn=25,
+#                                 num_words=20,
+#                                 display_num_words=20,
+#                                 metric=_metric,
+#                                 no_below=no_b,
+#                                 no_above=no_a,
+#                                 alpha='auto',
+#                                 eta='auto',
+#                                 eval_every=5,
+#                                 iterations=300,
+#
+#                                 random_state=123,
+#                                 verbose=False,
+#                                 display_plot=True,
+#                                 save_plot=True,
+#                                 save_model=True)
+#
+#         print('############\n_metric: {}, no_below: {}, no_above: {},\n'.format(_metric, no_b, no_a), results_lda_std)
 
 
 # ldamodel, docsforlda, ldadict, ldacorpus \
@@ -60,23 +60,23 @@ for no_b in np.arange(15, 25, 1):
 #                       minimum_phi_value=p['minimum_phi_value'], per_word_topics=p['per_word_topics']
 #                       )
 
-# complete_for_lda_calibr_tfidf = LDACalibration(
-#                             type='tfidf',
-#                             dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
-#                             topics_start=1,
-#                             topics_limit=15,
-#                             topics_step=1,
-#                             topn=200,
-#                             num_words=200,
-#                             metric='coherence',
-#                             no_below=75,
-#                             no_above=0.5,
-#                             alpha='auto',
-#                             eta='auto',
-#                             eval_every=3,
-#                             iterations=300,
-#
-#                             random_state=123,
-#                             verbose=False,
-#                             display_plot=True,
-#                             save_plot=True)
+complete_for_lda_calibr_tfidf = LDACalibration(
+                            type='tfidf',
+                            dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
+                            topics_start=1,
+                            topics_limit=20,
+                            topics_step=2,
+                            topn=200,
+                            num_words=200,
+                            metric=_metric,
+                            no_below=75,
+                            no_above=0.5,
+                            alpha='auto',
+                            eta='auto',
+                            eval_every=3,
+                            iterations=300,
+
+                            random_state=123,
+                            verbose=False,
+                            display_plot=True,
+                            save_plot=True)

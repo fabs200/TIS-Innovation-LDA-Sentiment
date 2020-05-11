@@ -17,13 +17,13 @@ params = {
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'type':         'tfidf',
-    'no_below':     23, # Keep tokens which are contained in at least no_below documents
-    'no_above':     .25, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
-    'num_topics':   7,
+    'no_below':     65, # Keep tokens which are contained in at least no_below documents
+    'no_above':     .55, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
+    'num_topics':   8,
     'num_words':    20,
     'alpha':        'auto',
     'eta':          'auto',
-    'eval_every':   5,
+    'eval_every':   5, # Log perplexity estimated every that many updates, =1 slows down training by ~2x
     'iterations':   300,
     'random_state': 123,
 

@@ -600,7 +600,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
     :param dataframecolumn: documents in string format to use as training corpus for the lda model
     :param topn: number of most relevant words in each topic to compare (Jaccard)
     :param num_words: number of most relevant words in each topic to compare (Hellinger)
-    :param metric: specify which metric to use (jaccard, hellinger or coherence)
+    :param metric: specify which metric to use (jaccard, hellinger, coherence or perplexity)
     :param no_below: cutoff words in the training corpus with frequency below a certain number
     :param no_above: cutoff words in the training corpus with frequency above a certain number
     :param alpha: a priori belief about topic probablities- specify 'auto' to learn asymmetric prior from data
@@ -640,12 +640,14 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         lda_model, docsforlda, dict_lda, corpus_lda = lda_results[0], lda_results[1], lda_results[2], lda_results[3]
         model_list.append(lda_model)
 
-        if metric == 'coherence':
-            metric_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
         if metric == 'jaccard':
             metric_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
         if metric == 'hellinger':
             metric_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
+        if metric == 'coherence':
+            metric_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
+        if metric == 'perplexity':
+            metric_values.append(lda_model.log_perplexity(corpus_lda))
 
         if verbose: print('num_topics: {}, metric: {}, metric values: {}'.format(num_topics, metric, metric_values))
 
@@ -660,7 +662,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         ax.legend()
         if save_plot:
             plt.savefig(path_project +
-                        'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'], type, p['POStag'], metric) +
+                        'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], metric)+
                         'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
                                                                               str(round(no_above, ndigits=3)),
                                                                               alpha, eta))
