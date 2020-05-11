@@ -7,26 +7,24 @@ import numpy as np
 params = {
 
     # Specify POStag type
-    'POStag':  'NN',
+    'POStag':  'NNV',
 
     # Specify on which level to fit lda
-    'lda_level_fit':        ['article'],
-    # 'lda_level_fit':      ['sentence', 'paragraph', 'article'],
+    'lda_level_fit':        ['article'], # article, paragraph, sentence
 
     # Specify of which level get dominant topics
-    'lda_level_domtopic':     ['article'],
-    # 'lda_level_domtopic': ['sentence', 'paragraph', 'article'],
+    'lda_level_domtopic':     ['article'], # article, paragraph, sentence
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'type':         'tfidf',
-    'no_below':     65, # Keep tokens which are contained in at least no_below documents
-    'no_above':     .55, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
-    'num_topics':   8,
-    'num_words':    40,
+    'no_below':     23, # Keep tokens which are contained in at least no_below documents
+    'no_above':     .25, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
+    'num_topics':   7,
+    'num_words':    20,
     'alpha':        'auto',
     'eta':          'auto',
     'eval_every':   5,
-    'iterations':   250,
+    'iterations':   300,
     'random_state': 123,
 
     # further parameters passed to LdaModel()

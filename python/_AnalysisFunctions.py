@@ -356,7 +356,6 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
     # pp.pprint(id2word_lda)
     if verbose: print('Number of unique tokens: {}'.format(len(dict_lda)))
     if verbose: print('Number of documents: {}'.format(len(corpus_lda)))
-    # TODO: save corpus and dictionary to disk and load them back (necessary?)
 
     lda_model = LdaModel(corpus=corpus_lda, id2word=id2word_lda, num_topics=num_topics,
                          alpha=alpha, eta=eta,
@@ -379,15 +378,15 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
                                               str(round(no_above, ndigits=2)),
                                               str(round(no_below, ndigits=3)),
                                               str(round(num_topics, ndigits=0)))
-        print('\n\tsaving model to {}lda/model_{}/...'.format(path_project, currmodel_))
-        os.makedirs(path_project + "lda/model_{}".format(currmodel_), exist_ok=True)
-        temp_file = datapath(path_project + "lda/model_{}/lda_model".format(currmodel_))
+        print('\n\tsaving model to {}lda/{}/model_{}/...'.format(path_project, p['lda_level_fit'][0], currmodel_))
+        os.makedirs(path_project + "lda/{}/model_{}".format(p['lda_level_fit'][0], currmodel_), exist_ok=True)
+        temp_file = datapath(path_project + "lda/{}/model_{}/lda_model".format(p['lda_level_fit'][0], currmodel_))
         # save
         lda_model.save(temp_file)
         # To load pretrained model: lda = LdaModel.load(temp_file)
         # save topics
         topics_temp = lda_model.print_topics(num_topics=num_topics, num_words=num_words)
-        with open(path_project + "lda/model_{}/topics.txt".format(currmodel_), 'w') as f:
+        with open(path_project + "lda/{}/model_{}/topics.txt".format(p['lda_level_fit'][0], currmodel_), 'w') as f:
             f.write("\n".join(map(str, topics_temp)))
 
     return lda_model, docsforlda, dict_lda, corpus_lda
@@ -661,7 +660,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         ax.legend()
         if save_plot:
             plt.savefig(path_project +
-                        'calibration/calibration_{}_{}/{}/'.format(type, p['POStag'], metric) +
+                        'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'], type, p['POStag'], metric) +
                         'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
                                                                               str(round(no_above, ndigits=3)),
                                                                               alpha, eta))
