@@ -8,20 +8,21 @@ import numpy as np
 complete_for_lda = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(p['POStag']),
                                    sep='\t', na_filter=False)
 
-_metric = 'coherence'
+_metric = 'hellinger'
 
-for no_b in np.arange(20, 101, 10):
-    for no_a in np.arange(.3, .61, .1):
+for no_b in np.arange(15, 25, 1):
+    for no_a in np.arange(.2, .3, .1):
         # print(no_b, no_a)
         results_lda_std = LDACalibration(
                                 type='tfidf',
                                 dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
                                 # dataframecolumn=complete_for_lda['sentences_{}_for_lda'.format(p['POStag'])],
                                 topics_start=1,
-                                topics_limit=15,
+                                topics_limit=12,
                                 topics_step=1,
-                                topn=250,
-                                num_words=250,
+                                topn=25,
+                                num_words=20,
+                                display_num_words=20,
                                 metric=_metric,
                                 no_below=no_b,
                                 no_above=no_a,
@@ -33,7 +34,8 @@ for no_b in np.arange(20, 101, 10):
                                 random_state=123,
                                 verbose=False,
                                 display_plot=True,
-                                save_plot=True)
+                                save_plot=True,
+                                save_model=True)
 
         print('############\n_metric: {}, no_below: {}, no_above: {},\n'.format(_metric, no_b, no_a), results_lda_std)
 

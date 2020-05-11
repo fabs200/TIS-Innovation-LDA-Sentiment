@@ -374,15 +374,20 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
 
     # Save model
     if save_model:
-        print('\tsaving model to {}lda/model_{}/...'.format(path_project, p['currmodel']))
-        os.makedirs(path_project + "lda/model_{}".format(p['currmodel']), exist_ok=True)
-        temp_file = datapath(path_project + "lda/model_{}/lda_model".format(p['currmodel']))
+        # retrieve currmodel
+        currmodel_ = '{}_{}_{}_{}_k{}'.format(type, p['POStag'],
+                                              str(round(no_above, ndigits=2)),
+                                              str(round(no_below, ndigits=3)),
+                                              str(round(num_topics, ndigits=0)))
+        print('\n\tsaving model to {}lda/model_{}/...'.format(path_project, currmodel_))
+        os.makedirs(path_project + "lda/model_{}".format(currmodel_), exist_ok=True)
+        temp_file = datapath(path_project + "lda/model_{}/lda_model".format(currmodel_))
         # save
         lda_model.save(temp_file)
         # To load pretrained model: lda = LdaModel.load(temp_file)
         # save topics
         topics_temp = lda_model.print_topics(num_topics=num_topics, num_words=num_words)
-        with open(path_project + "lda/model_{}/topics.txt".format(p['currmodel']), 'w') as f:
+        with open(path_project + "lda/model_{}/topics.txt".format(currmodel_), 'w') as f:
             f.write("\n".join(map(str, topics_temp)))
 
     return lda_model, docsforlda, dict_lda, corpus_lda
@@ -580,7 +585,7 @@ def LDACoherence(lda_model, corpus, dictionary, texts):
 
     return lda_model_cm.get_coherence()
 
-#todo: describe new parametrs: type in estimate lda and ldacali
+
 def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step=1,
                    topn=10, num_words=25, metric='hellinger', type='standard',
                    no_below=50, no_above=0.9, alpha='symmetric', eta=None, eval_every=10, iterations=50,
