@@ -1,6 +1,6 @@
 from python.ConfigUser import path_data, path_project
 from python.params import params as p
-import spacy, pandas, traceback, os
+import spacy, pandas, traceback, os, time
 import numpy as np
 import pprint as pp
 from python._ProcessingFunctions import MakeListInLists, FlattenList
@@ -618,8 +618,17 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
     stack = traceback.extract_stack()
     filename, lineno, function_name, code = stack[-2]
 
-    metric_values = []
-    model_list = []
+    # check which type of metric specified
+    if not isinstance(metric, list):
+        print(metric, 'single metric')
+        m = metric
+        metric = []
+        metric.append(m)
+
+    # create metrics lists where values will be saved to 
+    jaccard_values, hellinger_values, coherence_values, perplexity_values = [], [], [], []
+
+    model_list, metric_results = [], {}
 
     for num_topics in range(topics_start, topics_limit, topics_step):
         lda_results = EstimateLDA(dataframecolumn=dataframecolumn,
@@ -640,35 +649,126 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         lda_model, docsforlda, dict_lda, corpus_lda = lda_results[0], lda_results[1], lda_results[2], lda_results[3]
         model_list.append(lda_model)
 
-        if metric == 'jaccard':
-            metric_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
-        if metric == 'hellinger':
-            metric_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
-        if metric == 'coherence':
-            metric_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
-        if metric == 'perplexity':
-            metric_values.append(lda_model.log_perplexity(corpus_lda))
+    #     if metric == 'jaccard':
+    #         metric_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
+    #     if metric == 'hellinger':
+    #         metric_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
+    #     if metric == 'coherence':
+    #         metric_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
+    #     if metric == 'perplexity':
+    #         metric_values.append(lda_model.log_perplexity(corpus_lda))
 
-        if verbose: print('num_topics: {}, metric: {}, metric values: {}'.format(num_topics, metric, metric_values))
+    #     if verbose: print('num_topics: {}, metric: {}, metric values: {}'.format(num_topics, metric, metric_values))
 
+    # if display_plot:
+    #     fig = plt.figure()
+    #     ax = plt.subplot(111)
+    #     ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
+    #             label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(
+    #                 metric, type, p['POStag'],
+    #                 str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)),
+    #                 alpha, eta, code))
+    #     ax.legend()
+    #     if save_plot:
+    #         plt.savefig(path_project +
+    #                     'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], metric)+
+    #                     'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
+    #                                                                           str(round(no_above, ndigits=3)),
+    #                                                                           alpha, eta))
+    #     plt.show(block=False)
+    #     time.sleep(1.5)
+    #     plt.close('all')
+
+
+        for m in metric:
+            if m == 'jaccard':
+                jaccard_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
+            if m == 'hellinger':
+                hellinger_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
+            if m == 'coherence':
+                coherence_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
+            if m == 'perplexity':
+                perplexity_values.append(lda_model.log_perplexity(corpus_lda))
+
+        if verbose: print('num_topics: {}'.format(num_topics))
+
+    # dirty...
     if display_plot:
-        fig = plt.figure()
-        ax = plt.subplot(111)
-        ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
-                label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(
-                    metric, type, p['POStag'],
-                    str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)),
-                    alpha, eta, code))
-        ax.legend()
-        if save_plot:
-            plt.savefig(path_project +
-                        'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], metric)+
-                        'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
-                                                                              str(round(no_above, ndigits=3)),
-                                                                              alpha, eta))
-        plt.show()
 
-    return model_list, metric_values
+        for m in metric:
+            
+            # jaccard
+            if m == 'jaccard':
+                fig = plt.figure()
+                ax = plt.subplot(111)
+                ax.plot(range(topics_start, topics_limit, topics_step), jaccard_values,
+                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format('jaccard', type, p['POStag'], str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                ax.legend()
+                if save_plot:
+                    plt.savefig(path_project +
+                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], 'jaccard')+
+                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                plt.show(block=False)
+                time.sleep(1)
+                plt.close('all')
+
+            # hellinger
+            if m == 'hellinger':
+                fig = plt.figure()
+                ax = plt.subplot(111)
+                ax.plot(range(topics_start, topics_limit, topics_step), hellinger_values,
+                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format('hellinger', type, p['POStag'], str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                ax.legend()
+                if save_plot:
+                    plt.savefig(path_project +
+                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], 'hellinger')+
+                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                plt.show(block=False)
+                time.sleep(1)
+                plt.close('all')
+
+            # coherence
+            if m == 'coherence':
+                fig = plt.figure()
+                ax = plt.subplot(111)
+                ax.plot(range(topics_start, topics_limit, topics_step), coherence_values,
+                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format('coherence', type, p['POStag'], str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                ax.legend()
+                if save_plot:
+                    plt.savefig(path_project +
+                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], 'coherence')+
+                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                plt.show(block=False)
+                time.sleep(1)
+                plt.close('all')
+
+            # perplexity
+            if m == 'perplexity':
+                fig = plt.figure()
+                ax = plt.subplot(111)
+                ax.plot(range(topics_start, topics_limit, topics_step), perplexity_values,
+                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format('perplexity', type, p['POStag'], str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                ax.legend()
+                if save_plot:
+                    plt.savefig(path_project +
+                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], 'perplexity')+
+                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                plt.show(block=False)
+                time.sleep(1)
+                plt.close('all')
+
+    # save metric results
+    for m in metric:
+        if m=='jaccard':
+            metric_results['jaccard'] = jaccard_values
+        if m=='hellinger':
+            metric_results['hellinger'] = hellinger_values
+        if m=='coherence':
+            metric_results['coherence'] = coherence_values
+        if m=='perplexity':
+            metric_results['perplexity'] = perplexity_values
+
+    return model_list, metric_results
 
 
 """

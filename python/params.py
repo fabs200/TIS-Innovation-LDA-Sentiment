@@ -7,7 +7,7 @@ import numpy as np
 params = {
 
     # Specify POStag type
-    'POStag':  'NNV',
+    'POStag':  'NN',
 
     # Specify on which level to fit lda
     'lda_level_fit':        ['article'], # article, paragraph, sentence
