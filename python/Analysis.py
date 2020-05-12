@@ -2,6 +2,7 @@ import pandas, time
 from python.ConfigUser import path_data
 from python._AnalysisFunctions import EstimateLDA, GetDomTopic
 from python.params import params as p
+import numpy as np
 
 """
 ---------------------
