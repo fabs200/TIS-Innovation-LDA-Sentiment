@@ -4,6 +4,8 @@ Specify parameters here, adjust configurations for lda and for calibration
 
 import numpy as np
 
+np.random.seed(1) # setting random seed to get the same results each time
+
 params = {
 
     # Specify POStag type

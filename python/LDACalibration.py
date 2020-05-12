@@ -8,6 +8,8 @@ import numpy as np
 complete_for_lda = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(p['POStag']),
                                    sep='\t', na_filter=False)
 
+np.random.seed(1) # setting random seed to get the same results each time
+
 for no_b in np.arange(15, 150, 5):
     for no_a in np.arange(.2, .6, .05):
         # print(no_b, no_a)

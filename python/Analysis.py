@@ -12,6 +12,8 @@ Analysis.py
 * Save long file
 """
 
+np.random.seed(1) # setting random seed to get the same results each time
+
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
 POStag, lda_level_fit, lda_level_domtopic = p['POStag'], p['lda_level_fit'], p['lda_level_domtopic']
 
