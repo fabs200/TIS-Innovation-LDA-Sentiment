@@ -9,7 +9,7 @@ np.random.seed(1) # setting random seed to get the same results each time
 params = {
 
     # Specify POStag type
-    'POStag':  'NN',
+    'POStag':  'NNV',
 
     # Specify on which level to fit lda
     'lda_level_fit':        ['article'], # article, paragraph, sentence
@@ -19,10 +19,10 @@ params = {
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'type':         'tfidf',
-    'no_below':     65, # Keep tokens which are contained in at least no_below documents
-    'no_above':     .55, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
-    'num_topics':   8,
-    'num_words':    20,
+    'no_below':     0, # Keep tokens which are contained in at least no_below documents
+    'no_above':     .15, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
+    'num_topics':   20,
+    'num_words':    50,
     'alpha':        'auto',
     'eta':          'auto',
     'eval_every':   5, # Log perplexity estimated every that many updates, =1 slows down training by ~2x

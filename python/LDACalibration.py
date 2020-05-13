@@ -10,7 +10,7 @@ complete_for_lda = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.f
 
 np.random.seed(1) # setting random seed to get the same results each time
 
-for no_b in np.arange(15, 150, 5):
+for no_b in np.arange(5, 106, 10):
     for no_a in np.arange(.2, .6, .05):
         # print(no_b, no_a)
         results_lda_std = LDACalibration(
@@ -18,12 +18,12 @@ for no_b in np.arange(15, 150, 5):
                                 dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
                                 # dataframecolumn=complete_for_lda['sentences_{}_for_lda'.format(p['POStag'])],
                                 topics_start=4,
-                                topics_limit=16,
+                                topics_limit=13,
                                 topics_step=1,
                                 topn=25,
                                 num_words=30,
                                 display_num_words=20,
-                                metric=['jaccard', 'coherence', 'hellinger', 'perplexity'],
+                                metric=['coherence', 'hellinger', 'perplexity'],
                                 no_below=no_b,
                                 no_above=no_a,
                                 alpha='auto',
