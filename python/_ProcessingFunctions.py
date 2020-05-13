@@ -334,7 +334,7 @@ def NormalizeWords(string):
     string = string.replace('v-6', 'vsechs').replace('v6', 'vsechs').replace('v.6', 'vsechs').replace(' v 6 ',
                                                                                                       ' vsechs ')
     string = string.replace('f&e', 'fue').replace(' e 10 ', ' ezehn ').replace(' e10 ', ' ezehn ')
-    string = string.replace('formel 1', 'formeleins').replace('formel1', 'formeleins')
+    string = string.replace('formel 1', 'formeleins').replace('formel1', 'formeleins').replace('formel-1', 'formeleins')
     string = string.replace(' ps ', ' pferdestärke ').replace(' ps', ' pferdestärke')
     string = string.replace(' kg ', ' kilogramm ').replace(' g ', ' gramm ')
     string = string.replace('-v-', '-volt-').replace(' v ', ' volt ')
@@ -442,25 +442,40 @@ def NormalizeWords(string):
     string = string.replace('%', 'prozent').replace('€', 'euro').replace('$', 'dollar')
     string = string.replace(' s ', ' sekunden ').replace(' kw', ' kilowatt').replace('°c', 'gradcelsius')
 
-    #################################
-    #################################
-
-    # correct false lemmas
-    string = string.replace('lithium-ionen-batterien', 'lithium-ionen-batterie').replace('batteriezellen', 'batteriezelle').replace('lithium-ionen-akkus', 'lithium-ionen-akku')
-    string = string.replace('ladestationen', 'ladestation').replace('ladesäulen', 'ladesäule').replace('ladepunkte', 'ladepunkt')
-    string = string.replace('e-mobilität', 'elektromobilität').replace('e-mobil', 'elektromobil').replace('e-mobile', 'elektromobil').replace('arbeitsplätze', 'arbeitsplatz')
-    string = string.replace('e-autos', 'elektroauto').replace('e-auto', 'elektroauto'). replace('elektrofahrzeuge', 'elektrofahrzeug').replace('elektro-auto', 'elektroauto')
-    string = string.replace('elektro-autos', 'elektroauto').replace('elektroräder', 'elektrorad').replace('elektro-fahrräder', 'elektro-fahrrad').replace('e-bikes', 'e-bike')
-    string = string.replace('e-antrieb', 'elektroantrieb').replace('elektromotoren', 'elektromotor').replace('e-smart', 'elektro-smart').replace('pedelecs', 'pedelec')
-    string = string.replace('e-busse', 'elektrobus').replace('e-bus', 'elektrobus').replace('elektrobusse', 'elektrobus').replace('obusse', 'obus')
-    string = string.replace('stromtankstellen', 'stromtankstelle').replace(' module', 'modul').replace(' superkondensatoren', 'superkondensator').replace('vorstandsvorsitzende', 'vorstandsvorsitzender')
-    string = string.replace('installateure', 'installateur').replace('tesla-batterien', 'tesla-batterie').replace(' batteriemodulen', 'batteriemodule').replace('batterie-packs', 'batterie-pack')
+    # correct false Lemmatization of Spacy
+    string = string.replace('lithium-ionen-batterien', 'lithium-ionen-batterie')
+    string = string.replace('lithium-ionen-akkus', 'lithium-ionen-akku')
+    string = string.replace('batteriezellen', 'batteriezelle')
+    string = string.replace('ladestationen', 'ladestation').replace('ladesäulen', 'ladesäule')
+    string = string.replace('ladepunkte', 'ladepunkt')
+    string = string.replace('e-mobilität', 'elektromobilität')
+    string = string.replace('e-mobil', 'elektromobil').replace('e-mobile', 'elektromobil')
+    string = string.replace('arbeitsplätze', 'arbeitsplatz')
+    string = string.replace('e-autos', 'elektroauto').replace('e-auto', 'elektroauto')
+    string = string.replace('elektro-autos', 'elektroauto').replace('elektro-auto', 'elektroauto')
+    string = string.replace('elektrofahrzeuge', 'elektrofahrzeug')
+    string = string.replace('elektroräder', 'elektrorad').replace('elektro-fahrräder', 'elektro-fahrrad')
+    string = string.replace('e-bikes', 'e-bike')
+    string = string.replace('e-antrieb', 'elektroantrieb').replace('elektromotoren', 'elektromotor')
+    string = string.replace('e-smart', 'elektro-smart').replace('pedelecs', 'pedelec')
+    string = string.replace('e-busse', 'elektrobus').replace('e-bus', 'elektrobus').replace('elektrobusse',
+                                                                                            'elektrobus')
+    string = string.replace('obusse', 'obus')
+    string = string.replace('stromtankstellen', 'stromtankstelle').replace(' module', ' modul')
+    string = string.replace(' superkondensatoren', ' superkondensator')
+    string = string.replace('vorstandsvorsitzende', 'vorstandsvorsitzender')
+    string = string.replace('installateure', 'installateur').replace('tesla-batterien', 'tesla-batterie')
+    string = string.replace(' batteriemodulen', ' batteriemodule').replace('batterie-packs', 'batterie-pack')
     string = string.replace('speicherseen', 'speichersee').replace('serienautos', 'serienauto')
-    string = string.replace(' lkw', 'lastwagen').replace('anoden', 'anode').replace(' auslieferungen', ' auslieferung')
-    string = string.replace(' boni', 'bonus').replace(' e-fuels', ' e-fuel').replace(' kaufprämien', ' kaufprämie')
-    string = string.replace('wechselstationen', 'wechselstation').replace('bleiakkus', ' bleiakkus').replace('solarzellen', 'solarzelle')
-    string = string.replace('privathaushalte', 'privathaushalt').replace(' zellen', ' zelle').replace(' trucks', 'truck')
-    string = string.replace('karbonfasern', 'karbonfaser').replace('kohlenstoffdioxid-emissionen', ' kohlenstoffdioxid-emission').replace('kilometern', 'kilometer')
+    string = string.replace(' lkw', ' lastwagen').replace('anoden', 'anode').replace(' auslieferungen', ' auslieferung')
+    string = string.replace(' boni', ' bonus').replace(' e-fuels', ' e-fuel').replace(' kaufprämien', ' kaufprämie')
+    string = string.replace('wechselstationen', 'wechselstation').replace('bleiakkus', ' bleiakkus')
+    string = string.replace('solarzellen', 'solarzelle')
+    string = string.replace('privathaushalte', 'privathaushalt').replace(' zellen', ' zelle').replace(' trucks',
+                                                                                                      ' truck')
+    string = string.replace('karbonfasern', 'karbonfaser').replace('kohlenstoffdioxid-emissionen',
+                                                                   'kohlenstoffdioxid-emission')
+    string = string.replace('kilometern', 'kilometer')
 
     # delete
     string = string.replace(' sion ', ' ').replace(' dinslaken', ' ').replace(' bahnen', ' '). replace(' preisen', ' ')
@@ -468,25 +483,16 @@ def NormalizeWords(string):
     string = string.replace(' gasen', ' ').replace(' rädern', ' ').replace(' mann', ' ')
     string = string.replace(' winden', ' ').replace(' dingen', ' ').replace(' mark', ' ').replace(' hausen', ' ')
     string = string.replace(' bild', ' ').replace(' laeden', ' ').replace(' münchner', ' ').replace(' bauchen', ' ')
-    string = string.replace(' datum', ' ').replace(' frage', ' ').replace(' münchner', ' ').replace(' bauchen', ' ')
+    string = string.replace(' datum', ' ').replace(' frage', ' ')
     string = string.replace(' n-ergie', ' ').replace(' elektro-smartikel', ' ').replace(' strombetriebenen', ' ')
-    string = string.replace(' ene', ' ').replace(' kolbe', ' ')
-    string = string.replace(' herstellagier', ' ').replace(' dachen', ' ')
-    string = string.replace(' topfen', ' ').replace(' dachen', ' ').replace(' löer', ' ')
+    string = string.replace(' ene ', ' ').replace(' kolbe ', ' ').replace(' topfen', ' ')
+    string = string.replace(' herstellagier', ' ').replace(' dachen', ' ').replace(' löer', ' ')
     string = string.replace(' montag', ' ').replace(' dienstag', ' ').replace(' mittwoch', ' ')
     string = string.replace(' donnerstag', ' ').replace(' freitag', ' ')
     string = string.replace(' januar', ' ').replace(' februar', ' ').replace(' märz', ' ').replace(' april', ' ')
     string = string.replace(' mai', ' ').replace(' juni', ' ').replace(' juli', ' ').replace(' august', ' ')
-    string = string.replace(' september', ' ').replace(' oktober', ' ').replace(' november', ' ').replace(' dezember', ' ')
-
-
-
-
-    #########################################
-    ##########################################
-    #
-
-
+    string = string.replace(' september', ' ').replace(' oktober', ' ').replace(' november', ' ').replace(' dezember',
+                                                                                                          ' ')
 
     return string
 
