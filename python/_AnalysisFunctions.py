@@ -320,14 +320,14 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
     """
     Estimates lda model based on the given training corpus (article, sentence or paragraph level)
 
-    :param dataframecolumn: documents in string format to use as training corpus for the lda model
+    :param dataframecolumn: documents as list of tokens
     :param no_below: int, cutoff words in the training corpus with frequency below a certain number
     :param no_above: float, cutoff words in the training corpus with frequency above a certain number
-    :param num_topics: int, number of topcis to be estimated in the lda model
+    :param num_topics: int, number of topics to be estimated in the lda model
     :param num_words: int, number of topics to be included in topics when printed and saved to disk (save_model=True)
-    :param alpha: a priori belief about topic probablities- specify 'auto' to learn asymmetric prior from data
+    :param alpha: a priori belief about topic probabilities- specify 'auto' to learn asymmetric prior from data
     :param eta: a priori belief about word probabilities - specify 'auto' to learn asymmetric prior from data
-    :param eval_every: log proplecity estimation frequency, higher values slows down training
+    :param eval_every: log perplexity estimation frequency, higher values slows down training
     :param iterations: maximum number of iterations through the corpus when inferring the topic distribution
     :param random_state: set seed to generate random state - useful for reproducibility
     :param save_model: False, model and topics will be saved to {path_project}/lda/... if set to True
