@@ -110,6 +110,9 @@ df_long = df_articles.articles_text.apply(pandas.Series)\
     .dropna(subset=['articles_{}_for_lda'.format(POStag_type)]))\
     .drop(columns=['ID_incr', 'variable'])
 
+# replace everything in brackets from Newspaper
+df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
+
 # Sort columns
 df_long = df_long[['Art_ID', 'Newspaper', 'Date', 'articles_text', 'articles_{}_for_lda'.format(POStag_type)]]
 

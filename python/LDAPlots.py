@@ -13,12 +13,16 @@ Graph 2: Frequency analysis, publication trend of articles, over time (Fritsche,
 Graph 3: Frequency analysis, publication trend of topics, over time (Fritsche, Mejia)
 Graph 4: Frequency analysis, publisher bias, over time (Mejia)
 Graph 5: Frequency analysis, Annual total with 3-years-average, by topic, over time (Melton)
-Graph 6: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton) TODO
-Graph 7: Scatterplot number articles vs. sentiment polarity, over topics (Mejia) TODO
-Graph 8: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr), over time (Mejia)
-Graph 9: Barplot percentage shares of sentiment polarities for selected publishers (Mejia)
+Graph 6: Frequency analysis, barplot, frequency of published articles of top publishers
+Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia) TODO
+Graph 8: Histogram, Sentiment TODO
+Graph 9: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr), over time (Mejia)
 Graph 10: Ratio sentiment, over time, demeaned ... TODO
 Graph 11: Barplot, how many articles have a sentiment score and how many not ... TODO
+
+not:
+Graph: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton) TODO
+Graph: Scatterplot number articles vs. sentiment polarity, over topics (Mejia) TODO
 """
 
 # Todo: look up/implement LDAvis
@@ -45,6 +49,10 @@ df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], error
 
 # select date range
 df_long = df_long[(df_long['month'] >= '2007-1-1')]
+
+# replace everything in brackets from Newspaper
+df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
+
 
 """
 ###################### Graph 1: Sentiment score over time, by topics ######################
@@ -258,13 +266,13 @@ plt.close('all')
 Graph 4: Frequency analysis, publisher bias, over time (Mejia)
 """
 
-# groupby Newspapyer, year, aggregate and rename, over time
+# groupby Newspaper, year, aggregate and rename, over time
 df_aggr_publisher_y = df_long[['year', 'Newspaper', 'sentiscore_mean']]\
     .groupby(['year', 'Newspaper'])\
     .agg({'Newspaper': 'count', 'sentiscore_mean': ['mean', 'count', 'std']}).reset_index()
 df_aggr_publisher_y.columns = df_aggr_publisher_y.columns.map('_'.join)
 
-# groupby Newspapyer, year, aggregate, drop Newspaper with less than 7 count, sort
+# groupby Newspaper, year, aggregate, drop Newspaper with less than 7 count, sort
 df_aggr_publisher = df_aggr_publisher_y.groupby(['Newspaper_']).\
     agg({'Newspaper_': 'count',
          'sentiscore_mean_mean': ['mean', 'std'],
@@ -464,11 +472,161 @@ for t, topic in enumerate(topics):
 
 
 """
-Graph 6: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton)
+Graph 6: Frequency analysis, barplot, frequency of published articles of top publishers TODO
 """
 
-# TODO
+# groupby Newspapyer, year, aggregate and rename, over time
+df_aggr_publisher_y = df_long[['year', 'Newspaper', 'sentiscore_mean']]\
+    .groupby(['year', 'Newspaper'])\
+    .agg({'Newspaper': 'count', 'sentiscore_mean': ['mean', 'count', 'std']}).reset_index()
+df_aggr_publisher_y.columns = df_aggr_publisher_y.columns.map('_'.join)
 
+df_aggr_publisher_y = pandas.merge(df_aggr_publisher_y,
+                                   df_aggr_publisher_y.groupby(['Newspaper_']).agg(
+                                       {'Newspaper_': 'count'}).rename(columns={'Newspaper_': 'Newspaper_total'}),
+                                   how='left', on=['Newspaper_'])
+# Keep top publishers
+# df_aggr_publisher_y['Newspaper_'].nunique()
+df_aggr_publisher_y = df_aggr_publisher_y[df_aggr_publisher_y['Newspaper_total']>7]
+
+# aggregarte by year
+df_aggr_publisher_agg = df_aggr_publisher_y[['Newspaper_', 'sentiscore_mean_mean', 'Newspaper_total']].\
+    groupby(['Newspaper_']).mean().reset_index()
+
+# Plot top Publisher
+ax = df_aggr_publisher_agg[['Newspaper_', 'Newspaper_total']].\
+    sort_values(by='Newspaper_total').\
+    plot(kind='barh', figsize=(5, 7), zorder=2, width=0.8, color='#004488')
+ax.tick_params(axis="both", which="both", bottom="off", top="on", labelbottom="off",
+               left="off", right="off", labelleft="on")
+# set up ytitlelabels
+ax.set_yticklabels(df_aggr_publisher_agg.Newspaper_)
+# set up xticks and xtickslabels
+ax.set_xticks(np.around(np.arange(0, df_aggr_publisher_agg.Newspaper_total.max()+3, step=2), decimals=1))
+ax.set_xticklabels(np.around(np.arange(0, df_aggr_publisher_agg.Newspaper_total.max()+3, step=2), decimals=1))
+# Draw vertical axis lines
+for tick in ax.get_xticks():
+    ax.axvline(x=tick, linestyle='solid', alpha=0.25, color='#eeeeee', zorder=1)
+# Draw horizontal axis lines
+for tick in ax.get_yticks():
+    ax.axhline(y=tick, linestyle='solid', alpha=0.25, color='#eeeeee', zorder=1)
+# no legend
+ax.get_legend().remove()
+# For each bar: Place a label
+for rect in ax.patches:
+    # Get X and Y placement of label from rect.
+    x_value = rect.get_width()
+    y_value = rect.get_y() + rect.get_height() / 2
+
+    # Number of points between bar and label. Change to your liking.
+    space = 5
+    # Vertical alignment for positive values
+    ha = 'left'
+
+    # If value of bar is negative: Place label left of bar
+    if x_value < 0:
+        # Invert space to place label to the left
+        space *= -1
+        # Horizontally align label at right
+        ha = 'right'
+
+    # Use X value as label and format number with one decimal place
+    label = "{:.0f}".format(x_value)
+
+    # Create annotation
+    plt.annotate(
+        label,                      # Use `label` as label
+        (x_value, y_value),         # Place label at end of the bar
+        xytext=(space, 0),          # Horizontally shift label by `space`
+        textcoords="offset points", # Interpret `xytext` as offset in points
+        va='center',                # Vertically center label
+        ha=ha)                      # Horizontally align label differently for
+                                    # positive and negative values.
+
+ax.set_xlabel("total number of articles")
+plt.title('Total number of articles by \nmain publishers\n'
+          'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
+                                                                              p['no_below'], p['no_above']))
+plt.tight_layout()
+plt.savefig(path_project + 'graph/model_{}/06_totalarticles_bypublisher.png'.format(p['currmodel']))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+"""
+Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia)
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'Newspaper']).count().\
+    reset_index()[['DomTopic_arti_arti_id', 'Newspaper', 'sentiscore_mean']].\
+    rename(columns={'sentiscore_mean': 'count'}).\
+    pivot(index='Newspaper', columns='DomTopic_arti_arti_id', values='count').\
+    fillna(0)
+
+# calculate percentages per topic
+df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
+df_wide_publishers_bytopics = df_wide_publishers_bytopics[df_wide_publishers_bytopics['sum']>7]
+totalcols = len(df_wide_publishers_bytopics.columns)
+for col in range(0, totalcols-1):
+    df_wide_publishers_bytopics.iloc[:, col] = df_wide_publishers_bytopics.iloc[:, col] / df_wide_publishers_bytopics.iloc[:, totalcols-1]
+df_wide_publishers_bytopics = df_wide_publishers_bytopics.drop(['sum'], axis=1)
+# df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
+df_wide_publishers_bytopics = df_wide_publishers_bytopics.reset_index()
+
+
+# # plot
+# barWidth = 0.35
+# # Create green Bars
+# plt.bar(df_wide_publishers_bytopics.iloc[0, :].to_list()[1:], df_wide_publishers_bytopics.iloc[:, 0][1], color='#b5ffb9', edgecolor='white', width=barWidth)
+# # Create orange Bars
+# plt.bar(r, orangeBars, bottom=greenBars, color='#f9bc86', edgecolor='white', width=barWidth)
+# # Create blue Bars
+# plt.bar(r, blueBars, bottom=[i+j for i,j in zip(greenBars, orangeBars)], color='#a3acff', edgecolor='white', width=barWidth)
+#
+# # Custom x axis
+# plt.xticks(r, names)
+# plt.xlabel("group")
+#
+# # Show graphic
+# plt.show()
+
+#
+# # Data
+# r = [0,1,2,3,4]
+# raw_data = {'greenBars': [20, 1.5, 7, 10, 5], 'orangeBars': [5, 15, 5, 10, 15],'blueBars': [2, 15, 18, 5, 10]}
+# df = pandas.DataFrame(raw_data)
+#
+# # From raw value to percentage
+# totals = [i+j+k for i,j,k in zip(df['greenBars'], df['orangeBars'], df['blueBars'])]
+# greenBars = [i / j * 100 for i,j in zip(df['greenBars'], totals)]
+# orangeBars = [i / j * 100 for i,j in zip(df['orangeBars'], totals)]
+# blueBars = [i / j * 100 for i,j in zip(df['blueBars'], totals)]
+#
+# # plot
+# barWidth = 0.85
+# names = ('A','B','C','D','E')
+# # Create green Bars
+# plt.bar(r, greenBars, color='#b5ffb9', edgecolor='white', width=barWidth)
+# # Create orange Bars
+# plt.bar(r, orangeBars, bottom=greenBars, color='#f9bc86', edgecolor='white', width=barWidth)
+# # Create blue Bars
+# plt.bar(r, blueBars, bottom=[i+j for i,j in zip(greenBars, orangeBars)], color='#a3acff', edgecolor='white', width=barWidth)
+#
+# # Custom x axis
+# plt.xticks(r, names)
+# plt.xlabel("group")
+#
+# # Show graphic
+# plt.show()
+#
+
+
+
+"""
+Graph 8: Histogram, Sentiment TODO
+"""
+# TODO
 
 #####
 

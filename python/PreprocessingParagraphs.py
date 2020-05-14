@@ -124,6 +124,9 @@ df_long = df_articles.paragraphs_text.apply(pandas.Series)\
 # Generate Par_ID
 df_long['Par_ID'] = df_long.groupby(['Art_ID']).cumcount()+1
 
+# replace everything in brackets from Newspaper
+df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
+
 # Sort columns
 df_long = df_long[['Art_ID', 'Par_ID', 'Newspaper', 'Date', 'paragraphs_text', 'paragraphs_{}_for_lda'.format(POStag_type)]]
 
