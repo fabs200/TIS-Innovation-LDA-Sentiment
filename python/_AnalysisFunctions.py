@@ -320,7 +320,8 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
     """
     Estimates lda model based on the given training corpus (article, sentence or paragraph level)
 
-    :param dataframecolumn: documents as list of tokens
+    :param dataframecolumn: str, in the format: "[['str1', 'str2'], ['str3', ...], ...]",
+           documents in string format to use as training corpus for the lda model
     :param no_below: int, cutoff words in the training corpus with frequency below a certain number
     :param no_above: float, cutoff words in the training corpus with frequency above a certain number
     :param num_topics: int, number of topics to be estimated in the lda model
