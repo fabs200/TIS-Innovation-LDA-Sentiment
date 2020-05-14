@@ -460,7 +460,15 @@ def NormalizeWords(string):
     string = string.replace('e-smart', 'elektro-smart').replace('pedelecs', 'pedelec')
     string = string.replace('e-busse', 'elektrobus').replace('e-bus', 'elektrobus').replace('elektrobusse',
                                                                                             'elektrobus')
-    string = string.replace('obusse', 'obus')
+    string = string.replace('elektrobuss', 'elektrobus').replace('bürgermeisterin', 'bürgermeister')
+    string = string.replace('elektroauto-batterien', 'elektroauto-batterie')
+    string = string.replace('konzeptfahrzeuge', 'konzeptfahrzeug').replace('festkörperbatterien', 'festkörperbatterie')
+    string = string.replace('haushaltsgeräte', 'haushaltsgerät').replace('e-taxis', 'e-taxi')
+
+    string = string.replace(' analysten', ' analyst').replace(' bestückt', ' bestücken')
+
+
+    string = string.replace('obusse', 'obus').replace('forschungsministerin', 'forschungsminister')
     string = string.replace('stromtankstellen', 'stromtankstelle').replace(' module', ' modul')
     string = string.replace(' superkondensatoren', ' superkondensator')
     string = string.replace('vorstandsvorsitzende', 'vorstandsvorsitzender')
@@ -476,6 +484,7 @@ def NormalizeWords(string):
     string = string.replace('karbonfasern', 'karbonfaser').replace('kohlenstoffdioxid-emissionen',
                                                                    'kohlenstoffdioxid-emission')
     string = string.replace('kilometern', 'kilometer')
+    string = string.replace('lässt', 'lassen')
 
     # delete
     string = string.replace(' sion ', ' ').replace(' dinslaken', ' ').replace(' bahnen', ' '). replace(' preisen', ' ')
@@ -483,7 +492,7 @@ def NormalizeWords(string):
     string = string.replace(' gasen', ' ').replace(' rädern', ' ').replace(' mann', ' ')
     string = string.replace(' winden', ' ').replace(' dingen', ' ').replace(' mark', ' ').replace(' hausen', ' ')
     string = string.replace(' bild', ' ').replace(' laeden', ' ').replace(' münchner', ' ').replace(' bauchen', ' ')
-    string = string.replace(' datum', ' ').replace(' frage', ' ')
+    string = string.replace(' datum', ' ').replace(' frage', ' ').replace(' achatz', ' ')
     string = string.replace(' n-ergie', ' ').replace(' elektro-smartikel', ' ').replace(' strombetriebenen', ' ')
     string = string.replace(' ene ', ' ').replace(' kolbe ', ' ').replace(' topfen', ' ')
     string = string.replace(' herstellagier', ' ').replace(' dachen', ' ').replace(' löer', ' ')
