@@ -453,7 +453,7 @@ def NormalizeWords(string):
     string = string.replace('arbeitsplätze', 'arbeitsplatz')
     string = string.replace('e-autos', 'elektroauto').replace('e-auto', 'elektroauto')
     string = string.replace('elektro-autos', 'elektroauto').replace('elektro-auto', 'elektroauto')
-    string = string.replace('elektrofahrzeuge', 'elektrofahrzeug')
+    string = string.replace('elektrofahrzeuge', 'elektrofahrzeug').replace('elektroautos', 'elektroauto')
     string = string.replace('elektroräder', 'elektrorad').replace('elektro-fahrräder', 'elektro-fahrrad')
     string = string.replace('e-bikes', 'e-bike')
     string = string.replace('e-antrieb', 'elektroantrieb').replace('elektromotoren', 'elektromotor')
