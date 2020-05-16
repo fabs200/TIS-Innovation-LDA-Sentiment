@@ -569,58 +569,48 @@ df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
 df_wide_publishers_bytopics = df_wide_publishers_bytopics[df_wide_publishers_bytopics['sum']>7]
 totalcols = len(df_wide_publishers_bytopics.columns)
 for col in range(0, totalcols-1):
-    df_wide_publishers_bytopics.iloc[:, col] = df_wide_publishers_bytopics.iloc[:, col] / df_wide_publishers_bytopics.iloc[:, totalcols-1]
+    df_wide_publishers_bytopics.iloc[:, col] = 100*(df_wide_publishers_bytopics.iloc[:, col] / df_wide_publishers_bytopics.iloc[:, totalcols-1])
 df_wide_publishers_bytopics = df_wide_publishers_bytopics.drop(['sum'], axis=1)
-# df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
 df_wide_publishers_bytopics = df_wide_publishers_bytopics.reset_index()
 
+# transpose, rename to make plotable
+df_publishers_bytopics_t = df_wide_publishers_bytopics.transpose().reset_index()
+df_publishers_bytopics_t.columns = df_publishers_bytopics_t.iloc[0]
+df_publishers_bytopics_t = df_publishers_bytopics_t\
+    .drop(df_publishers_bytopics_t.columns[1], axis=1)\
+    .drop(0)\
+    .rename(columns={'Newspaper': 'topics'})
 
-# # plot
-# barWidth = 0.35
-# # Create green Bars
-# plt.bar(df_wide_publishers_bytopics.iloc[0, :].to_list()[1:], df_wide_publishers_bytopics.iloc[:, 0][1], color='#b5ffb9', edgecolor='white', width=barWidth)
-# # Create orange Bars
-# plt.bar(r, orangeBars, bottom=greenBars, color='#f9bc86', edgecolor='white', width=barWidth)
-# # Create blue Bars
-# plt.bar(r, blueBars, bottom=[i+j for i,j in zip(greenBars, orangeBars)], color='#a3acff', edgecolor='white', width=barWidth)
-#
-# # Custom x axis
-# plt.xticks(r, names)
-# plt.xlabel("group")
-#
-# # Show graphic
-# plt.show()
-
-#
-# # Data
-# r = [0,1,2,3,4]
-# raw_data = {'greenBars': [20, 1.5, 7, 10, 5], 'orangeBars': [5, 15, 5, 10, 15],'blueBars': [2, 15, 18, 5, 10]}
-# df = pandas.DataFrame(raw_data)
-#
-# # From raw value to percentage
-# totals = [i+j+k for i,j,k in zip(df['greenBars'], df['orangeBars'], df['blueBars'])]
-# greenBars = [i / j * 100 for i,j in zip(df['greenBars'], totals)]
-# orangeBars = [i / j * 100 for i,j in zip(df['orangeBars'], totals)]
-# blueBars = [i / j * 100 for i,j in zip(df['blueBars'], totals)]
-#
-# # plot
-# barWidth = 0.85
-# names = ('A','B','C','D','E')
-# # Create green Bars
-# plt.bar(r, greenBars, color='#b5ffb9', edgecolor='white', width=barWidth)
-# # Create orange Bars
-# plt.bar(r, orangeBars, bottom=greenBars, color='#f9bc86', edgecolor='white', width=barWidth)
-# # Create blue Bars
-# plt.bar(r, blueBars, bottom=[i+j for i,j in zip(greenBars, orangeBars)], color='#a3acff', edgecolor='white', width=barWidth)
-#
-# # Custom x axis
-# plt.xticks(r, names)
-# plt.xlabel("group")
-#
-# # Show graphic
-# plt.show()
-#
-
+# plot stacked bar plot
+barWidth = 0.85
+topics = df_publishers_bytopics_t['topics'].to_list()
+publishers = df_publishers_bytopics_t.columns[1:]
+# plot stacked bars
+fig = plt.figure(figsize=(9.5,4))
+ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+for i in range(0, len(topics)):
+    if i==0:
+        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:])
+    else:
+        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:],
+                bottom=df_publishers_bytopics_t.iloc[0:i].sum().to_list()[1:])
+# legend
+ax.legend(topics, title='topics', bbox_to_anchor=(1.1, .75), ncol=1, borderaxespad=0.,
+          fontsize='small', loc='upper right', )
+# Custom x axis
+plt.xticks(rotation=45)
+plt.xlabel('Newspaper')
+# Custom y axis
+plt.ylabel("percentage shares in topics")
+plt.tight_layout()
+plt.title('Topics by publishers\n'
+          'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
+                                                                              p['no_below'], p['no_above']))
+plt.savefig(path_project + 'graph/model_{}/07_topics_by_publishers_stacked.png'.format(p['currmodel'],
+                                                                                       bbox_inches='tight'))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 """
