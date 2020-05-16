@@ -334,7 +334,9 @@ def NormalizeWords(string):
     string = string.replace('v-6', 'vsechs').replace('v6', 'vsechs').replace('v.6', 'vsechs').replace(' v 6 ',
                                                                                                       ' vsechs ')
     string = string.replace('f&e', 'fue').replace(' e 10 ', ' ezehn ').replace(' e10 ', ' ezehn ')
+    string = string.replace('formel -', 'formel-').replace('formel i ', 'formeleins')
     string = string.replace('formel 1', 'formeleins').replace('formel1', 'formeleins').replace('formel-1', 'formeleins')
+    string = string.replace('formel -1', 'formeleins').replace('formel-e', 'formele').replace('formel e', 'formele')
     string = string.replace(' ps ', ' pferdestärke ').replace(' ps', ' pferdestärke')
     string = string.replace(' kg ', ' kilogramm ').replace(' g ', ' gramm ')
     string = string.replace('-v-', '-volt-').replace(' v ', ' volt ')
@@ -464,10 +466,7 @@ def NormalizeWords(string):
     string = string.replace('elektroauto-batterien', 'elektroauto-batterie')
     string = string.replace('konzeptfahrzeuge', 'konzeptfahrzeug').replace('festkörperbatterien', 'festkörperbatterie')
     string = string.replace('haushaltsgeräte', 'haushaltsgerät').replace('e-taxis', 'e-taxi')
-
     string = string.replace(' analysten', ' analyst').replace(' bestückt', ' bestücken')
-
-
     string = string.replace('obusse', 'obus').replace('forschungsministerin', 'forschungsminister')
     string = string.replace('stromtankstellen', 'stromtankstelle').replace(' module', ' modul')
     string = string.replace(' superkondensatoren', ' superkondensator')
@@ -497,6 +496,8 @@ def NormalizeWords(string):
     string = string.replace(' ene ', ' ').replace(' kolbe ', ' ').replace(' topfen', ' ')
     string = string.replace(' herstellagier', ' ').replace(' dachen', ' ').replace(' löer', ' ')
     string = string.replace(' montag', ' ').replace(' dienstag', ' ').replace(' mittwoch', ' ')
+    string = string.replace(' donnerstag', ' ').replace(' freitag', ' ').replace(' samstag', ' ').replace(' sonntag',
+                                                                                                          ' ')
     string = string.replace(' donnerstag', ' ').replace(' freitag', ' ')
     string = string.replace(' januar', ' ').replace(' februar', ' ').replace(' märz', ' ').replace(' april', ' ')
     string = string.replace(' mai', ' ').replace(' juni', ' ').replace(' juli', ' ').replace(' august', ' ')
