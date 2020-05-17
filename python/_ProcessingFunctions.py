@@ -498,7 +498,6 @@ def NormalizeWords(string):
     string = string.replace(' montag', ' ').replace(' dienstag', ' ').replace(' mittwoch', ' ')
     string = string.replace(' donnerstag', ' ').replace(' freitag', ' ').replace(' samstag', ' ').replace(' sonntag',
                                                                                                           ' ')
-    string = string.replace(' donnerstag', ' ').replace(' freitag', ' ')
     string = string.replace(' januar', ' ').replace(' februar', ' ').replace(' märz', ' ').replace(' april', ' ')
     string = string.replace(' mai', ' ').replace(' juni', ' ').replace(' juli', ' ').replace(' august', ' ')
     string = string.replace(' september', ' ').replace(' oktober', ' ').replace(' november', ' ').replace(' dezember',
