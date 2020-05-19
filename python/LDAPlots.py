@@ -15,14 +15,15 @@ Graph 4: Frequency analysis, publisher bias, over time (Mejia)
 Graph 5: Frequency analysis, Annual total with 3-years-average, by topic, over time (Melton)
 Graph 6: Frequency analysis, barplot, frequency of published articles of top publishers
 Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia) TODO
-Graph 8: Histogram, Sentiment TODO
-Graph 9: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr), over time (Mejia)
+Graph 8: Histogram Sentiment
+Graph 9: Histogram Sentiment by year TODO
 Graph 10: Ratio sentiment, over time, demeaned ... TODO
 Graph 11: Barplot, how many articles have a sentiment score and how many not ... TODO
 
 not:
 Graph: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton) TODO
 Graph: Scatterplot number articles vs. sentiment polarity, over topics (Mejia) TODO
+Graph: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr), over time (Mejia)
 """
 
 # Todo: look up/implement LDAvis
@@ -573,6 +574,9 @@ for col in range(0, totalcols-1):
 df_wide_publishers_bytopics = df_wide_publishers_bytopics.drop(['sum'], axis=1)
 df_wide_publishers_bytopics = df_wide_publishers_bytopics.reset_index()
 
+# cut str at lengt
+df_wide_publishers_bytopics['Newspaper'] = df_wide_publishers_bytopics['Newspaper'].str.slice(0, 14)
+
 # transpose, rename to make plotable
 df_publishers_bytopics_t = df_wide_publishers_bytopics.transpose().reset_index()
 df_publishers_bytopics_t.columns = df_publishers_bytopics_t.iloc[0]
@@ -586,8 +590,8 @@ barWidth = 0.85
 topics = df_publishers_bytopics_t['topics'].to_list()
 publishers = df_publishers_bytopics_t.columns[1:]
 # plot stacked bars
-fig = plt.figure(figsize=(9.5,4))
-ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+fig = plt.figure(figsize=(10, 4.5))
+ax = fig.add_axes([0.08, 0.2, 0.8, 0.65])
 for i in range(0, len(topics)):
     if i==0:
         ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:])
@@ -598,7 +602,7 @@ for i in range(0, len(topics)):
 ax.legend(topics, title='topics', bbox_to_anchor=(1.1, .75), ncol=1, borderaxespad=0.,
           fontsize='small', loc='upper right', )
 # Custom x axis
-plt.xticks(rotation=45)
+plt.xticks(rotation=90, size=7)
 plt.xlabel('Newspaper')
 # Custom y axis
 plt.ylabel("percentage shares in topics")
@@ -614,9 +618,39 @@ plt.close('all')
 
 
 """
-Graph 8: Histogram, Sentiment TODO
+Graph 8: Histogram, Sentiment
+"""
+# histogram
+plt.hist(df_long['sentiscore_mean'].to_list(), bins=20, color='#004488', edgecolor='b', alpha=0.65)
+# mean
+plt.axvline(df_long['sentiscore_mean'].mean(),
+            color='r', linestyle='--', linewidth=.5)
+plt.text(df_long['sentiscore_mean'].mean()*1.1, 10,
+         'Mean: {:.2f}'.format(df_long['sentiscore_mean'].mean()), color='r')
+# median
+plt.axvline(df_long['sentiscore_mean'].mean(),
+            color='lime', linestyle=':', linewidth=.5)
+plt.text(df_long['sentiscore_mean'].mean()*1.1, 20,
+         'Median: {:.2f}'.format(df_long['sentiscore_mean'].mean()), color='lime')
+plt.title('Histogram entiment score\n'
+          'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
+plt.savefig(path_project + 'graph/model_{}/08_hist_sentiment.png'.format(p['currmodel'], bbox_inches='tight'))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+"""
+Graph 9: Histogram Sentiment by year TODO
 """
 # TODO
+# fig, axs = plt.subplots(2, 2, sharey=True, tight_layout=True)
+#
+# # We can set the number of bins with the `bins` kwarg
+# axs[0].hist(df_long[df_long['year']==2010]['sentiscore_mean'].to_list(), bins=20)
+# axs[1].hist(df_long[df_long['year']==2011]['sentiscore_mean'].to_list(), bins=20)
+# axs[2].hist(df_long[df_long['year']==2012]['sentiscore_mean'].to_list(), bins=20)
+# axs[3].hist(df_long[df_long['year']==2013]['sentiscore_mean'].to_list(), bins=20)
 
 #####
 
