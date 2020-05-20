@@ -14,11 +14,13 @@ Graph 3: Frequency analysis, publication trend of topics, over time (Fritsche, M
 Graph 4: Frequency analysis, publisher bias, over time (Mejia)
 Graph 5: Frequency analysis, Annual total with 3-years-average, by topic, over time (Melton)
 Graph 6: Frequency analysis, barplot, frequency of published articles of top publishers
-Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia) TODO
+Graph 7: Barplot percentage shares of topics for selected publishers (stacked/not stacked) (Mejia)
 Graph 8: Histogram Sentiment
-Graph 9: Histogram Sentiment by year TODO
-Graph 10: Ratio sentiment, over time, demeaned ... TODO
-Graph 11: Barplot, how many articles have a sentiment score and how many not ... TODO
+Graph 9: Histogram Sentiment by year
+Graph 10: Boxplot sentiments by year TODO
+Graph 11: Barplot percentage shares of articles by year, stacked TODO
+Graph 12: Ratio sentiment, over time, demeaned ... TODO
+Graph 13: Barplot, how many articles have a sentiment score and how many not ... TODO
 
 not:
 Graph: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton) TODO
@@ -620,6 +622,7 @@ plt.close('all')
 """
 Graph 8: Histogram, Sentiment
 """
+
 # histogram
 plt.hist(df_long['sentiscore_mean'].to_list(), bins=20, color='#004488', edgecolor='b', alpha=0.65)
 # mean
@@ -632,7 +635,7 @@ plt.axvline(df_long['sentiscore_mean'].mean(),
             color='lime', linestyle=':', linewidth=.5)
 plt.text(df_long['sentiscore_mean'].mean()*1.1, 20,
          'Median: {:.2f}'.format(df_long['sentiscore_mean'].mean()), color='lime')
-plt.title('Histogram entiment score\n'
+plt.title('Histogram sentiment score\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.savefig(path_project + 'graph/model_{}/08_hist_sentiment.png'.format(p['currmodel'], bbox_inches='tight'))
 plt.show(block=False)
@@ -641,16 +644,34 @@ plt.close('all')
 
 
 """
-Graph 9: Histogram Sentiment by year TODO
+Graph 9: Histogram Sentiment by year
 """
-# TODO
-# fig, axs = plt.subplots(2, 2, sharey=True, tight_layout=True)
-#
-# # We can set the number of bins with the `bins` kwarg
-# axs[0].hist(df_long[df_long['year']==2010]['sentiscore_mean'].to_list(), bins=20)
-# axs[1].hist(df_long[df_long['year']==2011]['sentiscore_mean'].to_list(), bins=20)
-# axs[2].hist(df_long[df_long['year']==2012]['sentiscore_mean'].to_list(), bins=20)
-# axs[3].hist(df_long[df_long['year']==2013]['sentiscore_mean'].to_list(), bins=20)
+
+# extract years
+years = np.sort(df_long['year'].unique())
+# set up graph and title
+fig, axs = plt.subplots(4, 4, constrained_layout=True)
+fig.suptitle('Sentiment score by year\n'
+          'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']), fontsize=12)
+# loop over axis and list and plot hist
+for i, ax in enumerate(axs.reshape(-1)):
+    if i < len(years):
+        ax.hist(df_long[df_long['year'] == years[i]]['sentiscore_mean'], bins=20)
+        ax.set_title(years[i], fontsize=12)
+plt.savefig(path_project + 'graph/model_{}/09_hist_sentiment_byyears.png'.format(p['currmodel'], bbox_inches='tight'))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+"""
+Graph 10: Boxplot sentiments over year
+"""
+boxplot = df_long[['year', 'sentiscore_mean']].boxplot(column=['sentiscore_mean'], by='year')
+plt.savefig(path_project + 'graph/model_{}/10_boxplot_sentiment_overyears.png'.format(p['currmodel'], bbox_inches='tight'))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
 
 #####
 
