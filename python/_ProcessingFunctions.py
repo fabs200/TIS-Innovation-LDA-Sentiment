@@ -182,7 +182,7 @@ def POSlemmatizer(listOfSents, POStag=p['POStag']):
     POS tag words in sentences, lemmatize words, remove stop words
 
     :param listOfSents: nested list of articles where sentences are nested
-    :param POStag: str or list; e.g. 'NN', or 'NNV'
+    :param POStag: str or list; e.g. 'NN', 'NNV' (nouns, verbs) or 'NNVA' (nouns, verbs, adjectives/adverbs)
     :return: listOfSents
     """
     POStaggedlist = []
@@ -192,6 +192,9 @@ def POSlemmatizer(listOfSents, POStag=p['POStag']):
     if POStag == 'NNV':
         POStaglist = ['NN', 'VAFIN', 'VAIMP', 'VAINF', 'VAPP', 'VMFIN', 'VMINF',
                       'VMPP', 'VVFIN', 'VVIMP', 'VVINF', 'VVIZU', 'VVPP']
+    if POStag == 'NNVA':
+        POStaglist = ['NN', 'VAFIN', 'VAIMP', 'VAINF', 'VAPP', 'VMFIN', 'VMINF',
+                      'VMPP', 'VVFIN', 'VVIMP', 'VVINF', 'VVIZU', 'VVPP', 'ADJA', 'ADJD', 'ADV']
 
     # First, POStag words and remove stop words
     for sent in listOfSents:

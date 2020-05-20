@@ -1,4 +1,5 @@
 import pandas, time, dtale
+import numpy as np
 from python.ConfigUser import path_data
 from python._ProcessingFunctions import Sentencizer, IgnoreWarnings
 from python._AnalysisFunctions import Load_SePL, GetSentimentScores_l
@@ -103,10 +104,10 @@ df_long_complete['quarter'] = df_long_complete['Date'].dt.quarter
 df_long_complete['year'] = df_long_complete['Date'].dt.to_period('Y')
 
 ### 8. Create unique Articles, Paragraphs (prevent double counting)
-# df_long_complete['paragraphs_text'] = np.where(df_long_complete['Par_unique']==1, df_long_complete['paragraphs_text'], '')
-# df_long_complete['articles_text'] = np.where(df_long_complete['Art_unique']==1, df_long_complete['articles_text'], '')
-# df_long_complete['paragraphs_{}_for_lda'.format(POStag)] = np.where(df_long_complete['Par_unique']==1, df_long_complete['paragraphs_{}_for_lda'.format(POStag)], '')
-# df_long_complete['articles_{}_for_lda'.format(POStag)] = np.where(df_long_complete['Art_unique']==1, df_long_complete['articles_{}_for_lda'.format(POStag)], '')
+df_long_complete['paragraphs_text'] = np.where(df_long_complete['Par_unique']==1, df_long_complete['paragraphs_text'], '')
+df_long_complete['articles_text'] = np.where(df_long_complete['Art_unique']==1, df_long_complete['articles_text'], '')
+df_long_complete['paragraphs_{}_for_lda'.format(POStag_type)] = np.where(df_long_complete['Par_unique']==1, df_long_complete['paragraphs_{}_for_lda'.format(POStag_type)], '')
+df_long_complete['articles_{}_for_lda'.format(POStag_type)] = np.where(df_long_complete['Art_unique']==1, df_long_complete['articles_{}_for_lda'.format(POStag_type)], '')
 
 # dtale.show(df_long_complete, ignore_duplicate=True)
 
