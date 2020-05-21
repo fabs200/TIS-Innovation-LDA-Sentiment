@@ -9,13 +9,13 @@ np.random.seed(1) # setting random seed to get the same results each time
 params = {
 
     # Specify POStag type
-    'POStag':  'NNV',
+    'POStag':  'NN',
 
     # Specify on which level to fit lda
-    'lda_level_fit':        ['article'], # article, paragraph, sentence
+    'lda_level_fit':        ['paragraph'], # article, paragraph, sentence
 
     # Specify of which level get dominant topics
-    'lda_level_domtopic':     ['article'], # article, paragraph, sentence
+    'lda_level_domtopic':     ['paragraph'], # article, paragraph, sentence
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'type':         'tfidf',

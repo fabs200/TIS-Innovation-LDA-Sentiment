@@ -15,7 +15,7 @@ for no_b in np.arange(5, 106, 10):
         # print(no_b, no_a)
         results_lda_std = LDACalibration(
                                 type='tfidf',
-                                dataframecolumn=complete_for_lda[complete_for_lda['Art_unique'] == 1]['articles_{}_for_lda'.format(p['POStag'])],
+                                dataframecolumn=complete_for_lda[complete_for_lda['Par_unique'] == 1]['paragraphs_{}_for_lda'.format(p['POStag'])],
                                 # dataframecolumn=complete_for_lda['sentences_{}_for_lda'.format(p['POStag'])],
                                 topics_start=4,
                                 topics_limit=13,
