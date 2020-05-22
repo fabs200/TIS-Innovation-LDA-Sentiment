@@ -19,8 +19,10 @@ Graph 8: Histogram Sentiment
 Graph 9: Histogram Sentiment by year
 Graph 10: Boxplot sentiments by year
 Graph 11: Barplot, how many articles have a sentiment score and how many not ...
-Graph 11: Barplot percentage shares of articles by year, stacked TODO
-Graph 12: Ratio sentiment, over time, demeaned ... TODO
+Graph 12: Barplot, how many articles have a sentiment score and how many not, by year
+Graph 13: Valid and non-valid sentiments by different lengths of articles
+Graph 14: Barplot percentage shares of articles by year, stacked TODO
+Graph 15: Ratio sentiment, over time, demeaned ... TODO
 
 not:
 Graph: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton) TODO
@@ -44,7 +46,7 @@ df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currm
 # Select articles and columns
 df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id',
                                                'year', 'quarter', 'month',
-                                               'Newspaper', 'sentiscore_mean']]
+                                               'Newspaper', 'sentiscore_mean', 'articles_text']]
 
 # convert dtypes
 df_long['month'] = pandas.to_datetime(df_long['month'], format='%Y-%m')
@@ -751,7 +753,7 @@ for i in range(len(years)):
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # label
 ax.set_xticks(years)
-# legend
+# legend, axis labels
 plt.legend([b1, b2], ['valid sentiment', 'missing sentiment'], loc='upper left')
 plt.ylabel('frequency articles')
 # For each bar: Place a label
@@ -764,6 +766,69 @@ plt.savefig(path_project + 'graph/model_{}/12_barplot_sentavailability_byyear.pn
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
+
+
+"""
+Graph 13: Valid and non-valid sentiments by different lengths of articles
+"""
+
+# generate dummy indicating filled sentiscore =1 or not =2 (nan)
+df_long['D_filledsent'] = df_long['sentiscore_mean'].notnull().astype('int').replace(0, 2)
+# get deciles
+deciles = 9
+df_long['articles_len'] = df_long.articles_text.apply(lambda x: len(x))
+df_long['articles_len_dc'] = pandas.qcut(df_long['articles_len'], deciles, labels=False)
+df_filledsent_dc = df_long[['articles_len_dc', 'articles_len', 'D_filledsent']].\
+    groupby(['articles_len_dc', 'D_filledsent']).count().reset_index()
+
+# label
+label = ['with sentiment', 'without sentiment']
+
+# bar plot
+fig, ax = plt.subplots(figsize=(8, 4.5))
+# Define bar width. We'll use this to offset the second bar.
+bar_width = .4
+# 1. bars and number on bars, filled
+b1 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['articles_len_dc'].to_numpy()-bar_width/2,
+            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['articles_len'].to_list(),
+            width=bar_width)
+# loop over each pair of x- and y-value and annotate b1 bars
+for i in range(deciles):
+    # Create annotation
+    x_val, y_val = i-bar_width, df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1, 'articles_len'].to_list()[i]
+    plt.annotate("{:.0f}".format(y_val), (x_val, y_val+5),
+                 xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
+# 2. bars and number on bars, empty
+b2 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['articles_len_dc'].to_numpy()+bar_width/2,
+            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['articles_len'].to_list(),
+            width=bar_width)
+# loop over each pair of x- and y-value and annotate b2 bars
+for i in range(deciles):
+    # Create annotation
+    x_val, y_val = i, df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2, 'articles_len'].to_list()[i]
+    plt.annotate("{:.0f}".format(y_val), (x_val, y_val+5),
+                 xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
+# label
+ax.set_xticks(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['articles_len_dc'].to_numpy())
+ax.set_xticklabels(labels=10*(1+df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['articles_len_dc'].to_numpy()))
+
+# legend, axis labels
+plt.legend([b1, b2], ['valid sentiment', 'missing sentiment'], loc='lower left')
+plt.ylabel('frequency articles')
+plt.xlabel('deciles of length of articles')
+# For each bar: Place a label
+
+plt.title('Bar plot of deciles of article lengths w/o valid sentiments by year\n'
+          'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
+plt.tight_layout()
+plt.savefig(path_project + 'graph/model_{}/13_barplot_sentavailability_deciles.png'.format(p['currmodel'],
+                                                                                           bbox_inches='tight'))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+
 
 
 
