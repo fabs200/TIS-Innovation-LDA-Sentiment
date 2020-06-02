@@ -9,19 +9,19 @@ np.random.seed(1) # setting random seed to get the same results each time
 params = {
 
     # Specify POStag type
-    'POStag':  'NN',
+    'POStag':  'NNV',
 
     # Specify on which level to fit lda
-    'lda_level_fit':        ['paragraph'], # article, paragraph, sentence
+    'lda_level_fit':        ['articles'], # article, paragraph, sentence
 
     # Specify of which level get dominant topics
-    'lda_level_domtopic':     ['paragraph'], # article, paragraph, sentence
+    'lda_level_domtopic':     ['article'], # article, paragraph, sentence
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'type':         'tfidf',
-    'no_below':     65, # Keep tokens which are contained in at least no_below documents
-    'no_above':     .55, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
-    'num_topics':   8,
+    'no_below':     55, # Keep tokens which are contained in at least no_below documents
+    'no_above':     .02, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
+    'num_topics':   5,
     'num_words':    50,
     'alpha':        'auto',
     'eta':          'auto',
