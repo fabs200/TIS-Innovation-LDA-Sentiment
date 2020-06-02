@@ -43,6 +43,13 @@ os.makedirs(path_project + "graph/model_{}".format(p['currmodel']), exist_ok=Tru
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
+
+df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
+
+df_long_sent_mean = df_long.groupby('Art_ID', as_index=False).sentiscore_mean.mean()
+#artcles = 3400
+#ToDo: Merge to following df_long or compute directly into df_long before collapsing by Art_unique
+
 # Select articles and columns
 df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id',
                                                'year', 'quarter', 'month',
@@ -58,7 +65,7 @@ df_long = df_long[(df_long['month'] >= '2007-1-1')]
 # replace everything in brackets from Newspaper
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
 
-
+df_long.to_excel(path_data + 'df_long_tocheckarticles.xlsx')
 """
 ###################### Graph 1: Sentiment score over time, by topics ######################
 """
