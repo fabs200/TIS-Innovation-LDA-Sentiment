@@ -12,7 +12,7 @@ params = {
     'POStag':  'NNV',
 
     # Specify on which level to fit lda
-    'lda_level_fit':        ['articles'], # article, paragraph, sentence
+    'lda_level_fit':        ['article'], # article, paragraph, sentence
 
     # Specify of which level get dominant topics
     'lda_level_domtopic':     ['article'], # article, paragraph, sentence
