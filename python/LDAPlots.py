@@ -39,16 +39,19 @@ POStag, lda_level_fit, lda_level_domtopic = p['POStag'], p['lda_level_fit'], p['
 # create folder in graphs with currmodel
 os.makedirs(path_project + "graph/model_{}".format(p['currmodel']), exist_ok=True)
 
-# Load long file
+# Load long file (sentence-level)
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
-
+# to numeric
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
-df_long_sent_mean = df_long.groupby('Art_ID', as_index=False).sentiscore_mean.mean()
-#artcles = 3400
-#ToDo: Merge to following df_long or compute directly into df_long before collapsing by Art_unique
+# calculate average sentiment per article and merge to df_long
+df_long = pandas.merge(df_long.drop('sentiscore_mean', axis=1),
+                       df_long.groupby('Art_ID', as_index=False).sentiscore_mean.mean(),
+                       how='left', on=['Art_ID'])
+
+# Todo: drop neutral sentiment scores (either =0 or in range(-.1, .1) or ...)
 
 # Select articles and columns
 df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id',
@@ -746,7 +749,7 @@ b1 = ax.bar(years-bar_width/2,
 for i in range(len(years)):
     # Create annotation
     x_val, y_val = years[i], df_filledsent_yr.loc[df_filledsent_yr['D_filledsent']=='filled', 'Newspaper'].to_list()[i]
-    plt.annotate("{:.0f}".format(y_val), (x_val-1.05*bar_width, y_val+5),
+    plt.annotate("{:.0f}".format(y_val), (x_val-1.25*bar_width, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # 2. bars and number on bars, empty
 b2 = ax.bar(years+bar_width/2,

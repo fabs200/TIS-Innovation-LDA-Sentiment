@@ -20,7 +20,7 @@ params = {
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'type':         'tfidf',
     'no_below':     55, # Keep tokens which are contained in at least no_below documents
-    'no_above':     .02, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
+    'no_above':     .2, # Keep tokens which are contained in no more than no_above documents (fraction of total corpus)
     'num_topics':   5,
     'num_words':    50,
     'alpha':        'auto',
