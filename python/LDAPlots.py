@@ -69,6 +69,9 @@ df_long = df_long[(df_long['month'] >= '2007-1-1')]
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
 
 df_long.to_excel(path_data + 'df_long_tocheckarticles.xlsx')
+
+
+
 """
 ###################### Graph 1: Sentiment score over time, by topics ######################
 """
@@ -727,7 +730,7 @@ Graph 12: Barplot, how many articles have a sentiment score and how many not, by
 # generate dummy indicating filled sentiscore =1 or not =2 (nan)
 df_long['D_filledsent'] = df_long['sentiscore_mean'].notnull().astype('int').replace(0, 2)
 # group by dummy
-df_filledsent_yr = df_long.groupby(['D_filledsent', 'year']).count().reset_index()
+df_filledsent_yr = df_long.groupby(['D_filledsent', 'year']).count().unstack(fill_value=0).stack().reset_index()
 df_filledsent_yr = df_filledsent_yr[['D_filledsent', 'year', 'Newspaper']]
 # df_filledsent_yr['year'] = df_filledsent_yr['year'].astype('str')
 df_filledsent_yr['D_filledsent'] = df_filledsent_yr['D_filledsent'].astype('str').replace('1', 'filled').replace('2', 'empty')
@@ -789,7 +792,7 @@ deciles = 9
 df_long['articles_len'] = df_long.articles_text.apply(lambda x: len(x))
 df_long['articles_len_dc'] = pandas.qcut(df_long['articles_len'], deciles, labels=False)
 df_filledsent_dc = df_long[['articles_len_dc', 'articles_len', 'D_filledsent']].\
-    groupby(['articles_len_dc', 'D_filledsent']).count().reset_index()
+    groupby(['articles_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index()
 
 # label
 label = ['with sentiment', 'without sentiment']
