@@ -842,6 +842,75 @@ plt.close('all')
 
 
 
+"""
+Graph 14: Average length of articles with valid and non-valid sentiments by different lengths of articles
+"""
+
+# generate dummy indicating filled sentiscore =1 or not =2 (nan)
+df_long['D_filledsent'] = df_long['sentiscore_mean'].notnull().astype('int').replace(0, 2)
+# get deciles
+deciles = 9
+df_long['articles_len'] = df_long.articles_text.apply(lambda x: len(x))
+df_long['articles_len_dc'] = pandas.qcut(df_long['articles_len'], deciles, labels=False)
+# aggregate deciles
+df_filledsent_dc = df_long[['articles_len_dc', 'articles_len', 'D_filledsent']].\
+    groupby(['articles_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index().\
+    rename(columns={'articles_len': 'count'})
+# aggregate lengths
+df_filledsent_dc_len = df_long[['articles_len_dc', 'articles_len', 'D_filledsent']].\
+    groupby(['articles_len_dc', 'D_filledsent']).mean().unstack(fill_value=0).stack().reset_index().\
+    rename(columns={'articles_len': 'avg_len'})
+# add deciles to lengths df
+df_filledsent_dc_len.insert(2, 'count', df_filledsent_dc['count'].to_list(), True)
+
+# label
+label = ['with sentiment', 'without sentiment']
+
+# bar plot
+fig, ax = plt.subplots(figsize=(8, 4.5))
+# Define bar width. We'll use this to offset the second bar.
+bar_width = .4
+# 1. bars and number on bars, filled
+b1 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['articles_len_dc'].to_numpy()-bar_width/2,
+            df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['count'].to_list(),
+            width=bar_width)
+# loop over each pair of x- and y-value and annotate b1 bars
+for i in range(deciles):
+    # Create annotation
+    x_val, y_val = i-bar_width, df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'count'].to_list()[i]
+    display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'avg_len'].to_list()[i]
+    plt.annotate("({:.0f})".format(display_val), (x_val, y_val+5),
+                 xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
+# 2. bars and number on bars, empty
+b2 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2]['articles_len_dc'].to_numpy()+bar_width/2,
+            df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2]['count'].to_list(),
+            width=bar_width)
+# loop over each pair of x- and y-value and annotate b2 bars
+for i in range(deciles):
+    # Create annotation
+    x_val, y_val = i, df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2, 'count'].to_list()[i]
+    display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2, 'avg_len'].to_list()[i]
+    plt.annotate("({:.0f})".format(display_val), (x_val, y_val+5),
+                 xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
+# label
+ax.set_xticks(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['articles_len_dc'].to_numpy())
+ax.set_xticklabels(labels=10*(1+df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['articles_len_dc'].to_numpy()))
+
+# legend, axis labels
+plt.legend([b1, b2], ['valid sentiment', 'missing sentiment'], loc='lower left')
+plt.ylabel('frequency articles')
+plt.xlabel('deciles of length of articles')
+# For each bar: Place a label
+
+plt.title('Bar plot of deciles of article lengths w/o valid sentiments by year,\n'
+          'average length of article in brackets on bars,\n'
+          'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
+plt.tight_layout()
+plt.savefig(path_project + 'graph/model_{}/14_barplot_sentavailability_deciles_withartilen.png'.format(p['currmodel'],
+                                                                                                       bbox_inches='tight'))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 
