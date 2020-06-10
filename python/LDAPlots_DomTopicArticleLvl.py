@@ -3,6 +3,7 @@ from python.ConfigUser import path_data, path_project
 from python.params import params as p
 import matplotlib.pyplot as plt
 import numpy as np
+import warnings
 
 """
 ------------------------------------------
@@ -36,6 +37,10 @@ Graph: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr)
 
 # Todo: look up/implement LDAvis
 # https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
+
+# Ignore some warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
 POStag, lda_level_fit = p['POStag'], p['lda_level_fit']
@@ -365,7 +370,8 @@ plt.title('Average sentiment score by main publishers\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/04a_sentiscore_bypublisher.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/model_{}/{}/04a_sentiscore_bypublisher.png'.format(p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -422,6 +428,10 @@ df_aggr_q['quarter'] = df_aggr_q.year.map(str) + '-' + df_aggr_q.quarter.map(str
 df_aggr_q = df_aggr_q.drop('year', axis=1)
 # year
 df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
+
+# Make column names string if pandas reads as numeric
+df_aggr_q.columns = df_aggr_q.columns.astype(str)
+df_aggr_y.columns = df_aggr_y.columns.astype(str)
 
 # before calculating avgs, retrieve all topics
 topics = df_aggr_q.columns[1:]
@@ -639,8 +649,8 @@ plt.tight_layout()
 plt.title('Topics by publishers\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/07_topics_by_publishers_stacked.png'.format(p['currmodel'],
-                                                                                       lda_level_domtopic),
+plt.savefig(path_project + 'graph/model_{}/{}/07_topics_by_publishers_stacked.png'.format(p['currmodel'],
+                                                                                          lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -793,8 +803,8 @@ plt.ylabel('frequency articles')
 plt.title('Bar plot of articles w/o valid sentiments by year\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/12_barplot_sentavailability_byyear.png'.format(p['currmodel'],
-                                                                                          lda_level_domtopic),
+plt.savefig(path_project + 'graph/model_{}/{}/12_barplot_sentavailability_byyear.png'.format(p['currmodel'],
+                                                                                             lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -854,8 +864,8 @@ plt.xlabel('deciles of length of articles')
 plt.title('Bar plot of deciles of article lengths w/o valid sentiments by year\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/13_barplot_sentavailability_deciles.png'.format(p['currmodel'],
-                                                                                           lda_level_domtopic),
+plt.savefig(path_project + 'graph/model_{}/{}/13_barplot_sentavailability_deciles.png'.format(p['currmodel'],
+                                                                                              lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
