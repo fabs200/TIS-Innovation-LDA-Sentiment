@@ -904,3 +904,332 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
     if verbose: print('\tstats:', ss_mean, ss_median, ss_n, ss_sd, end='\n\n')
 
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'SentiScores': listOfSentiScores, 'seplphrs': listOfseplphrs}
+
+
+#######################################################################################################################
+######################################################################################################################
+#Functions for SentiWS/simple word lists
+
+
+
+def Load_SentiWS():
+    """
+    Reads in SentiWS, prepares phrases and sorts them; this is required be be run before MakeCandidatesWS() and
+    GetSentiments()
+    """
+    # Read in SentiWS
+    df_SentiWS = pandas.read_csv(path_data + 'SentiWS/SentiWS_final.csv', sep=';')
+
+    # convert all words to lower case
+    df_SentiWS['word'] = [i.lower() for i in df_SentiWS['word']]
+
+    print('SentiWS file loaded')
+
+    return df_SentiWS
+
+
+def MakeCandidatesWS(sent, df_SentiWS=None, get='candidates', verbose=False, negation_list=None):
+
+    sent = sent.split(',')
+    sent = [nlp2(s) for s in sent]
+    candidates = []
+
+    if negation_list is None:
+        # Rill (2016)
+        # negation_list = ['nicht', 'kein', 'nichts', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'niemanden',
+        #                  'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
+        # Rill + Wiegant et al. (2018)
+        negation_list = ['nicht', 'kein', 'nichts', 'kaum', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'gegen',
+                         'niemanden', 'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
+        # TODO: check further negation words in literature
+
+    if get == 'candidates':
+
+        # Loop over sentence parts and check whether a word is a noun/verb/adverb/adjective and append it as candidate
+        for s in sent:
+            c = []
+            # loop over tokens in sentences, get tags and prepare
+            for token in s:
+               # if verbose: print('token:', token.text, '->', token.tag_)
+                if token.tag_.startswith(('NN', 'V', 'ADV', 'ADJ')) or token.text in negation_list:
+                    if df_SentiWS['word'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(token.text)).any():
+                        c.append(token.text)
+            candidates.append(c)
+
+        if verbose: print('final candidates:', candidates)
+
+    if get == 'negation':
+
+        # loop over sentence parts and check whether a word is contained in negation_list, if yes, append to candidates
+        for s in sent:
+            c = []
+            # loop over tokens in sentence part
+            for token in s:
+               # if verbose: print(token.text, token.tag_)
+                if (token.text in negation_list):
+                # if (token.tag_.startswith(('PIAT', 'PIS', 'PTKNEG'))) or (token.text in negation_list):
+                    c.append(token.text)
+            candidates.append(c)
+        if verbose: print('final negations:', candidates)
+
+    return candidates
+
+
+def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
+    """
+    reads in candidates (list in list), retrieves sentiment scores (sentiment_scores), returns them and the opinion
+    relevant terms (tagged_phr), make sure df_SentiWS is loaded (run Load_SentiWS() before)
+
+
+
+    :param candidates: list in list with POS tagged words
+    :param df_SentiWS: load df_SentiWS via Load_SentiWS()
+    :param verbose: display
+    :return: [sentiment_scores], [tagged_phr]
+    """
+
+    final_sentiments, final_phrs, tagged_phr_list = [], [], []
+    # loop over candidates and extract sentiment score according to Rill (2016): S.66-73, 110-124
+    for c in candidates:
+        c_sentiments, c_phrs = [], []
+        print (c)
+        # loop over each word in nested candidate list
+        for word in c:
+            print (word)
+            if (df_SentiWS['word'] == word).any():
+                # extract sentiment, SentiWS sometimes contains non-unique entries, thus get the highest value
+                # if there are more than 1 sentiments
+                try:
+                    sentiment_score = df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].item()
+                    print(sentiment_score)
+                except ValueError:
+                    sentiment_score = max(df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].to_list())
+                c_sentiments.append(sentiment_score)
+                #if verbose: print('phrase found! sentiment is', sentiment_score)
+                # save phr
+                c_phrs.append(word)
+                #tagged_phr_list = phr_string.split()
+                #break
+
+        # gather all extracted sentiments and phrases
+        final_sentiments.append(c_sentiments)
+        final_phrs.append(c_phrs)
+
+    if verbose: print('final list with sentiments:', final_sentiments)
+    if verbose: print('final list of phrs:', final_phrs)
+
+    return final_sentiments, final_phrs
+
+
+
+def ProcessSentimentScoresWS(WS_phrase, negation_candidates, sentimentscores, negation_list=None):
+    """
+    Process sentimentscores of sentence parts and return only one sentiment score per sentence
+
+        #negation: senti score of first opinion word in sentence part is negated if negation present
+                    in the same sentence part
+        #Todo: negate highest sent in sentence part or just leave it as it is?
+
+    :param WS_phrase: GetSentiments(...)[1], here are all words which are in SentiWS
+    :param negation_candidates: MakeCandidates(..., get='negation')
+    :param sentimentscores: GetSentiments(...)[0]
+    :return: 1 sentiment score
+    """
+
+    if negation_list is None:
+        negation_list = ['nicht', 'kein', 'nichts', 'kaum', 'ohne', 'niemand', 'nie', 'nie mehr', 'niemals', 'gegen',
+                         'niemanden', 'keinesfalls', 'keineswegs', 'nirgends', 'nirgendwo', 'mitnichten']
+
+    # Loop over each sentence part and access each list (SentiWS_word/negation_candidates/sentimentscores) via index
+    for i in range(0, len(WS_phrase)):
+
+        # Check whether SentiWS_word in sentence part is contained in negation_list, if yes, set flag to True
+        # if WS_phrase[i]:
+        if WS_phrase[i] and negation_candidates[i]:
+
+            # # write as str
+            # WS_string = WS_phrase[i][0]
+            # WS_neg_string = negation_candidates[i][0]
+            #
+            # # set up flags
+            # WSphr, WSphrneg = False, False
+            #
+            # # check whether negation word in SentiWS_string, in SentiWS_neg_string
+            # for word in WS_string.split():
+            #     if word in negation_list: WSphr = True
+            # for word in WS_neg_string.split():
+            #     if word in negation_list: WSphrneg = True
+            #
+            # # Condition Case II: Invert sentiment
+            # if not WSphr and WSphrneg:
+                sentimentscores[i][0] = -sentimentscores[i][0]
+        else:
+            continue
+
+    # Flatten list
+    flatsentimentscores = [element for sublist in sentimentscores for element in sublist]
+
+    # Average sentiment score
+    if flatsentimentscores:
+        averagescore = sum(flatsentimentscores) / len(flatsentimentscores)
+    else:
+        averagescore = []
+
+    return averagescore
+
+
+def ProcessSentiWSphrases(WS_phrase):
+    """
+    Process WS_phrases of sentence parts and return only one list with the opinion relevant words per sentence,
+    drop empty nested lists
+
+    :param WS_phrase: GetSentiments(...)[1], here are all words which are in SentiWS
+    :return: 1 WS_word list
+    """
+
+    # Loop over sentence parts and append only non-empty lists
+    processed_WS_phrases = ([])
+    for phrase in WS_phrase:
+        if phrase:
+            for p in phrase:
+                processed_WS_phrases.append(p)
+    return processed_WS_phrases
+
+
+def GetSentimentScoresWS(listOfSentenceparts, df_SentiWS):
+    """
+    Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
+    Note: Apply this function on the final long file only!
+
+    Includes following function:
+
+    1. Load_SentiWS() to load SentiWS
+    2. MakeCandidatesWS() to make candidates- and candidates_negation-lists
+    3. ReadWSSentiments() which reads in candidates- and candidates_negation-lists and retrieves sentiment scores
+        from SentiWS
+    4. ProcessSentimentScoresWS() to process the retrieved sentiment scores and to return a unified score per sentence
+
+    :param listOfSentenceparts
+        input must be processed by ProcessforSentiment() where listOfSentenceparts==1 sentence
+        ['sentencepart', 'sentencepart', ...]
+    :return: return 1 value per Article, return 1 list with sentiments of each sentence, 1 list w/ opinion relev. words
+    """
+
+    listOfSentiScores, listOfWSphrs = [], []
+
+    for sentpart in listOfSentenceparts:
+
+        """
+        first step: identification of suitable candidates for opinionated phrases suitable candidates:
+        nouns, adjectives, adverbs and verbs
+        """
+        candidates = MakeCandidates(sentpart, df_SentiWS, get='candidates')
+        negation_candidates = MakeCandidates(sentpart, df_SentiWS, get='negation')
+
+        """
+        second step: extraction of possible opinion-bearing phrases from a candidate starting from a candidate,
+        check all left and right neighbours to extract possible phrases. The search is terminated on a comma (POS tag $,),
+        a punctuation terminating a sentence (POS tag $.), a conjunction (POS-Tag KON) or an opinion-bearing word that is
+        already tagged. (Max distance determined by sentence lenght)
+        If one of the adjacent words is included in the SentiWS, together with the previously extracted phrase, it is added to
+        the phrase.
+        """
+
+        raw_sentimentscores, raw_WS_phrase = ReadSentiWSSentiments(candidates, df_WS)
+
+        """
+        third step: compare extracted phrases with SentiWS After all phrases have been extracted, they are compared with the
+        entries in the SentiWS (everything lemmatized!) If no  match is found, the extracted Phrase is shortened by the last
+        added element and compared again with the SentiWS This is repeated until a match is found.
+        """
+
+        # Make sure SentiWS_phrase, negation_candidates, sentimentscores are of same size
+        assert len(raw_WS_phrase) == len(raw_sentimentscores) == len(candidates) == len(negation_candidates)
+
+        # export processed, flattened lists
+        sentimentscores = ProcessSentimentScoresWS(raw_WS_phrase, negation_candidates, raw_sentimentscores)
+        WS_phrase = ProcessSentiWSphrases(raw_WS_phrase)
+
+        listOfSentiScores.append(sentimentscores)
+        listOfWSphrs.append(WS_phrase)
+
+    # create flat, non-empty list with scores
+    sentiscores = np.array([i for i in listOfSentiScores if i])
+
+    # Retrieve statistics
+    ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
+
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfWSphrs
+
+
+
+def GetSentimentScoresWS_l(sent, df_SentiWS, verbose=False):
+    """
+    Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
+    Note: Apply this function on the final long file only!
+
+    Includes following function:
+
+    1. Load_SentiWS() to load SentiWS
+    2. MakeCandidates() to make candidates- and candidates_negation-lists
+    3. ReadSentiWSSentiments() which reads in candidates- and candidates_negation-lists and retrieves sentiment scores
+        from SentiWS
+    4. ProcessSentimentScoresWS() to process the retrieved sentiment scores and to return a unified score per sentence
+
+    :param listOfSentenceparts
+        input must be processed by ProcessforSentiment() where listOfSentenceparts equals 1 sentence
+        ['sentencepart', 'sentencepart', ...]
+    :return: return 1 value per Article, return 1 list with sentiments of each sentence, 1 list w/ opinion relev. words
+    """
+    if verbose: print('### sent:', sent)
+    listOfSentenceparts = ProcessforSentiment_l(sent)
+    listOfSentiScores, listOfWSphrs = [], []
+
+    for sentpart in listOfSentenceparts:
+
+        """
+        first step: identification of suitable candidates for opinionated phrases suitable candidates:
+        nouns, adjectives, adverbs and verbs
+        """
+        # if verbose: print('\tsentpart:', sentpart, end='\r')
+        candidates = MakeCandidatesWS(sentpart, df_SentiWS, get='candidates')
+        negation_candidates = MakeCandidatesWS(sentpart, df_SentiWS, get='negation')
+        # if verbose: print('\tcandidates:', candidates, end='\r')
+        # if verbose: print('\tnegation_candidates:', negation_candidates)
+        """
+        second step: extraction of possible opinion-bearing phrases from a candidate starting from a candidate,
+        check all left and right neighbours to extract possible phrases. The search is terminated on a comma (POS tag $,),
+        a punctuation terminating a sentence (POS tag $.), a conjunction (POS-Tag KON) or an opinion-bearing word that is
+        already tagged. (Max distance determined by sentence lenght)
+        If one of the adjacent words is included in the SentiWS, together with the previously extracted phrase, it is added to
+        the phrase.
+        """
+
+        raw_sentimentscores, raw_WS_phrase = ReadSentiWSSentiments(candidates, df_SentiWS)
+
+        """
+        third step: compare extracted phrases with SentiWS After all phrases have been extracted, they are compared with the
+        entries in the SentiWS. (everything lemmatized!) If no  match is found, the extracted Phrase is shortened by the last
+        added element and compared again with the SentiW. This is repeated until a match is found.
+        """
+
+        # Make sure WS_phrase, negation_candidates, sentimentscores are of same size
+        assert len(raw_WS_phrase) == len(raw_sentimentscores) == len(candidates) == len(negation_candidates)
+
+        # export processed, flattened lists
+        sentimentscores = ProcessSentimentScoresWS(raw_WS_phrase, negation_candidates, raw_sentimentscores)
+        # if verbose: print('\tsentimentscores:', sentimentscores, end='\r')
+        WS_phrase = ProcessSentiWSphrases(raw_WS_phrase)
+
+        listOfSentiScores.append(sentimentscores)
+        listOfWSphrs.append(WS_phrase)
+
+    # create flat, non-empty list with scores
+    sentiscores = np.array([i for i in listOfSentiScores if i])
+
+    # Retrieve statistics
+    ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
+    if verbose: print('\tstats:', ss_mean, ss_median, ss_n, ss_sd, end='\n\n')
+
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'SentiScores': listOfSentiScores, 'WSphrs': listOfWSphrs}
+
