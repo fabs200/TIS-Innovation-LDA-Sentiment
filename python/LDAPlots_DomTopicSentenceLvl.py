@@ -26,8 +26,10 @@ Graph 11: Barplot, how many articles have a sentiment score and how many not ...
 Graph 12: Barplot, how many articles have a sentiment score and how many not, by year
 Graph 13: Valid and non-valid sentiments by different lengths of articles
 Graph 14: Average length of articles with valid and non-valid sentiments by different lengths of articles
-Graph 15: Barplot percentage shares of articles by year, stacked TODO
-Graph 16: Ratio sentiment, over time, demeaned ... TODO
+Graph 15: (as Graph 2, but shares), relative frequency analysis, publication trend of articles, over time
+Graph 16: (as Graph 3, but shares), relative frequency analysis, publication trend of topics, over time
+Graph 17: Barplot percentage shares of articles by year, stacked TODO
+Graph 18: Ratio sentiment, over time, demeaned ... TODO
 
 not:
 Graph: Positive and negative sentiment with net 3-years-average, by topic, over time (Melton) TODO
@@ -934,6 +936,140 @@ time.sleep(1.5)
 plt.close('all')
 
 
+"""
+Graph 15: (as Graph 2, but shares), relative frequency analysis, publication trend of articles, over time
+"""
+
+# group by year
+df_senti_freq_y = df_long.groupby(['year'])[['sentiscore_mean']].count().reset_index()
+
+# Graph bar by year
+width, totalrows = .75, np.array(df_senti_freq_y.sentiscore_mean.to_list()).sum()
+fig = plt.figure(figsize=(10, 5))
+ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+ax.bar(df_senti_freq_y.iloc[:,0], 100*(df_senti_freq_y.iloc[:, 1]/totalrows), color='#004488', width=width)
+ax.set_ylabel('relative frequency in percent')
+ax.set_title('Relative frequency of sentences over time\n'
+             'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
+                                                                                p['no_below'], p['no_above']))
+ax.xaxis.set_ticks(np.arange(df_senti_freq_y.iloc[:,0].min(), df_senti_freq_y.iloc[:,0].max()+1, 1))
+# Access bars
+rects = ax.patches
+# Define labels
+labels = round(100*(df_senti_freq_y.iloc[:,1]/totalrows), 2)
+# Loop over bars and add label
+for rect, label in zip(rects, labels):
+    ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label, ha='center', va='bottom')
+
+plt.savefig(path_project + 'graph/model_{}/{}/15_relfreqArt_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+"""
+Graph 16: (as Graph 3, but shares), relative frequency analysis, publication trend of topics, over time
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_sent_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_sent_id', values='sentiscore_mean')
+
+# make aggregation available
+df_aggr_m = df_senti_freq_agg.groupby(pandas.Grouper(freq='M')).sum().reset_index()
+df_aggr_q = df_senti_freq_agg.groupby(pandas.Grouper(freq='Q')).sum().reset_index().rename(columns={'month': 'quarter'})
+df_aggr_y = df_senti_freq_agg.groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
+
+### Reformat dates
+# month
+df_aggr_m['month'] = pandas.DatetimeIndex(df_aggr_m.iloc[:,0])
+df_aggr_m['year'] = pandas.DatetimeIndex(df_aggr_m.iloc[:,0]).year
+df_aggr_m['month'] = pandas.DatetimeIndex(df_aggr_m.iloc[:,0]).month
+df_aggr_m['month'] = df_aggr_m.year.map(str) + '-' + df_aggr_m.month.map(str)
+df_aggr_m = df_aggr_m.drop('year', axis=1)
+# quarter
+df_aggr_q['quarter'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0])
+df_aggr_q['year'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0]).year
+df_aggr_q['quarter'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0]).quarter
+df_aggr_q['quarter'] = df_aggr_q.year.map(str) + '-' + df_aggr_q.quarter.map(str)
+df_aggr_q = df_aggr_q.drop('year', axis=1)
+# year
+df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
+
+# calculate percentages of all columns
+for i in range(1, len(df_aggr_m.columns)):
+    df_aggr_m.iloc[:, i] = df_aggr_m.iloc[:, i].div(np.array(df_aggr_m.iloc[:, i]).sum(), axis=0).apply(lambda x: 100*x)
+for i in range(1, len(df_aggr_q.columns)):
+    df_aggr_q.iloc[:, i] = df_aggr_q.iloc[:, i].div(np.array(df_aggr_q.iloc[:, i]).sum(), axis=0).apply(lambda x: 100*x)
+for i in range(1, len(df_aggr_y.columns)):
+    df_aggr_y.iloc[:, i] = df_aggr_y.iloc[:, i].div(np.array(df_aggr_y.iloc[:, i]).sum(), axis=0).apply(lambda x: 100*x)
+
+# Graph line by month
+fig = plt.figure(figsize=(10,5))
+ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+for i in range(1, len(df_aggr_m.columns)):
+    ax.plot(df_aggr_m.iloc[:, i], marker='.', label='topic ' + str(df_aggr_m.iloc[:, i].name))
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.set_xticks(range(len(df_aggr_m.iloc[:, 0])))
+ax.set_xticklabels(df_aggr_m.iloc[:, 0])
+idx = 1
+for label in ax.xaxis.get_ticklabels():
+    if (idx % 6)==0 or (idx==1):
+        label.set_rotation(90)
+    else:
+        label.set_visible(False)
+    idx+=1
+ax.set_ylabel('relative frequency in percent')
+plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
+          'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
+                                                                              p['no_below'], p['no_above']))
+
+plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_m.png'.format(p['currmodel'], lda_level_domtopic))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+# Graph line by quarter
+fig = plt.figure(figsize=(10,5))
+ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+for i in range(1, len(df_aggr_q.columns)):
+    ax.plot(df_aggr_q.iloc[:, i], marker='.', label='topic ' + str(df_aggr_q.iloc[:, i].name))
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.set_xticks(range(len(df_aggr_q.iloc[:, 0])))
+ax.set_xticklabels(df_aggr_q.iloc[:, 0])
+idx = 1
+for label in ax.xaxis.get_ticklabels():
+    if (idx % 6)==0 or (idx==1):
+        label.set_rotation(90)
+    else:
+        label.set_visible(False)
+    idx+=1
+ax.set_ylabel('relative frequency in percent')
+plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
+          'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
+                                                                                p['no_below'], p['no_above']))
+plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_q.png'.format(p['currmodel'], lda_level_domtopic))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+# Graph line by year
+fig = plt.figure(figsize=(10,5))
+ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+for i in range(1, len(df_aggr_y.columns)):
+    ax.plot(df_aggr_y.iloc[:, i], marker='.', label='topic ' + str(df_aggr_y.iloc[:, i].name))
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.set_xticks(range(len(df_aggr_y.index)))
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
+ax.set_ylabel('relative frequency in percent')
+plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
+          'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
+                                                                             p['no_below'], p['no_above']))
+plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 #####
