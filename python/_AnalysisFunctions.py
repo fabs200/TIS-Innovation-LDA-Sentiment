@@ -166,7 +166,7 @@ def ReadSePLSentiments(candidates, df_sepl=None, verbose=False):
 
 def ProcessSentimentScores(sepl_phrase, negation_candidates, sentimentscores, negation_list=None):
     """
-    Process sentimentscores of sentence parts and return only one sentiment score per sentence
+    Process sentimentscores of sentence parts and return only one sentiment score per sentence/sentence part
 
         # Case I:
         # 1. any word contained in negation_list, sepl_phrase is already negated in SePL list
@@ -256,7 +256,7 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     2. MakeCandidates() to make candidates- and candidates_negation-lists
     3. ReadSePLSentiments() which reads in candidates- and candidates_negation-lists and retrieves sentiment scores
         from SePL
-    4. ProcessSentimentScores() to process the retrieved sentiment scores and to return a unified score per sentence
+    4. ProcessSentimentScores() to process the retrieved sentiment scores and to return a unified score per sentence/sentence part
 
     :param listOfSentenceparts
         input must be processed by ProcessforSentiment() where listOfSentenceparts==1 sentence
@@ -844,7 +844,7 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
     2. MakeCandidates() to make candidates- and candidates_negation-lists
     3. ReadSePLSentiments() which reads in candidates- and candidates_negation-lists and retrieves sentiment scores
         from SePL
-    4. ProcessSentimentScores() to process the retrieved sentiment scores and to return a unified score per sentence
+    4. ProcessSentimentScores() to process the retrieved sentiment scores and to return a unified score per sentence/sentence part
 
     :param listOfSentenceparts
         input must be processed by ProcessforSentiment() where listOfSentenceparts equals 1 sentence
@@ -980,8 +980,6 @@ def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
     reads in candidates (list in list), retrieves sentiment scores (sentiment_scores), returns them and the opinion
     relevant terms (tagged_phr), make sure df_SentiWS is loaded (run Load_SentiWS() before)
 
-
-
     :param candidates: list in list with POS tagged words
     :param df_SentiWS: load df_SentiWS via Load_SentiWS()
     :param verbose: display
@@ -992,12 +990,10 @@ def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
     # loop over candidates and extract sentiment score according to Rill (2016): S.66-73, 110-124
     for c in candidates:
         c_sentiments, c_phrs = [], []
-        print (c)
         # loop over each word in nested candidate list
         for word in c:
-            print (word)
             if (df_SentiWS['word'] == word).any():
-                # extract sentiment, SentiWS sometimes contains non-unique entries, thus get the highest value
+                # extract sentiment - if SentiWS contains non-unique entries, get the highest value
                 # if there are more than 1 sentiments
                 try:
                     sentiment_score = df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].item()
@@ -1024,7 +1020,7 @@ def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
 
 def ProcessSentimentScoresWS(WS_phrase, negation_candidates, sentimentscores, negation_list=None):
     """
-    Process sentimentscores of sentence parts and return only one sentiment score per sentence
+    Process sentimentscores of sentence parts and return only one sentiment score per sentence/sentence part
 
         #negation: senti score of first opinion word in sentence part is negated if negation present
                     in the same sentence part
@@ -1107,7 +1103,7 @@ def GetSentimentScoresWS(listOfSentenceparts, df_SentiWS):
     2. MakeCandidatesWS() to make candidates- and candidates_negation-lists
     3. ReadWSSentiments() which reads in candidates- and candidates_negation-lists and retrieves sentiment scores
         from SentiWS
-    4. ProcessSentimentScoresWS() to process the retrieved sentiment scores and to return a unified score per sentence
+    4. ProcessSentimentScoresWS() to process the retrieved sentiment scores and to return a unified score per sentence/sentence part
 
     :param listOfSentenceparts
         input must be processed by ProcessforSentiment() where listOfSentenceparts==1 sentence
@@ -1174,7 +1170,7 @@ def GetSentimentScoresWS_l(sent, df_SentiWS, verbose=False):
     2. MakeCandidates() to make candidates- and candidates_negation-lists
     3. ReadSentiWSSentiments() which reads in candidates- and candidates_negation-lists and retrieves sentiment scores
         from SentiWS
-    4. ProcessSentimentScoresWS() to process the retrieved sentiment scores and to return a unified score per sentence
+    4. ProcessSentimentScoresWS() to process the retrieved sentiment scores and to return a unified score per sentence/sentencepart
 
     :param listOfSentenceparts
         input must be processed by ProcessforSentiment() where listOfSentenceparts equals 1 sentence
