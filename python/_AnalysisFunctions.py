@@ -416,41 +416,6 @@ def GetTopics(doc, lda_model, dict_lda):
     return lda_model.get_document_topics(doc_bow)
 
 
-# def GetDomTopic(doc, lda_model, dict_lda):
-#     """
-#     Uses a previously trained lda model to estimate the dominant topic of a document
-#
-#     :param doc: 1 document as a string
-#     :param lda_model: estimated LDA model
-#     :return: dominant topic id and its probability as a tupel
-#     """
-#     # initialize in spacy
-#     doc = nlp2(doc)
-#
-#     # loop over all tokens in doc, capitalize for Pos-tag NN, disregard punctuation (length>1)
-#     postagged_doc, lemmatized_doc = [], []
-#     for token in doc:
-#         if len(token.text) > 1 and token.tag_ == 'NN':
-#             postagged_doc.append(token.string.title())
-#             # loop over capitalized NN tags and lemmatize
-#         elif len(token.text) > 1:
-#             postagged_doc.append(token.string)
-#
-#     # lemmatize
-#     for doc in postagged_doc:
-#         temp_ = nlp2(doc)
-#         for t in temp_:
-#             lemmatized_doc.append(t.lemma_)
-#
-#     # make back lower again
-#     lemmatized_doc_lower = [i.lower() for i in lemmatized_doc]
-#
-#     # Create BOW representation of doc to use as input for the LDA model
-#     doc_bow = dict_lda.doc2bow(lemmatized_doc_lower)
-#     domdoc = max(lda_model.get_document_topics(doc_bow), key=lambda item: item[1])
-#
-#     return domdoc
-
 def GetDomTopic(doc, lda_model, dict_lda):
     """
     Uses a previously trained lda model to estimate the dominant topic of a document
@@ -910,8 +875,6 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
 ######################################################################################################################
 #Functions for SentiWS/simple word lists
 
-
-
 def Load_SentiWS():
     """
     Reads in SentiWS, prepares phrases and sorts them; this is required be be run before MakeCandidatesWS() and
@@ -927,6 +890,7 @@ def Load_SentiWS():
 
     return df_SentiWS
 
+df_SentiWS = Load_SentiWS()
 
 def MakeCandidatesWS(sent, df_SentiWS=None, get='candidates', verbose=False, negation_list=None):
 
@@ -986,26 +950,26 @@ def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
     :return: [sentiment_scores], [tagged_phr]
     """
 
-    final_sentiments, final_phrs, tagged_phr_list = [], [], []
+    final_sentiments, final_phrs = [], []
     # loop over candidates and extract sentiment score according to Rill (2016): S.66-73, 110-124
     for c in candidates:
         c_sentiments, c_phrs = [], []
         # loop over each word in nested candidate list
         for word in c:
-            if (df_SentiWS['word'] == word).any():
+            # check whether candidate is contained in SentiWS, if yes, get left and right neighbors
+            # if (df_SentiWS['word'] == word).any():
+            if df_SentiWS['word'].str.contains(word).any():
                 # extract sentiment - if SentiWS contains non-unique entries, get the highest value
                 # if there are more than 1 sentiments
                 try:
                     sentiment_score = df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].item()
-                    print(sentiment_score)
+                    print(sentiment_score, word)
                 except ValueError:
                     sentiment_score = max(df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].to_list())
                 c_sentiments.append(sentiment_score)
-                #if verbose: print('phrase found! sentiment is', sentiment_score)
+                if verbose: print('phrase found! sentiment is', sentiment_score)
                 # save phr
                 c_phrs.append(word)
-                #tagged_phr_list = phr_string.split()
-                #break
 
         # gather all extracted sentiments and phrases
         final_sentiments.append(c_sentiments)
@@ -1021,15 +985,16 @@ def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
 def ProcessSentimentScoresWS(WS_phrase, negation_candidates, sentimentscores, negation_list=None):
     """
     Process sentimentscores of sentence parts and return only one sentiment score per sentence/sentence part
+    negation: senti score of first opinion word in sentence part is negated if negation present
+              in the same sentence part
 
-        #negation: senti score of first opinion word in sentence part is negated if negation present
-                    in the same sentence part
-        #Todo: negate highest sent in sentence part or just leave it as it is?
-
-    :param WS_phrase: GetSentiments(...)[1], here are all words which are in SentiWS
+    :param sepl_phrase: GetSentiments(...)[1], here are all words which are in SePL
     :param negation_candidates: MakeCandidates(..., get='negation')
     :param sentimentscores: GetSentiments(...)[0]
     :return: 1 sentiment score
+
+    Todo: negate highest sent in sentence part or just leave it as it is?
+
     """
 
     if negation_list is None:
@@ -1058,7 +1023,7 @@ def ProcessSentimentScoresWS(WS_phrase, negation_candidates, sentimentscores, ne
             #
             # # Condition Case II: Invert sentiment
             # if not WSphr and WSphrneg:
-                sentimentscores[i][0] = -sentimentscores[i][0]
+            sentimentscores[i][0] = -sentimentscores[i][0]
         else:
             continue
 
@@ -1130,8 +1095,7 @@ def GetSentimentScoresWS(listOfSentenceparts, df_SentiWS):
         If one of the adjacent words is included in the SentiWS, together with the previously extracted phrase, it is added to
         the phrase.
         """
-
-        raw_sentimentscores, raw_WS_phrase = ReadSentiWSSentiments(candidates, df_WS)
+        raw_sentimentscores, raw_WS_phrase = ReadSentiWSSentiments(candidates, df_SentiWS)
 
         """
         third step: compare extracted phrases with SentiWS After all phrases have been extracted, they are compared with the
@@ -1200,7 +1164,6 @@ def GetSentimentScoresWS_l(sent, df_SentiWS, verbose=False):
         If one of the adjacent words is included in the SentiWS, together with the previously extracted phrase, it is added to
         the phrase.
         """
-
         raw_sentimentscores, raw_WS_phrase = ReadSentiWSSentiments(candidates, df_SentiWS)
 
         """

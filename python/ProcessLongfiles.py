@@ -2,7 +2,7 @@ import pandas, time, dtale
 import numpy as np
 from python.ConfigUser import path_data
 from python._ProcessingFunctions import Sentencizer, IgnoreWarnings
-from python._AnalysisFunctions import Load_SePL, GetSentimentScores_l
+from python._AnalysisFunctions import Load_SePL, Load_SentiWS, GetSentimentScores_l, GetSentimentScoresWS_l
 from python.params import params as p
 
 """
@@ -37,7 +37,7 @@ df_long_arti = pandas.read_csv(path_data + 'csv/articles_for_lda_{}_l.csv'.forma
 
 ######
 # TEMP: Make smaller
-# df_long_sent = df_long_sent[df_long_sent['Art_ID']<10]
+df_long_sent = df_long_sent[df_long_sent['Art_ID']<200]
 # df_long_para = df_long_para[df_long_para['Art_ID']<10]
 ######
 
@@ -119,18 +119,21 @@ start_time4 = time.process_time()
 
 ### 9. Extract Sentiment Score
 
-# Read in SePL
-df_sepl = Load_SePL()
+# Read in SePL, SentiWS
+df_sepl, df_SentiWS = Load_SePL(), Load_SentiWS()
 
-# Extract sentiment score
+# Extract sentiment scores
 print('Extract sentiment scores')
 IgnoreWarnings()
-df_long_complete['Sentiment_score_dict'] = \
+df_long_complete['Sentiment_sepl_dict'] = \
     df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, df_sepl=df_sepl))
+df_long_complete['Sentiment_sentiws_dict'] = \
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScoresWS_l(sent=x, df_SentiWS=df_SentiWS))
 
 # Split columns from 'Sentiment_score_temp' and concatenate df_temp
 df_long_complete = \
-    pandas.concat([df_long_complete, pandas.json_normalize(df_long_complete['Sentiment_score_dict'])], axis=1)
+    pandas.concat([df_long_complete, pandas.json_normalize(df_long_complete['Sentiment_sepl_dict'])], axis=1)
+# TODO: also for Sentiment_sentiws_dict
 
 end_time4 = time.process_time()
 print('\ttimer4: Elapsed time is {} seconds.'.format(round(end_time4-start_time4, 2)))
