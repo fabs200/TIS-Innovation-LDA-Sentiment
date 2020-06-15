@@ -900,8 +900,8 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
     if verbose: print('\tstats:', ss_mean, ss_median, ss_n, ss_sd, end='\n\n')
 
-    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'SentiScores': listOfSentiScores,
-            'seplphrs': listOfseplphrs}
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'sentiscores': listOfSentiScores,
+            'phrs': listOfseplphrs}
 
 
 #######################################################################################################################
@@ -1003,7 +1003,7 @@ def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
                 # if there are more than 1 sentiments
                 try:
                     sentiment_score = df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].item()
-                    print(sentiment_score, word)
+                    if verbose: print(sentiment_score, word)
                 except ValueError:
                     sentiment_score = max(df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].to_list())
                 c_sentiments.append(sentiment_score)

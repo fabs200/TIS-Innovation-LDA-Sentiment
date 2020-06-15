@@ -37,7 +37,7 @@ df_long_arti = pandas.read_csv(path_data + 'csv/articles_for_lda_{}_l.csv'.forma
 
 ######
 # TEMP: Make smaller
-# df_long_sent = df_long_sent[df_long_sent['Art_ID']<200]
+df_long_sent = df_long_sent[df_long_sent['Art_ID']<10]
 # df_long_para = df_long_para[df_long_para['Art_ID']<10]
 ######
 
@@ -147,8 +147,9 @@ for sent in ['sepldefault', 'seplmodified', 'sentiwsdefault']:
                                                         'median': 'ss_{}_median'.format(sent),
                                                         'n': 'ss_{}_n'.format(sent),
                                                         'sd': 'ss_{}_sd'.format(sent),
-                                                        'SentiScores': 'ss_{}_scores'.format(sent),
-                                                        'phrs': 'ss_{}_phrs'.format(sent)})
+                                                        'sentiscores': 'ss_{}_scores'.format(sent),
+                                                        'phrs': 'ss_{}_phrs'.format(sent)
+                                                        })
 
 end_time4 = time.process_time()
 print('\ttimer4: Elapsed time is {} seconds.'.format(round(end_time4-start_time4, 2)))
