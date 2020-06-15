@@ -143,12 +143,12 @@ for sent in ['sepldefault', 'seplmodified', 'sentiwsdefault']:
 
     ### 10. Rename and order vars
     print('Order vars for {}'.format(sent))
-    df_long_complete = df_long_complete.rename(columns={'mean': 'sentiscore_{}_mean'.format(sent),
-                                                        'median': 'sentiscore_{}_median'.format(sent),
-                                                        'n': 'sentiscore_{}_n'.format(sent),
-                                                        'sd': 'sentiscore_{}_sd'.format(sent),
-                                                        'SentiScores': 'sentiscore_{}_scores'.format(sent),
-                                                        'seplphrs': 'sentiscore_{}_seplphrs'.format(sent)})
+    df_long_complete = df_long_complete.rename(columns={'mean': 'ss_{}_mean'.format(sent),
+                                                        'median': 'ss_{}_median'.format(sent),
+                                                        'n': 'ss_{}_n'.format(sent),
+                                                        'sd': 'ss_{}_sd'.format(sent),
+                                                        'SentiScores': 'ss_{}_scores'.format(sent),
+                                                        'phrs': 'ss_{}_phrs'.format(sent)})
 
 end_time4 = time.process_time()
 print('\ttimer4: Elapsed time is {} seconds.'.format(round(end_time4-start_time4, 2)))
@@ -166,17 +166,17 @@ df_long_complete = df_long_complete[[
     'articles_text', 'articles_{}_for_lda'.format(POStag_type),
     ## Sentiment Scores:
     # Sepl default
-    'sentiscore_{}_mean'.format('sepldefault'), 'sentiscore_{}_median'.format('sepldefault'),
-    'sentiscore_{}_n'.format('sepldefault'), 'sentiscore_{}_sd'.format('sepldefault'),
-    'sentiscore_{}_scores'.format('sepldefault'), 'sentiscore_{}_seplphrs'.format('sepldefault'),
+    'ss_{}_mean'.format('sepldefault'), 'ss_{}_median'.format('sepldefault'),
+    'ss_{}_n'.format('sepldefault'), 'ss_{}_sd'.format('sepldefault'),
+    'ss_{}_scores'.format('sepldefault'), 'ss_{}_phrs'.format('sepldefault'),
     # Sepl default
-    'sentiscore_{}_mean'.format('seplmodified'), 'sentiscore_{}_median'.format('seplmodified'),
-    'sentiscore_{}_n'.format('seplmodified'), 'sentiscore_{}_sd'.format('seplmodified'),
-    'sentiscore_{}_scores'.format('seplmodified'), 'sentiscore_{}_seplphrs'.format('seplmodified'),
+    'ss_{}_mean'.format('seplmodified'), 'ss_{}_median'.format('seplmodified'),
+    'ss_{}_n'.format('seplmodified'), 'ss_{}_sd'.format('seplmodified'),
+    'ss_{}_scores'.format('seplmodified'), 'ss_{}_phrs'.format('seplmodified'),
     # SentiWS default
-    'sentiscore_{}_mean'.format('sentiwsdefault'), 'sentiscore_{}_median'.format('sentiwsdefault'),
-    'sentiscore_{}_n'.format('sentiwsdefault'), 'sentiscore_{}_sd'.format('sentiwsdefault'),
-    'sentiscore_{}_scores'.format('sentiwsdefault'), 'sentiscore_{}_seplphrs'.format('sentiwsdefault')
+    'ss_{}_mean'.format('sentiwsdefault'), 'ss_{}_median'.format('sentiwsdefault'),
+    'ss_{}_n'.format('sentiwsdefault'), 'ss_{}_sd'.format('sentiwsdefault'),
+    'ss_{}_scores'.format('sentiwsdefault'), 'ss_{}_phrs'.format('sentiwsdefault')
 ]]
 
 ### 11. Export longfile to csv (will be read in later)
