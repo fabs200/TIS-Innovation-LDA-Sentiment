@@ -11,23 +11,28 @@ from gensim.models.coherencemodel import CoherenceModel
 from gensim.test.utils import datapath
 import matplotlib.pyplot as plt
 
-def Load_SePL():
+def Load_SePL(type='default'):
     """
     Reads in SePL file, prepares phrases and sorts them; this is required be be run before MakeCandidates() and
     GetSentiments()
+
+    :param type: default 'default' (calls SePL_v1.1.csv), 'modified' (calls SePL_v1.3_negated_modified.csv)
+    :return: Pandas dataframe with sepl-phrs and sentiments
     """
-    # Read in SePL
-    df_sepl = pandas.read_csv(path_data + 'SePL/SePL_v1.1_negated_modified.csv', sep=';')
+    if type == 'modified':
+        # Read in modified SePL
+        df_sepl = pandas.read_csv(path_data + 'SePL/SePL_v1.3_negated_modified.csv', sep=';')
+    else:
+        # Read in default SePL
+        df_sepl = pandas.read_csv(path_data + 'SePL/SePL_v1.1.csv', sep=';')
 
     # convert all words to lower case
     df_sepl['phrase'] = [i.lower() for i in df_sepl['phrase']]
 
     df_sepl['phrase_sorted'] = df_sepl['phrase'].apply(lambda x: ' '.join(sorted(x.split())))
-    print('SePL file loaded')
+    print('SePL ({}) file loaded'.format(type))
 
     return df_sepl
-
-df_sepl = Load_SePL()
 
 nlp2 = spacy.load('de_core_news_md', disable=['ner', 'parser'])
 
@@ -875,22 +880,30 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
 ######################################################################################################################
 #Functions for SentiWS/simple word lists
 
-def Load_SentiWS():
+def Load_SentiWS(type='default'):
     """
     Reads in SentiWS, prepares phrases and sorts them; this is required be be run before MakeCandidatesWS() and
     GetSentiments()
+    Note: SentiWS.csv -> SentiWS_final.csv, so both pos/neg columns in SentiWS.csv are appended together,
+          so SentiWS_final.csv containes unedited sentiment scores / phrs
+
+    :param type: default 'default' (calls SentiWS_final.csv), 'modified' (calls SentiWS_final_v1.x_negated_modified.csv)
+    :return: Pandas dataframe with sentiws-phrs and sentiments
     """
-    # Read in SentiWS
-    df_SentiWS = pandas.read_csv(path_data + 'SentiWS/SentiWS_final.csv', sep=';')
+    if type == 'modified':
+        # Read in modified SentiWS
+        df_SentiWS = pandas.read_csv(path_data + 'SentiWS/SentiWS_final_v1.x_negated_modified.csv', sep=';')
+    else:
+        # Read in default SentiWS
+        df_SentiWS = pandas.read_csv(path_data + 'SentiWS/SentiWS_final.csv', sep=';')
 
     # convert all words to lower case
     df_SentiWS['word'] = [i.lower() for i in df_SentiWS['word']]
 
-    print('SentiWS file loaded')
+    print('SentiWS ({}) file loaded'.format(type))
 
     return df_SentiWS
 
-df_SentiWS = Load_SentiWS()
 
 def MakeCandidatesWS(sent, df_SentiWS=None, get='candidates', verbose=False, negation_list=None):
 
