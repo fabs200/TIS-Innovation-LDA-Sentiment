@@ -2,7 +2,8 @@ import pandas, time, dtale
 import numpy as np
 from python.ConfigUser import path_data
 from python._ProcessingFunctions import Sentencizer, IgnoreWarnings
-from python._AnalysisFunctions import Load_SePL, Load_SentiWS, GetSentimentScores_l, GetSentimentScoresWS_l
+from python._AnalysisFunctions import Load_SePL, Load_SentiWS, Load_Sentiment_final, \
+    GetSentimentScores_l, GetSentimentScoresWS_l
 from python.params import params as p
 
 """
@@ -119,23 +120,25 @@ start_time4 = time.process_time()
 
 ### 9. Extract Sentiment Score
 
-# Read in SePL, SentiWS
+# Read in SePL, SentiWS and final Sentiment list
 df_sepl_default, df_sepl_modified = Load_SePL(), Load_SePL(type='modified')
 df_SentiWS_default = Load_SentiWS()
-# TODO later: Load_SentiWS(type='modified')
+df_sentiment_final = Load_Sentiment_final()
 
 # Extract sentiment scores
 print('Extract sentiment scores')
 IgnoreWarnings()
 df_long_complete['Sentiment_sepldefault_dict'] = \
-    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, df_sepl=df_sepl_default))
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, sentiment_list=df_sepl_default))
 df_long_complete['Sentiment_seplmodified_dict'] = \
-    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, df_sepl=df_sepl_modified))
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, sentiment_list=df_sepl_modified))
 df_long_complete['Sentiment_sentiwsdefault_dict'] = \
     df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScoresWS_l(sent=x, df_SentiWS=df_SentiWS_default))
+df_long_complete['Sentiment_sentifinal_dict'] = \
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, sentiment_list=df_sentiment_final))
 
 ## Loop over sepl or sentiws and split for each the dictionary into columns
-for sent in ['sepldefault', 'seplmodified', 'sentiwsdefault']:
+for sent in ['sepldefault', 'seplmodified', 'sentiwsdefault', 'sentifinal']:
     # Split columns from 'Sentiment_score_temp' and concatenate df_temp
     df_long_complete = \
         pandas.concat([df_long_complete, pandas.json_normalize(df_long_complete['Sentiment_{}_dict'.format(sent)])],
@@ -177,7 +180,11 @@ df_long_complete = df_long_complete[[
     # SentiWS default
     'ss_{}_mean'.format('sentiwsdefault'), 'ss_{}_median'.format('sentiwsdefault'),
     'ss_{}_n'.format('sentiwsdefault'), 'ss_{}_sd'.format('sentiwsdefault'),
-    'ss_{}_scores'.format('sentiwsdefault'), 'ss_{}_phrs'.format('sentiwsdefault')
+    'ss_{}_scores'.format('sentiwsdefault'), 'ss_{}_phrs'.format('sentiwsdefault'),
+    # Sentiment final list
+    'ss_{}_mean'.format('sentifinal'), 'ss_{}_median'.format('sentifinal'),
+    'ss_{}_n'.format('sentifinal'), 'ss_{}_sd'.format('sentifinal'),
+    'ss_{}_scores'.format('sentifinal'), 'ss_{}_phrs'.format('sentifinal')
 ]]
 
 ### 11. Export longfile to csv (will be read in later)

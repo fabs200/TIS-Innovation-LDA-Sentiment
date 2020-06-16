@@ -12,6 +12,26 @@ from gensim.test.utils import datapath
 import matplotlib.pyplot as plt
 
 
+def Load_Sentiment_final():
+    """
+    Reads in final SentimentList_final from 02_ProcessSentimentlists.py.
+    This will be our final dictionary of phrases with sentiments.
+    Load it and prepare for GetSentiments()
+
+    :return: Pandas dataframe with phrs and sentiments
+    """
+    # Read in final Sentimentlist
+    df_sentiment_final = pandas.read_csv(path_data + 'Sentiment/Sentimentlist_final.csv', sep=',')
+
+    # convert all words to lower case
+    df_sentiment_final['phrase'] = [i.lower() for i in df_sentiment_final['phrase']]
+
+    df_sentiment_final['phrase_sorted'] = df_sentiment_final['phrase'].apply(lambda x: ' '.join(sorted(x.split())))
+    print('Sentiment final list loaded')
+
+    return df_sentiment_final
+
+
 def Load_SePL(type='default'):
     """
     Reads in SePL file, prepares phrases and sorts them; this is required be be run before MakeCandidates() and
@@ -22,10 +42,10 @@ def Load_SePL(type='default'):
     """
     if type == 'modified':
         # Read in modified SePL
-        df_sepl = pandas.read_csv(path_data + 'SePL/SePL_v1.3_negated_modified.csv', sep=';')
+        df_sepl = pandas.read_csv(path_data + 'Sentiment/SePL/SePL_v1.3_negated_modified.csv', sep=';')
     else:
         # Read in default SePL
-        df_sepl = pandas.read_csv(path_data + 'SePL/SePL_v1.1.csv', sep=';')
+        df_sepl = pandas.read_csv(path_data + 'Sentiment/SePL/SePL_v1.1.csv', sep=';')
 
     # convert all words to lower case
     df_sepl['phrase'] = [i.lower() for i in df_sepl['phrase']]
@@ -256,7 +276,7 @@ def ProcessSePLphrases(sepl_phrase):
     return processed_sepl_phrases
 
 
-def GetSentimentScores(listOfSentenceparts, df_sepl):
+def GetSentimentScores(listOfSentenceparts, sentiment_list):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
     Note: Apply this function on the final long file only!
@@ -282,8 +302,8 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
         first step: identification of suitable candidates for opinionated phrases suitable candidates: 
         nouns, adjectives, adverbs and verbs
         """
-        candidates = MakeCandidates(sentpart, df_sepl, get='candidates')
-        negation_candidates = MakeCandidates(sentpart, df_sepl, get='negation')
+        candidates = MakeCandidates(sentpart, sentiment_list, get='candidates')
+        negation_candidates = MakeCandidates(sentpart, sentiment_list, get='negation')
 
         """
         second step: extraction of possible opinion-bearing phrases from a candidate starting from a candidate, 
@@ -294,7 +314,7 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
         the phrase.
         """
 
-        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, df_sepl)
+        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, sentiment_list)
 
         """
         third step: compare extracted phrases with SePL After all phrases have been extracted, they are compared with the 
@@ -920,10 +940,10 @@ def Load_SentiWS(type='default'):
     """
     if type == 'modified':
         # Read in modified SentiWS
-        df_SentiWS = pandas.read_csv(path_data + 'SentiWS/SentiWS_final_v1.x_negated_modified.csv', sep=';')
+        df_SentiWS = pandas.read_csv(path_data + 'Sentiment/SentiWS/SentiWS_final_v1.x_negated_modified.csv', sep=';')
     else:
         # Read in default SentiWS
-        df_SentiWS = pandas.read_csv(path_data + 'SentiWS/SentiWS_final.csv', sep=';')
+        df_SentiWS = pandas.read_csv(path_data + 'Sentiment/SentiWS/SentiWS_final.csv', sep=';')
 
     # convert all words to lower case
     df_SentiWS['word'] = [i.lower() for i in df_SentiWS['word']]
