@@ -7,7 +7,7 @@ from python.params import params as p
 
 """
 ---------------------
-ProcessLongfiles.py
+04_ProcessLongfiles.py
 ---------------------
 * Load all Long files and put together
 * Produce Par_ID, Sent_ID, Art_ID variables
@@ -37,7 +37,7 @@ df_long_arti = pandas.read_csv(path_data + 'csv/articles_for_lda_{}_l.csv'.forma
 
 ######
 # TEMP: Make smaller
-df_long_sent = df_long_sent[df_long_sent['Art_ID']<10]
+df_long_sent = df_long_sent[df_long_sent['Art_ID']<101]
 # df_long_para = df_long_para[df_long_para['Art_ID']<10]
 ######
 

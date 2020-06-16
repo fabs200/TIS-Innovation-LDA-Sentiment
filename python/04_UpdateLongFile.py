@@ -16,7 +16,7 @@ df_long_para = pandas.read_csv(path_data + 'csv/paragraphs_for_lda_{}_l.csv'.for
 df_long_sent = pandas.read_csv(path_data + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type),
                                sep='\t', na_filter=False)
 
-# Read in exported long file from ProcessLongfiles.py
+# Read in exported long file from 04_ProcessLongfiles.py
 df_long_complete = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(POStag_type),
                                    sep='\t', na_filter=False)
 

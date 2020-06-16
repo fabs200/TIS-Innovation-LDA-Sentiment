@@ -8,7 +8,7 @@ from python._ProcessingFunctions import MakeListInLists
 # Specify POStag type
 POStag_type = 'NN'
 
-# Read in output file from PreprocessingSentences.py
+# Read in output file from 03c_PreprocessingSentences.py
 df_paragraphs = pandas.read_csv(path_data + 'csv/paragraphs_for_lda_analysis.csv', sep='\t')
 
 paragraphs = df_paragraphs['Article_paragraph_nouns_cleaned'].to_list()

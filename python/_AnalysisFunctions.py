@@ -430,7 +430,7 @@ def GetDomTopic(doc, lda_model, dict_lda):
     """
     Uses a previously trained lda model to estimate the dominant topic of a document
 
-    :param doc: 1 document as a string (e.g. articles_text, capitalized nouns, from PreprocessingArticles.py)
+    :param doc: 1 document as a string (e.g. articles_text, capitalized nouns, from 03a_PreprocessingArticles.py)
     :param lda_model: estimated LDA model
     :return: dominant topic id and its probability as a tupel
     """

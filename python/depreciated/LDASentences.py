@@ -12,7 +12,7 @@ POStag_type = p['POStag']
 # Read in SePL
 #df_sepl = Load_SePL()
 
-# Read in output file from PreprocessingSentences.py
+# Read in output file from 03c_PreprocessingSentences.py
 df_sentences = pandas.read_csv(path_data + 'csv/sentences_for_lda_{}_l.csv'.format(POStag_type), sep='\t')
 
 lda = EstimateLDA(df_sentences['Article_sentence_nouns_cleaned'])
