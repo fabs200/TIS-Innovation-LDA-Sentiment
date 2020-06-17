@@ -851,7 +851,7 @@ def ProcessforSentiment_l(sent):
     return final_article
 
 
-def GetSentimentScores_l(sent, df_sepl, verbose=False):
+def GetSentimentScores_l(sent, sentiment_list, verbose=False):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
     Note: Apply this function on the final long file only!
@@ -871,7 +871,7 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
     """
     if verbose: print('### sent:', sent)
     listOfSentenceparts = ProcessforSentiment_l(sent)
-    listOfSentiScores, listOfseplphrs = [], []
+    listOfSentiScores, listOfphrs = [], []
 
     for sentpart in listOfSentenceparts:
         """
@@ -879,8 +879,8 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
         nouns, adjectives, adverbs and verbs
         """
         # if verbose: print('\tsentpart:', sentpart, end='\r')
-        candidates = MakeCandidates(sentpart, df_sepl, get='candidates')
-        negation_candidates = MakeCandidates(sentpart, df_sepl, get='negation')
+        candidates = MakeCandidates(sentpart, sentiment_list, get='candidates')
+        negation_candidates = MakeCandidates(sentpart, sentiment_list, get='negation')
         # if verbose: print('\tcandidates:', candidates, end='\r')
         # if verbose: print('\tnegation_candidates:', negation_candidates)
         """
@@ -892,7 +892,7 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
         the phrase.
         """
 
-        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, df_sepl)
+        raw_sentimentscores, raw_phrs = ReadSePLSentiments(candidates, sentiment_list)
         # if verbose: print('\traw_sentimentscores:', raw_sentimentscores, 'raw_sepl_phrase:', raw_sepl_phrase)
 
         """
@@ -902,16 +902,16 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
         """
 
         # Make sure sepl_phrase, negation_candidates, sentimentscores are of same size
-        assert len(raw_sepl_phrase) == len(raw_sentimentscores) == len(candidates) == len(negation_candidates)
+        assert len(raw_phrs) == len(raw_sentimentscores) == len(candidates) == len(negation_candidates)
 
         # export processed, flattened lists
-        sentimentscores = ProcessSentimentScores(raw_sepl_phrase, negation_candidates, raw_sentimentscores)
+        sentimentscores = ProcessSentimentScores(raw_phrs, negation_candidates, raw_sentimentscores)
         # if verbose: print('\tsentimentscores:', sentimentscores, end='\r')
-        sepl_phrase = ProcessSePLphrases(raw_sepl_phrase)
+        final_phrs = ProcessSePLphrases(raw_phrs)
         # if verbose: print('\tsepl_phrase:', sepl_phrase)
 
         listOfSentiScores.append(sentimentscores)
-        listOfseplphrs.append(sepl_phrase)
+        listOfphrs.append(final_phrs)
 
     # create flat, non-empty list with scores
     sentiscores = np.array([i for i in listOfSentiScores if i])
@@ -921,7 +921,7 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
     if verbose: print('\tstats:', ss_mean, ss_median, ss_n, ss_sd, end='\n\n')
 
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'sentiscores': listOfSentiScores,
-            'phrs': listOfseplphrs}
+            'phrs': listOfphrs}
 
 
 #######################################################################################################################
