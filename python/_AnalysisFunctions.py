@@ -169,10 +169,10 @@ def ReadSePLSentiments(candidates, df_sepl=None, verbose=False):
                         # if there are more than 1 sentiments
                         try:
                             sentiment_score = df_sepl.loc[
-                                df_sepl['phrase_sorted'] == phr_string, 'opinion_value'].item()
+                                df_sepl['phrase_sorted'] == phr_string, 'sentiment'].item()
                         except ValueError:
                             sentiment_score = max(
-                                df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'opinion_value'].to_list())
+                                df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'sentiment'].to_list())
                         c_sentiments.append(sentiment_score)
                         if verbose: print('phrase found! sentiment is', sentiment_score)
                         # save phr
