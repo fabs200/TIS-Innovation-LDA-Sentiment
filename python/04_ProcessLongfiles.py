@@ -1,7 +1,7 @@
 import pandas, time, dtale
 import numpy as np
 from python.ConfigUser import path_data
-from python._ProcessingFunctions import Sentencizer, IgnoreWarnings
+from python._ProcessingFunctions import Sentencizer, IgnoreWarnings, split_sentidict
 from python._AnalysisFunctions import Load_SePL, Load_SentiWS, Load_Sentiment_final, \
     GetSentimentScores_l, GetSentimentScoresWS_l
 from python.params import params as p
@@ -139,10 +139,13 @@ df_long_complete['Sentiment_sentifinal_dict'] = \
 
 ## Loop over sepl or sentiws and split for each the dictionary into columns
 for sent in ['sepldefault', 'seplmodified', 'sentiwsdefault', 'sentifinal']:
-    # Split columns from 'Sentiment_score_temp' and concatenate df_temp
-    df_long_complete = \
-        pandas.concat([df_long_complete, pandas.json_normalize(df_long_complete['Sentiment_{}_dict'.format(sent)])],
-                      axis=1)
+
+    # Split columns from 'Sentiment_*_dict' into single cols and rename (might not function, split_sentidict() solves)
+    try:
+        df_long_complete = pandas.concat(
+            [df_long_complete, pandas.json_normalize(df_long_complete['Sentiment_{}_dict'.format(sent)])], axis=1)
+    except:
+        split_sentidict(df_long_complete, sent)
 
     ### 10. Rename and order vars
     print('Order vars for {}'.format(sent))

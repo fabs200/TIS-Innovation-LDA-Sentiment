@@ -614,3 +614,11 @@ def CapitalizeNouns(doc):
             normalized_sent = ''
         doc_cap.append(' '.join(normalized_sent))
     return doc_cap
+
+def split_sentidict(df, sent):
+    """
+    splitting the dictionary in pandas might raise errors. If it does, split strings manually
+    """
+    for i, x in enumerate(['mean', 'median', 'n', 'sd', 'sentiscores', 'phrs']):
+        df[x] = df['Sentiment_{}_dict'.format(sent)].astype(str)
+        df[x] = df[x].str.split(': ').str[i+1].str.split(", '").str[0]
