@@ -37,8 +37,8 @@ Graph: Scatterplot number articles vs. sentiment polarity, over topics (Mejia) T
 Graph: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr), over time (Mejia)
 """
 
-# Todo: look up/implement LDAvis
-# https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
+# select sentiment type ['sepldefault', 'seplmodified', 'sentiwsdefault', 'sentifinal']
+sent = 'sentifinal'
 
 # Ignore some warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -49,15 +49,16 @@ POStag, lda_level_fit = p['POStag'], p['lda_level_fit']
 if 'article' in p['lda_level_domtopic']: lda_level_domtopic = 'article'
 
 # create folder in graphs with currmodel
-os.makedirs(path_project + "graph/model_{}".format(p['currmodel']), exist_ok=True)
+os.makedirs(path_project + "graph/{}/model_{}".format(sent, p['currmodel']), exist_ok=True)
 # create folder in currmodel with specified lda_level_domtopic
-os.makedirs(path_project + "graph/model_{}/{}".format(p['currmodel'], lda_level_domtopic), exist_ok=True)
+os.makedirs(path_project + "graph/{}/model_{}/{}".format(sent, p['currmodel'], lda_level_domtopic), exist_ok=True)
 
 # Load long file (sentence-level)
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
-# to numeric
+# set main sentiscore_mean, rename and to numeric
+df_long['sentiscore_mean'] = df_long['ss_{}_mean'.format(sent)]
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
 # calculate average sentiment per article and merge to df_long
@@ -114,7 +115,9 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/01_sentiscore_bytopics_m.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_m.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -130,7 +133,9 @@ plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'],
                                                                                 p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/01_sentiscore_bytopics_q.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_q.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -146,7 +151,9 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/01_sentiscore_bytopics_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -195,7 +202,9 @@ labels = df_senti_freq_y.iloc[:,1]
 for rect, label in zip(rects, labels):
     ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + 2, label, ha='center', va='bottom')
 
-plt.savefig(path_project + 'graph/model_{}/{}/02_absfreqArt_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/02_absfreqArt_y.png'.format(sent,
+                                                                             p['currmodel'],
+                                                                             lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -248,7 +257,9 @@ for label in ax.xaxis.get_ticklabels():
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/03_absfreqArt_bytopic_m.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_m.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -271,7 +282,9 @@ for label in ax.xaxis.get_ticklabels():
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/03_absfreqArt_bytopic_q.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_q.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -288,7 +301,9 @@ ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/03_absfreqArt_bytopic_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_y.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -372,8 +387,9 @@ plt.title('Average sentiment score by main publishers\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/04a_sentiscore_bypublisher.png'.format(p['currmodel'],
-                                                                                     lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/04a_sentiscore_bypublisher.png'.format(sent,
+                                                                                        p['currmodel'],
+                                                                                        lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -402,7 +418,9 @@ plt.title('Average sentiment score of publisher\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/04b_absfreqArt_bytopic_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/04b_absfreqArt_bytopic_y.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -466,9 +484,10 @@ for t, topic in enumerate(topics):
               'POStag: {}, frequency: quarterly,\nno_below: {}, no_above: {}'.format(t, p['POStag'],
                                                                                         p['no_below'], p['no_above']))
     plt.tight_layout()
-    plt.savefig(path_project + 'graph/model_{}/{}/05_freq_q_topic{}_withline.png'.format(p['currmodel'],
-                                                                                         lda_level_domtopic,
-                                                                                         str(t)))
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/05_freq_q_topic{}_withline.png'.format(sent,
+                                                                                            p['currmodel'],
+                                                                                            lda_level_domtopic,
+                                                                                            str(t)))
     plt.show(block=False)
     time.sleep(1.5)
     plt.close('all')
@@ -503,9 +522,10 @@ for t, topic in enumerate(topics):
               'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(t, p['POStag'],
                                                                                      p['no_below'], p['no_above']))
     plt.tight_layout()
-    plt.savefig(path_project + 'graph/model_{}/{}/05_freq_y_topic{}_withline.png'.format(p['currmodel'],
-                                                                                         lda_level_domtopic,
-                                                                                         str(t)))
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/05_freq_y_topic{}_withline.png'.format(sent,
+                                                                                            p['currmodel'],
+                                                                                            lda_level_domtopic,
+                                                                                            str(t)))
     plt.show(block=False)
     time.sleep(1.5)
     plt.close('all')
@@ -589,8 +609,9 @@ plt.title('Total number of articles by \nmain publishers\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/06_totalarticles_bypublisher.png'.format(p['currmodel'],
-                                                                                       lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/06_totalarticles_bypublisher.png'.format(sent,
+                                                                                          p['currmodel'],
+                                                                                          lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -651,8 +672,9 @@ plt.tight_layout()
 plt.title('Topics by publishers\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/07_topics_by_publishers_stacked.png'.format(p['currmodel'],
-                                                                                          lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/07_topics_by_publishers_stacked.png'.format(sent,
+                                                                                             p['currmodel'],
+                                                                                             lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -677,7 +699,9 @@ plt.text(df_long['sentiscore_mean'].mean()*1.1, 20,
          'Median: {:.2f}'.format(df_long['sentiscore_mean'].mean()), color='lime')
 plt.title('Histogram sentiment score\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/08_hist_sentiment.png'.format(p['currmodel'], lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/08_hist_sentiment.png'.format(sent,
+                                                                               p['currmodel'],
+                                                                               lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -699,7 +723,9 @@ for i, ax in enumerate(axs.reshape(-1)):
     if i < len(years):
         ax.hist(df_long[df_long['year'] == years[i]]['sentiscore_mean'], bins=20)
         ax.set_title(years[i], fontsize=12)
-plt.savefig(path_project + 'graph/model_{}/{}/09_hist_sentiment_byyears.png'.format(p['currmodel'], lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/09_hist_sentiment_byyears.png'.format(sent,
+                                                                                       p['currmodel'],
+                                                                                       lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -709,8 +735,9 @@ plt.close('all')
 Graph 10: Boxplot sentiments over year
 """
 boxplot = df_long[['year', 'sentiscore_mean']].boxplot(column=['sentiscore_mean'], by='year')
-plt.savefig(path_project + 'graph/model_{}/{}/10_boxplot_sentiment_overyears.png'.format(p['currmodel'],
-                                                                                         lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/10_boxplot_sentiment_overyears.png'.format(sent,
+                                                                                            p['currmodel'],
+                                                                                            lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -747,8 +774,9 @@ plt.ylabel('frequency articles')
 plt.title('Bar plot of articles w/o valid sentiments\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/11_barplot_sentavailability.png'.format(p['currmodel'],
-                                                                                      lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/11_barplot_sentavailability.png'.format(sent,
+                                                                                         p['currmodel'],
+                                                                                         lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -805,8 +833,9 @@ plt.ylabel('frequency articles')
 plt.title('Bar plot of articles w/o valid sentiments by year\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/12_barplot_sentavailability_byyear.png'.format(p['currmodel'],
-                                                                                             lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/12_barplot_sentavailability_byyear.png'.format(sent,
+                                                                                                p['currmodel'],
+                                                                                                lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -866,8 +895,9 @@ plt.xlabel('deciles of length of articles')
 plt.title('Bar plot of deciles of article lengths w/o valid sentiments by year\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/13_barplot_sentavailability_deciles.png'.format(p['currmodel'],
-                                                                                              lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/13_barplot_sentavailability_deciles.png'.format(sent,
+                                                                                                 p['currmodel'],
+                                                                                                 lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -939,8 +969,9 @@ plt.title('Bar plot of deciles of article lengths w/o valid sentiments by year,\
           'average length of article in brackets on bars,\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/14_barplot_sentavailability_deciles_withartilen.png'.format(p['currmodel'],
-                                                                                                          lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/14_barplot_sentavailability_deciles_withartilen.png'.format(sent,
+                                                                                                             p['currmodel'],
+                                                                                                             lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -970,7 +1001,7 @@ labels = round(100*(df_senti_freq_y.iloc[:,1]/totalrows), 2)
 for rect, label in zip(rects, labels):
     ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label, ha='center', va='bottom')
 
-plt.savefig(path_project + 'graph/model_{}/{}/15_relfreqArt_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/15_relfreqArt_y.png'.format(sent, p['currmodel'], lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -1032,7 +1063,9 @@ ax.set_ylabel('relative frequency in percent')
 plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_m.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/16_relfreqArt_bytopic_m.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -1056,7 +1089,9 @@ ax.set_ylabel('relative frequency in percent')
 plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_q.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/16_relfreqArt_bytopic_q.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -1074,7 +1109,9 @@ ax.set_ylabel('relative frequency in percent')
 plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/16_relfreqArt_bytopic_y.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
