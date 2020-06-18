@@ -57,6 +57,11 @@ os.makedirs(path_project + "graph/{}/model_{}/{}".format(sent, p['currmodel'], l
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
+# drop sentences with low probability of assigned dominant topics
+drop_prob_below = .7
+df_long['DomTopic_arti_arti_prob'] = pandas.to_numeric(df_long['DomTopic_arti_arti_prob'])
+df_long = df_long.drop(df_long[df_long.DomTopic_arti_arti_prob < drop_prob_below].index)
+
 # set main sentiscore_mean, rename and to numeric
 df_long['sentiscore_mean'] = df_long['ss_{}_mean'.format(sent)]
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
