@@ -58,12 +58,14 @@ print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
 #drop short articles
+drop_article_lenght = 300
 df_long['articles_text_lenght']= df_long['articles_text'].str.len()
-df_long= df_long.drop(df_long[df_long.articles_text_lenght<300].index)
+df_long= df_long.drop(df_long[df_long.articles_text_lenght < drop_article_lenght].index)
 
 #drop short sentences
+drop_sentence_lenght = 50
 df_long['sentences_for_sentiment_lenght']= df_long['sentences_for_sentiment'].str.len()
-df_long= df_long.drop(df_long[df_long.sentences_for_sentiment_lenght<50].index)
+df_long= df_long.drop(df_long[df_long.sentences_for_sentiment_lenght<drop_sentence_lenght].index)
 
 # drop articles with low probability of assigned dominant topic
 drop_prob_below = .7
