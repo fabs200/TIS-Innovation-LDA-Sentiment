@@ -7,7 +7,7 @@ import warnings
 
 """
 ------------------------------------------
-06a_LDAPlots_DomTopicSentenceLvl.py - Overview of graphs
+06a_LDAPlots_DomTopicArticleLvl.py - Overview of graphs
 ------------------------------------------
 
 ### Run this script if 'sentence' is specified in lda_level_domtopic
@@ -46,7 +46,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
 POStag, lda_level_fit = p['POStag'], p['lda_level_fit']
-if 'sentence' in p['lda_level_domtopic']: lda_level_domtopic = 'sentence'
+if 'paragraph' in p['lda_level_domtopic']: lda_level_domtopic = 'paragraph'
 
 # create folder in graphs with currmodel
 os.makedirs(path_project + "graph/{}/model_{}".format(sent, p['currmodel']), exist_ok=True)
@@ -77,17 +77,17 @@ df_long['sentiscore_mean'] = df_long['ss_{}_mean'.format(sent)]
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
 #drop sentences with (relatively) neutral sentiment score (either =0 or in range(-.1, .1)
-drop_senti_below = .2
-drop_senti_above = -.001
+# drop_senti_below = .
+# drop_senti_above = -.001
 
-df_long = df_long.drop(df_long[(df_long.sentiscore_mean < drop_senti_below) & (df_long.sentiscore_mean > drop_senti_above)].index)
+# df_long = df_long.drop(df_long[(df_long.sentiscore_mean < drop_senti_below) & (df_long.sentiscore_mean > drop_senti_above)].index)
 
 # keep values between range
 #df_long = df_long[df_long['sentiscore_mean'].between(-.1, .1, inclusive=False)]
 
 # Select articles and columns
-df_long = df_long[['DomTopic_arti_sent_id', 'year', 'quarter', 'month',
-                   'Newspaper', 'sentiscore_mean', 'articles_text', 'sentences_{}_for_lda'.format(POStag)]]
+df_long = df_long[['DomTopic_arti_para_id', 'year', 'quarter', 'month',
+                   'Newspaper', 'sentiscore_mean', 'articles_text', 'paragraphs_{}_for_lda'.format(POStag)]]
 
 # convert dtypes
 df_long['month'] = pandas.to_datetime(df_long['month'], format='%Y-%m')
@@ -106,8 +106,8 @@ df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='
 """
 
 # group by topics and reshape long to wide to make plottable
-df_wide_bytopics = df_long.groupby(['DomTopic_arti_sent_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
-    index='month', columns='DomTopic_arti_sent_id', values='sentiscore_mean')
+df_wide_bytopics = df_long.groupby(['DomTopic_arti_para_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
+    index='month', columns='DomTopic_arti_para_id', values='sentiscore_mean')
 
 # make aggregation available
 df_aggr_m = df_wide_bytopics.groupby(pandas.Grouper(freq='M')).mean()
@@ -227,8 +227,8 @@ plt.close('all')
 """
 
 # group by topics and reshape long to wide to make plottable
-df_senti_freq_agg = df_long.groupby(['DomTopic_arti_sent_id', 'month'])[['sentiscore_mean']].count().reset_index()\
-    .pivot(index='month', columns='DomTopic_arti_sent_id', values='sentiscore_mean')
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_para_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_para_id', values='sentiscore_mean')
 
 # make aggregation available
 df_aggr_m = df_senti_freq_agg.groupby(pandas.Grouper(freq='M')).sum().reset_index()
@@ -442,8 +442,8 @@ plt.close('all')
 """
 
 # group by topics and reshape long to wide to make plottable
-df_senti_freq_agg = df_long.groupby(['DomTopic_arti_sent_id', 'month'])[['sentiscore_mean']].count().reset_index()\
-    .pivot(index='month', columns='DomTopic_arti_sent_id', values='sentiscore_mean')
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_para_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_para_id', values='sentiscore_mean')
 
 # make aggregation available
 # df_aggr_m = df_senti_freq_agg.groupby(pandas.Grouper(freq='M')).sum().reset_index()
@@ -632,10 +632,10 @@ Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/n
 """
 
 # group by topics and reshape long to wide to make plottable
-df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_sent_id', 'Newspaper']).count().\
-    reset_index()[['DomTopic_arti_sent_id', 'Newspaper', 'sentiscore_mean']].\
+df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_para_id', 'Newspaper']).count().\
+    reset_index()[['DomTopic_arti_para_id', 'Newspaper', 'sentiscore_mean']].\
     rename(columns={'sentiscore_mean': 'count'}).\
-    pivot(index='Newspaper', columns='DomTopic_arti_sent_id', values='count').\
+    pivot(index='Newspaper', columns='DomTopic_arti_para_id', values='count').\
     fillna(0)
 
 # calculate percentages per topic
@@ -861,10 +861,10 @@ Graph 13: Valid and non-valid sentiments by different lengths of articles
 df_long['D_filledsent'] = df_long['sentiscore_mean'].notnull().astype('int').replace(0, 2)
 # get deciles
 deciles = 9
-df_long['sentence_len'] = df_long['sentences_{}_for_lda'.format(POStag)].apply(lambda x: len(x))
-df_long['sentence_len_dc'] = pandas.qcut(df_long['sentence_len'], deciles, labels=False)
-df_filledsent_dc = df_long[['sentence_len_dc', 'sentence_len', 'D_filledsent']].\
-    groupby(['sentence_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index()
+df_long['paragraph_len'] = df_long['paragraphs_{}_for_lda'.format(POStag)].apply(lambda x: len(x))
+df_long['paragraph_len_dc'] = pandas.qcut(df_long['paragraph_len'], deciles, labels=False, duplicates='drop')
+df_filledsent_dc = df_long[['paragraph_len_dc', 'paragraph_len', 'D_filledsent']].\
+    groupby(['paragraph_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index()
 
 # label
 label = ['with sentiment', 'without sentiment']
@@ -874,28 +874,36 @@ fig, ax = plt.subplots(figsize=(8, 4.5))
 # Define bar width. We'll use this to offset the second bar.
 bar_width = .4
 # 1. bars and number on bars, filled
-b1 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['sentence_len_dc'].to_numpy()-bar_width/2,
-            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['sentence_len'].to_list(),
+b1 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['paragraph_len_dc'].to_numpy()-bar_width/2,
+            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['paragraph_len'].to_list(),
             width=bar_width)
 # loop over each pair of x- and y-value and annotate b1 bars
 for i in range(deciles):
     # Create annotation
-    x_val, y_val = i-bar_width, df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1, 'sentence_len'].to_list()[i]
+    x_val = i-bar_width
+    try:
+        y_val = df_filledsent_dc.loc[df_filledsent_dc['D_filledsent'] == 1, 'paragraph_len'].to_list()[i]
+    except:
+        y_val = 0
     plt.annotate("{:.0f}".format(y_val), (x_val, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # 2. bars and number on bars, empty
-b2 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['sentence_len_dc'].to_numpy()+bar_width/2,
-            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['sentence_len'].to_list(),
+b2 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['paragraph_len_dc'].to_numpy()+bar_width/2,
+            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['paragraph_len'].to_list(),
             width=bar_width)
 # loop over each pair of x- and y-value and annotate b2 bars
 for i in range(deciles):
     # Create annotation
-    x_val, y_val = i, df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2, 'sentence_len'].to_list()[i]
+    x_val = i
+    try:
+        y_val = df_filledsent_dc.loc[df_filledsent_dc['D_filledsent'] == 2, 'paragraph_len'].to_list()[i]
+    except:
+        y_val = 0
     plt.annotate("{:.0f}".format(y_val), (x_val, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # label
-ax.set_xticks(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['sentence_len_dc'].to_numpy())
-ax.set_xticklabels(labels=10*(1+df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['sentence_len_dc'].to_numpy()))
+ax.set_xticks((1+np.arange(deciles)))
+ax.set_xticklabels(labels=10*(1+np.arange(deciles)))
 
 # legend, axis labels
 plt.legend([b1, b2], ['valid sentiment', 'missing sentiment'], loc='lower left')
@@ -924,16 +932,16 @@ Graph 14: Average length of articles with valid and non-valid sentiments by diff
 df_long['D_filledsent'] = df_long['sentiscore_mean'].notnull().astype('int').replace(0, 2)
 # get deciles
 deciles = 9
-df_long['sentence_len'] = df_long['sentences_{}_for_lda'.format(POStag)].apply(lambda x: len(x))
-df_long['sentence_len_dc'] = pandas.qcut(df_long['sentence_len'], deciles, labels=False)
+df_long['paragraph_len'] = df_long['paragraphs_{}_for_lda'.format(POStag)].apply(lambda x: len(x))
+df_long['paragraph_len_dc'] = pandas.qcut(df_long['paragraph_len'], deciles, labels=False, duplicates='drop')
 # aggregate deciles
-df_filledsent_dc = df_long[['sentence_len_dc', 'sentence_len', 'D_filledsent']].\
-    groupby(['sentence_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index().\
-    rename(columns={'sentence_len': 'count'})
+df_filledsent_dc = df_long[['paragraph_len_dc', 'paragraph_len', 'D_filledsent']].\
+    groupby(['paragraph_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index().\
+    rename(columns={'paragraph_len': 'count'})
 # aggregate lengths
-df_filledsent_dc_len = df_long[['sentence_len_dc', 'sentence_len', 'D_filledsent']].\
-    groupby(['sentence_len_dc', 'D_filledsent']).mean().unstack(fill_value=0).stack().reset_index().\
-    rename(columns={'sentence_len': 'avg_len'})
+df_filledsent_dc_len = df_long[['paragraph_len_dc', 'paragraph_len', 'D_filledsent']].\
+    groupby(['paragraph_len_dc', 'D_filledsent']).mean().unstack(fill_value=0).stack().reset_index().\
+    rename(columns={'paragraph_len': 'avg_len'})
 # add deciles to lengths df
 df_filledsent_dc_len.insert(2, 'count', df_filledsent_dc['count'].to_list(), True)
 
@@ -945,30 +953,40 @@ fig, ax = plt.subplots(figsize=(8, 4.5))
 # Define bar width. We'll use this to offset the second bar.
 bar_width = .4
 # 1. bars and number on bars, filled
-b1 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['sentence_len_dc'].to_numpy()-bar_width/2,
+b1 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['paragraph_len_dc'].to_numpy()-bar_width/2,
             df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['count'].to_list(),
             width=bar_width)
 # loop over each pair of x- and y-value and annotate b1 bars
 for i in range(deciles):
     # Create annotation
-    x_val, y_val = i-bar_width, df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'count'].to_list()[i]
-    display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'avg_len'].to_list()[i]
+    try:
+        y_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'count'].to_list()[i]
+        display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'avg_len'].to_list()[i]
+    except:
+        y_val = 0
+        display_val = 0
+    x_val = i-bar_width
     plt.annotate("({:.0f})".format(display_val), (x_val, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # 2. bars and number on bars, empty
-b2 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2]['sentence_len_dc'].to_numpy()+bar_width/2,
+b2 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2]['paragraph_len_dc'].to_numpy()+bar_width/2,
             df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2]['count'].to_list(),
             width=bar_width)
 # loop over each pair of x- and y-value and annotate b2 bars
 for i in range(deciles):
     # Create annotation
-    x_val, y_val = i, df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2, 'count'].to_list()[i]
-    display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2, 'avg_len'].to_list()[i]
+    x_val = i
+    try:
+        y_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent'] == 2, 'count'].to_list()[i]
+        display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2, 'avg_len'].to_list()[i]
+    except:
+        y_val = 0
+        display_val = 0
     plt.annotate("({:.0f})".format(display_val), (x_val, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # label
-ax.set_xticks(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['sentence_len_dc'].to_numpy())
-ax.set_xticklabels(labels=10*(1+df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['sentence_len_dc'].to_numpy()))
+ax.set_xticks(1+np.arange(deciles))
+ax.set_xticklabels(labels=10*(1+np.arange(deciles)))
 
 # legend, axis labels
 plt.legend([b1, b2], ['valid sentiment', 'missing sentiment'], loc='lower left')
@@ -1025,8 +1043,8 @@ Graph 16: (as Graph 3, but shares), relative frequency analysis, publication tre
 """
 
 # group by topics and reshape long to wide to make plottable
-df_senti_freq_agg = df_long.groupby(['DomTopic_arti_sent_id', 'month'])[['sentiscore_mean']].count().reset_index()\
-    .pivot(index='month', columns='DomTopic_arti_sent_id', values='sentiscore_mean')
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_para_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_para_id', values='sentiscore_mean')
 
 # make aggregation available
 df_aggr_m = df_senti_freq_agg.groupby(pandas.Grouper(freq='M')).sum().reset_index()

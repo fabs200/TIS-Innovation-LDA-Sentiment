@@ -15,7 +15,7 @@ params = {
     'lda_level_fit':        ['article'], # article, paragraph, sentence
 
     # Specify of which level get dominant topics
-    'lda_level_domtopic':     ['article', 'sentence'], # article, paragraph, sentence
+    'lda_level_domtopic':     ['article', 'paragraph', 'sentence'], # article, paragraph, sentence
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'type':         'tfidf',
