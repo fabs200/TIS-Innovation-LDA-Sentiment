@@ -57,7 +57,15 @@ os.makedirs(path_project + "graph/{}/model_{}/{}".format(sent, p['currmodel'], l
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
-# drop sentences with low probability of assigned dominant topics
+#drop short articles
+df_long['articles_text_lenght']= df_long['articles_text'].str.len()
+df_long= df_long.drop(df_long[df_long.articles_text_lenght<300].index)
+
+#drop short sentences
+df_long['sentences_for_sentiment_lenght']= df_long['sentences_for_sentiment'].str.len()
+df_long= df_long.drop(df_long[df_long.sentences_for_sentiment_lenght<50].index)
+
+# drop sentences with low probability of assigned dominant topic
 drop_prob_below = .7
 df_long['DomTopic_arti_arti_prob'] = pandas.to_numeric(df_long['DomTopic_arti_arti_prob'])
 df_long = df_long.drop(df_long[df_long.DomTopic_arti_arti_prob < drop_prob_below].index)
@@ -66,7 +74,14 @@ df_long = df_long.drop(df_long[df_long.DomTopic_arti_arti_prob < drop_prob_below
 df_long['sentiscore_mean'] = df_long['ss_{}_mean'.format(sent)]
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
-# Todo: drop neutral sentiment scores (either =0 or in range(-.1, .1) or ...)
+#drop sentences with (relatively) neutral sentiment score (either =0 or in range(-.1, .1)
+drop_senti_below = .2
+drop_senti_above = -.001
+
+df_long = df_long.drop(df_long[(df_long.sentiscore_mean < drop_senti_below) & (df_long.sentiscore_mean > drop_senti_above)].index)
+
+# keep values between range
+#df_long = df_long[df_long['sentiscore_mean'].between(-.1, .1, inclusive=False)]
 
 # Select articles and columns
 df_long = df_long[['DomTopic_arti_sent_id', 'year', 'quarter', 'month',
@@ -77,7 +92,8 @@ df_long['month'] = pandas.to_datetime(df_long['month'], format='%Y-%m')
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
 # select date range
-df_long = df_long[(df_long['month'] >= '2007-1-1')]
+df_long = df_long[(df_long['month'] >= '2009-1-1')]
+df_long = df_long[(df_long['month'] <= '2020-1-1')]
 
 # replace everything in brackets from Newspaper
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()

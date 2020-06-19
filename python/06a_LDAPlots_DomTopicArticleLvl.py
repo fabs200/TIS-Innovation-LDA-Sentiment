@@ -57,7 +57,15 @@ os.makedirs(path_project + "graph/{}/model_{}/{}".format(sent, p['currmodel'], l
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
-# drop sentences with low probability of assigned dominant topics
+#drop short articles
+df_long['articles_text_lenght']= df_long['articles_text'].str.len()
+df_long= df_long.drop(df_long[df_long.articles_text_lenght<300].index)
+
+#drop short sentences
+df_long['sentences_for_sentiment_lenght']= df_long['sentences_for_sentiment'].str.len()
+df_long= df_long.drop(df_long[df_long.sentences_for_sentiment_lenght<50].index)
+
+# drop articles with low probability of assigned dominant topic
 drop_prob_below = .7
 df_long['DomTopic_arti_arti_prob'] = pandas.to_numeric(df_long['DomTopic_arti_arti_prob'])
 df_long = df_long.drop(df_long[df_long.DomTopic_arti_arti_prob < drop_prob_below].index)
@@ -66,12 +74,18 @@ df_long = df_long.drop(df_long[df_long.DomTopic_arti_arti_prob < drop_prob_below
 df_long['sentiscore_mean'] = df_long['ss_{}_mean'.format(sent)]
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
+#drop sentences with (relatively) neutral sentiment score (either =0 or in range(-.1, .1)
+drop_senti_below = .05
+drop_senti_above = -.05
+
+df_long = df_long.drop(df_long[(df_long.sentiscore_mean < drop_senti_below) & (df_long.sentiscore_mean > drop_senti_above)].index)
+# keep values between range
+#df_long = df_long[df_long['sentiscore_mean'].between(-.1, .1, inclusive=False)]
+
 # calculate average sentiment per article and merge to df_long
 df_long = pandas.merge(df_long.drop('sentiscore_mean', axis=1),
                        df_long.groupby('Art_ID', as_index=False).sentiscore_mean.mean(),
                        how='left', on=['Art_ID'])
-
-# Todo: drop neutral sentiment scores (either =0 or in range(-.1, .1) or ...)
 
 # Select articles and columns
 df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id',
@@ -81,9 +95,12 @@ df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id',
 # convert dtypes
 df_long['month'] = pandas.to_datetime(df_long['month'], format='%Y-%m')
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
+df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
 # select date range
-df_long = df_long[(df_long['month'] >= '2007-1-1')]
+#ToDo: data range not the same on graph. on graph 2010-2020
+df_long = df_long[(df_long['month'] >= '2009-1-1')]
+df_long = df_long[(df_long['month'] <= '2020-1-1')]
 
 # replace everything in brackets from Newspaper
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
@@ -156,9 +173,9 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y.png'.format(sent,
-                                                                                      p['currmodel'],
-                                                                                      lda_level_domtopic))
+# plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y.png'.format(sent,
+#                                                                                       p['currmodel'],
+#                                                                                       lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
