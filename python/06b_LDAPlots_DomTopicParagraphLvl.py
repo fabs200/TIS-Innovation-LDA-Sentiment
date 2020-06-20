@@ -99,42 +99,42 @@ df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean()
 # df_aggr_q.plot()
 df_aggr_y.plot()
 
-# # Graph by month
-# fig = plt.figure(figsize=(10,5))
-# ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-# for i in range(len(df_aggr_m.columns)):
-#     ax.plot(df_aggr_m.iloc[:, i], marker='.', label='topic ' + str(df_aggr_m.iloc[:, i].name))
-#     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-# ax.axhline(linewidth=1, color='grey', alpha=.5)
-# plt.title('Sentiment score over time, by topics\n'
-#           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
-#                                                                               p['no_below'], p['no_above']))
-# plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_m.png'.format(sent,
-#                                                                                       p['currmodel'],
-#                                                                                       lda_level_domtopic))
-# plt.show(block=False)
-# time.sleep(1.5)
-# plt.close('all')
-#
-# # Graph by quarter
-# fig = plt.figure(figsize=(10,5))
-# ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-# for i in range(len(df_aggr_q.columns)):
-#     ax.plot(df_aggr_q.iloc[:, i], marker='.', label='topic ' + str(df_aggr_q.iloc[:, i].name))
-#     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-# ax.axhline(linewidth=1, color='grey', alpha=.5)
-# plt.title('Sentiment score over time, by topics\n'
-#           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
-#                                                                                 p['no_below'],
-#                                                                                 p['no_above']))
-# plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_q.png'.format(sent,
-#                                                                                       p['currmodel'],
-#                                                                                       lda_level_domtopic))
-# plt.show(block=False)
-# time.sleep(1.5)
-# plt.close('all')
-#
-#
+# Graph by month
+fig = plt.figure(figsize=(10,5))
+ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+for i in range(len(df_aggr_m.columns)):
+    ax.plot(df_aggr_m.iloc[:, i], marker='.', label='topic ' + str(df_aggr_m.iloc[:, i].name))
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.axhline(linewidth=1, color='grey', alpha=.5)
+plt.title('Sentiment score over time, by topics\n'
+          'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
+                                                                              p['no_below'], p['no_above']))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_m.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+# Graph by quarter
+fig = plt.figure(figsize=(10,5))
+ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+for i in range(len(df_aggr_q.columns)):
+    ax.plot(df_aggr_q.iloc[:, i], marker='.', label='topic ' + str(df_aggr_q.iloc[:, i].name))
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.axhline(linewidth=1, color='grey', alpha=.5)
+plt.title('Sentiment score over time, by topics\n'
+          'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
+                                                                                p['no_below'],
+                                                                                p['no_above']))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_q.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
 # Graph by year
 fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
