@@ -1,5 +1,5 @@
 """
-Specify parameters here, adjust configurations for lda and for calibration
+Specify parameters here, adjust configurations for lda, for its calibration and for adjusting lda-sentiment-plots
 """
 
 import numpy as np
@@ -8,6 +8,24 @@ np.random.seed(1) # setting random seed to get the same results each time
 
 params = {
 
+    ### Sentiment params
+
+    # drop short articles (int or None)
+    'drop_article_lenght': 300,
+
+    # drop short sentences (int or None)
+    'drop_sentence_lenght': 50,
+
+    # drop articles with low probability of assigned dominant topic (decimal number between 0 and 1 or None)
+    'drop_prob_below': .7,
+
+    #drop sentences with (relatively) neutral sentiment score (either =0 or in range(-.1, .1), or set None
+    'drop_senti_below': .05,
+    'drop_senti_above': -.05,
+
+
+    ### LDA pramas
+    
     # Specify POStag type
     'POStag':  'NNV',
 

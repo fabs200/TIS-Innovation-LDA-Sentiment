@@ -1,5 +1,6 @@
 import pandas, os, time, dtale
 from python.ConfigUser import path_data, path_project
+from python._ProcessingFunctions import filter_sentiment_params
 from python.params import params as p
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,10 +8,10 @@ import warnings
 
 """
 ------------------------------------------
-06a_LDAPlots_DomTopicArticleLvl.py - Overview of graphs
+06a_LDAPlots_DomTopicParagraphLvl.py - Overview of graphs
 ------------------------------------------
 
-### Run this script if 'sentence' is specified in lda_level_domtopic
+### Run this script if 'paragraph' is specified in lda_level_domtopic
 
 Graph 1: Sentiment score over time, by topics
 Graph 2: Frequency analysis, publication trend of articles, over time (Fritsche, Mejia)
@@ -57,33 +58,8 @@ os.makedirs(path_project + "graph/{}/model_{}/{}".format(sent, p['currmodel'], l
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
-#drop short articles
-drop_article_lenght = 300
-df_long['articles_text_lenght']= df_long['articles_text'].str.len()
-df_long= df_long.drop(df_long[df_long.articles_text_lenght < drop_article_lenght].index)
-
-#drop short sentences
-drop_sentence_lenght = 50
-df_long['sentences_for_sentiment_lenght']= df_long['sentences_for_sentiment'].str.len()
-df_long= df_long.drop(df_long[df_long.sentences_for_sentiment_lenght<drop_sentence_lenght].index)
-
-# drop sentences with low probability of assigned dominant topic
-drop_prob_below = .7
-df_long['DomTopic_arti_arti_prob'] = pandas.to_numeric(df_long['DomTopic_arti_arti_prob'])
-df_long = df_long.drop(df_long[df_long.DomTopic_arti_arti_prob < drop_prob_below].index)
-
-# set main sentiscore_mean, rename and to numeric
-df_long['sentiscore_mean'] = df_long['ss_{}_mean'.format(sent)]
-df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
-
-#drop sentences with (relatively) neutral sentiment score (either =0 or in range(-.1, .1)
-# drop_senti_below = .
-# drop_senti_above = -.001
-
-# df_long = df_long.drop(df_long[(df_long.sentiscore_mean < drop_senti_below) & (df_long.sentiscore_mean > drop_senti_above)].index)
-
-# keep values between range
-#df_long = df_long[df_long['sentiscore_mean'].between(-.1, .1, inclusive=False)]
+# Filter df_long
+df_long = filter_sentiment_params(df_long, sent)
 
 # Select articles and columns
 df_long = df_long[['DomTopic_arti_para_id', 'year', 'quarter', 'month',
