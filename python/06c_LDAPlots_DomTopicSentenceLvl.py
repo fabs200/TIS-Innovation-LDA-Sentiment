@@ -1,7 +1,7 @@
 import pandas, os, time, dtale
 from python.ConfigUser import path_data, path_project
 from python.params import params as p
-from python._ProcessingFunctions import filter_sentiment_params
+from python._HelpFunctions import filter_sentiment_params
 import matplotlib.pyplot as plt
 import numpy as np
 import warnings
@@ -46,7 +46,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
-POStag, lda_level_fit = p['POStag'], p['lda_level_fit']
+POStag, lda_level_fit, sent = p['POStag'], p['lda_level_fit'], p['sentiment_list']
 if 'sentence' in p['lda_level_domtopic']: lda_level_domtopic = 'sentence'
 
 # create folder in graphs with currmodel
@@ -57,6 +57,10 @@ os.makedirs(path_project + "graph/{}/model_{}/{}".format(sent, p['currmodel'], l
 # Load long file (sentence-level)
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
+
+# Rename target sentiment variable
+df_long = df_long.rename(columns={'ss_{}_mean'.format(sent): 'sentiscore_mean'})
+df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'],errors='coerce')
 
 # Filter df_long
 df_long = filter_sentiment_params(df_long, sent)

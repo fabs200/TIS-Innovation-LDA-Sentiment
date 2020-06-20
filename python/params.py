@@ -10,18 +10,21 @@ params = {
 
     ### Sentiment params
 
+    # select sentiment type ['sepldefault', 'seplmodified', 'sentiwsdefault', 'sentifinal']
+    'sentiment_list': 'sentifinal',
+
     # drop short articles (int or None)
-    'drop_article_lenght': 300,
+    'drop_article_lenght': None,
 
     # drop short sentences (int or None)
-    'drop_sentence_lenght': 50,
+    'drop_sentence_lenght': None,
 
     # drop articles with low probability of assigned dominant topic (decimal number between 0 and 1 or None)
-    'drop_prob_below': .7,
+    'drop_prob_below': None,
 
     #drop sentences with (relatively) neutral sentiment score (either =0 or in range(-.1, .1), or set None
-    'drop_senti_below': .05,
-    'drop_senti_above': -.05,
+    'drop_senti_below': None,
+    'drop_senti_above': None,
 
 
     ### LDA pramas

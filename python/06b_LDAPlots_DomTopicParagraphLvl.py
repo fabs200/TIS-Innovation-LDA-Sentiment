@@ -1,6 +1,6 @@
 import pandas, os, time, dtale
 from python.ConfigUser import path_data, path_project
-from python._ProcessingFunctions import filter_sentiment_params
+from python._HelpFunctions import filter_sentiment_params
 from python.params import params as p
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,7 +20,7 @@ Graph 4: Frequency analysis, publisher bias, over time (Mejia)
 Graph 5: Frequency analysis, Annual total with 3-years-average, by topic, over time (Melton)
 Graph 6: Frequency analysis, barplot, frequency of published articles of top publishers
 Graph 7: Barplot percentage shares of topics for selected publishers (stacked/not stacked) (Mejia)
-Graph 8: Histogram Sentiment
+Graph 8: Histogram SentimentGraph 3
 Graph 9: Histogram Sentiment by year
 Graph 10: Boxplot sentiments by year
 Graph 11: Barplot, how many articles have a sentiment score and how many not ...
@@ -46,7 +46,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
-POStag, lda_level_fit = p['POStag'], p['lda_level_fit']
+POStag, lda_level_fit, sent = p['POStag'], p['lda_level_fit'], p['sentiment_list']
 if 'paragraph' in p['lda_level_domtopic']: lda_level_domtopic = 'paragraph'
 
 # create folder in graphs with currmodel
@@ -57,6 +57,10 @@ os.makedirs(path_project + "graph/{}/model_{}/{}".format(sent, p['currmodel'], l
 # Load long file (sentence-level)
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
+
+# Rename target sentiment variable
+df_long = df_long.rename(columns={'ss_{}_mean'.format(sent): 'sentiscore_mean'})
+df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'],errors='coerce')
 
 # Filter df_long
 df_long = filter_sentiment_params(df_long, sent)
@@ -93,44 +97,44 @@ df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean()
 # plot
 # df_aggr_m.plot()
 # df_aggr_q.plot()
-# df_aggr_y.plot()
+df_aggr_y.plot()
 
-# Graph by month
-fig = plt.figure(figsize=(10,5))
-ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-for i in range(len(df_aggr_m.columns)):
-    ax.plot(df_aggr_m.iloc[:, i], marker='.', label='topic ' + str(df_aggr_m.iloc[:, i].name))
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-ax.axhline(linewidth=1, color='grey', alpha=.5)
-plt.title('Sentiment score over time, by topics\n'
-          'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
-                                                                              p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_m.png'.format(sent,
-                                                                                      p['currmodel'],
-                                                                                      lda_level_domtopic))
-plt.show(block=False)
-time.sleep(1.5)
-plt.close('all')
-
-# Graph by quarter
-fig = plt.figure(figsize=(10,5))
-ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-for i in range(len(df_aggr_q.columns)):
-    ax.plot(df_aggr_q.iloc[:, i], marker='.', label='topic ' + str(df_aggr_q.iloc[:, i].name))
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-ax.axhline(linewidth=1, color='grey', alpha=.5)
-plt.title('Sentiment score over time, by topics\n'
-          'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
-                                                                                p['no_below'],
-                                                                                p['no_above']))
-plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_q.png'.format(sent,
-                                                                                      p['currmodel'],
-                                                                                      lda_level_domtopic))
-plt.show(block=False)
-time.sleep(1.5)
-plt.close('all')
-
-
+# # Graph by month
+# fig = plt.figure(figsize=(10,5))
+# ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+# for i in range(len(df_aggr_m.columns)):
+#     ax.plot(df_aggr_m.iloc[:, i], marker='.', label='topic ' + str(df_aggr_m.iloc[:, i].name))
+#     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+# ax.axhline(linewidth=1, color='grey', alpha=.5)
+# plt.title('Sentiment score over time, by topics\n'
+#           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
+#                                                                               p['no_below'], p['no_above']))
+# plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_m.png'.format(sent,
+#                                                                                       p['currmodel'],
+#                                                                                       lda_level_domtopic))
+# plt.show(block=False)
+# time.sleep(1.5)
+# plt.close('all')
+#
+# # Graph by quarter
+# fig = plt.figure(figsize=(10,5))
+# ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+# for i in range(len(df_aggr_q.columns)):
+#     ax.plot(df_aggr_q.iloc[:, i], marker='.', label='topic ' + str(df_aggr_q.iloc[:, i].name))
+#     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+# ax.axhline(linewidth=1, color='grey', alpha=.5)
+# plt.title('Sentiment score over time, by topics\n'
+#           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
+#                                                                                 p['no_below'],
+#                                                                                 p['no_above']))
+# plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_q.png'.format(sent,
+#                                                                                       p['currmodel'],
+#                                                                                       lda_level_domtopic))
+# plt.show(block=False)
+# time.sleep(1.5)
+# plt.close('all')
+#
+#
 # Graph by year
 fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
@@ -150,21 +154,6 @@ plt.close('all')
 
 
 
-# import numpy
-# def smoothListGaussian(list, strippedXs=False, degree=5):
-#     window = degree*2-1
-#     weight = numpy.array([1.0]*window)
-#     weightGauss = []
-#     for i in range(window):
-#         i = i-degree+1
-#         frac = i/float(window)
-#         gauss = 1/(numpy.exp((4*(frac))**2))
-#         weightGauss.append(gauss)
-#     weight = numpy.array(weightGauss)*weight
-#     smoothed = [0.0]*(len(list)-window)
-#     for i in range(len(smoothed)):
-#         smoothed[i] = sum(numpy.array(list[i:i+window])*weight)/sum(weight)
-#     return smoothed
 
 
 """
