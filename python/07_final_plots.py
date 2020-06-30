@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Specify font
-_FONT = 'Times New Roman'
+_FONT = 'Arial'
 csfont = {'fontname': _FONT, 'size': 16}
 hfont = {'fontname': _FONT}
 csfont_axis = {'fontname': _FONT, 'size': 11}
@@ -39,7 +39,8 @@ tc5 = 'politics'
 topics = ['topics', tc1, tc2, tc3, tc4, tc5]
 
 # Specify color palette
-_COLORS = ['colors', '#004488', 'steelblue', 'lightblue', 'lightgray', 'grey', 'k'] # 'lightgray'
+# _COLORS = ['colors', '#004488', 'steelblue', 'lightblue', 'lightgray', 'grey', 'k'] # 'lightgray'
+_COLORS = ['colors', '#225378', '#1483D6', '#8E9AA1', '#FF7F15', '#F43E00', '#B3CDF4'] # 'lightgray'
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
 POStag, lda_level_fit, sent = p['POStag'], p['lda_level_fit'], p['sentiment_list']
@@ -154,8 +155,12 @@ for tick in ax.get_xticklabels():
 for tick in ax.get_yticklabels():
     tick.set_fontname(_FONT)
 
-plt.savefig(path_project + 'graph/{}/model_{}/{}/02_absfreqArt_y_FINAL.png'.format(sent, p['currmodel'],
-                                                                                   lda_level_domtopic))
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/02_absfreqArt_y_FINAL.{}'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic,
+                                                                                      fmt))
+
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -180,7 +185,7 @@ df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
 fig = plt.figure(figsize=(8, 5))
 ax = fig.add_axes([0.1, 0.05, .69, .85]) # [left, bottom, width, height]
 for i in range(1, len(df_aggr_y.columns)):
-    ax.plot(df_aggr_y.iloc[:, i], marker='.', label='topic ' + topics[i], color=_COLORS[i])
+    ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i], color=_COLORS[i])
 ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=legendfont)
 ax.set_xticks(range(len(df_aggr_y.index)))
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
@@ -195,9 +200,11 @@ ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
 ax.axhline(y=0, color='#DEDEDE')
 
-plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_y_FINAL.png'.format(sent,
-                                                                                           p['currmodel'],
-                                                                                           lda_level_domtopic))
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_y_FINAL.{}'.format(sent,
+                                                                                              p['currmodel'],
+                                                                                              lda_level_domtopic,
+                                                                                              fmt))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -268,10 +275,12 @@ for tick in ax.get_xticklabels():
 for tick in ax.get_yticklabels():
     tick.set_fontname(_FONT)
 
-plt.savefig(path_project + 'graph/{}/model_{}/{}/07_topics_by_publishers_stacked_FINAL.png'.format(sent,
-                                                                                                   p['currmodel'],
-                                                                                                   lda_level_domtopic),
-            bbox_inches='tight')
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/07_topics_by_publishers_stacked_FINAL.{}'.format(sent,
+                                                                                                      p['currmodel'],
+                                                                                                      lda_level_domtopic,
+                                                                                                      fmt),
+                bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
