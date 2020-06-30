@@ -3,6 +3,7 @@ from python.ConfigUser import path_data, path_project
 from python._HelpFunctions import filter_sentiment_params
 from python.params import params as p
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as font_manager
 import numpy as np
 import warnings
 
@@ -44,6 +45,10 @@ Graph: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr)
 # Ignore some warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+csfont = {'fontname': 'Times New Roman'}
+hfont = {'fontname': 'Times New Roman'}
+legendfont = font_manager.FontProperties(family='Times New Roman')
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
 POStag, lda_level_fit, sent = p['POStag'], p['lda_level_fit'], p['sentiment_list']
@@ -102,25 +107,50 @@ df_wide_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentisc
     index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
 
 # make aggregation available
-df_aggr_m = df_wide_bytopics.groupby(pandas.Grouper(freq='M')).mean()
-df_aggr_q = df_wide_bytopics.groupby(pandas.Grouper(freq='Q')).mean()
-df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean()
+df_aggr_m = df_wide_bytopics.groupby(pandas.Grouper(freq='M')).mean().reset_index()
+df_aggr_q = df_wide_bytopics.groupby(pandas.Grouper(freq='Q')).mean().reset_index().rename(columns={'month': 'quarter'})
+df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
 
 # plot
 # df_aggr_m.plot()
 # df_aggr_q.plot()
 # df_aggr_y.plot()
 
-# Graph by month
+### Reformat dates
+# month
+df_aggr_m['month'] = pandas.DatetimeIndex(df_aggr_m.iloc[:,0])
+df_aggr_m['year'] = pandas.DatetimeIndex(df_aggr_m.iloc[:,0]).year
+df_aggr_m['month'] = pandas.DatetimeIndex(df_aggr_m.iloc[:,0]).month
+df_aggr_m['month'] = df_aggr_m.year.map(str) + '-' + df_aggr_m.month.map(str)
+df_aggr_m = df_aggr_m.drop('year', axis=1)
+# quarter
+df_aggr_q['quarter'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0])
+df_aggr_q['year'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0]).year
+df_aggr_q['quarter'] = pandas.DatetimeIndex(df_aggr_q.iloc[:,0]).quarter
+df_aggr_q['quarter'] = df_aggr_q.year.map(str) + '-' + df_aggr_q.quarter.map(str)
+df_aggr_q = df_aggr_q.drop('year', axis=1)
+# year
+df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
+
+# Graph line by month
 fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-for i in range(len(df_aggr_m.columns)):
+for i in range(1, len(df_aggr_m.columns)):
     ax.plot(df_aggr_m.iloc[:, i], marker='.', label='topic ' + str(df_aggr_m.iloc[:, i].name))
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-ax.axhline(linewidth=1, color='grey', alpha=.5)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_m.iloc[:, 0])))
+ax.set_xticklabels(df_aggr_m.iloc[:, 0], **hfont)
+idx = 1
+for label in ax.xaxis.get_ticklabels():
+    if (idx % 6)==0 or (idx==1):
+        label.set_rotation(90)
+    else:
+        label.set_visible(False)
+    idx+=1
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
-                                                                              p['no_below'], p['no_above']))
+                                                                              p['no_below'], p['no_above']),
+          **csfont)
 plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_m.png'.format(sent,
                                                                                       p['currmodel'],
                                                                                       lda_level_domtopic))
@@ -128,17 +158,26 @@ plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
-# Graph by quarter
+# Graph line by quarter
 fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-for i in range(len(df_aggr_q.columns)):
+for i in range(1, len(df_aggr_q.columns)):
     ax.plot(df_aggr_q.iloc[:, i], marker='.', label='topic ' + str(df_aggr_q.iloc[:, i].name))
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-ax.axhline(linewidth=1, color='grey', alpha=.5)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_q.iloc[:, 0])))
+ax.set_xticklabels(df_aggr_q.iloc[:, 0])
+idx = 1
+for label in ax.xaxis.get_ticklabels():
+    if (idx % 6)==0 or (idx==1):
+        label.set_rotation(90)
+    else:
+        label.set_visible(False)
+    idx+=1
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'],
-                                                                                p['no_above']))
+                                                                                p['no_above']),
+          **csfont)
 plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_q.png'.format(sent,
                                                                                       p['currmodel'],
                                                                                       lda_level_domtopic))
@@ -146,17 +185,27 @@ plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
+csfont = {'fontname': 'Times New Roman'}
+hfont = {'fontname': 'Times New Roman'}
+legendfont = font_manager.FontProperties(family='Times New Roman')
 
-# Graph by year
+# Graph line by year
 fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-for i in range(len(df_aggr_y.columns)):
+for i in range(1, len(df_aggr_y.columns)):
     ax.plot(df_aggr_y.iloc[:, i], marker='.', label='topic ' + str(df_aggr_y.iloc[:, i].name))
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-ax.axhline(linewidth=1, color='grey', alpha=.5)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_y.index)))
+# Set the font name for axis tick labels to be Comic Sans
+for tick in ax.get_xticklabels():
+    tick.set_fontname("Times New Roman")
+for tick in ax.get_yticklabels():
+    tick.set_fontname("Times New Roman")
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
-                                                                             p['no_below'], p['no_above']))
+                                                                             p['no_below'], p['no_above']),
+          **csfont)
 plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y.png'.format(sent,
                                                                                       p['currmodel'],
                                                                                       lda_level_domtopic))
@@ -180,7 +229,8 @@ ax.bar(df_senti_freq_y.iloc[:,0], df_senti_freq_y.iloc[:, 1], color='#004488', w
 ax.set_ylabel('absolute frequency')
 ax.set_title('Absolute frequency of articles over time\n'
              'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
-                                                                                p['no_below'], p['no_above']))
+                                                                                p['no_below'], p['no_above']),
+             **csfont)
 ax.xaxis.set_ticks(np.arange(df_senti_freq_y.iloc[:,0].min(), df_senti_freq_y.iloc[:,0].max()+1, 1))
 # Access bars
 rects = ax.patches
@@ -232,7 +282,7 @@ fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
 for i in range(1, len(df_aggr_m.columns)):
     ax.plot(df_aggr_m.iloc[:, i], marker='.', label='topic ' + str(df_aggr_m.iloc[:, i].name))
-ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
 ax.set_xticks(range(len(df_aggr_m.iloc[:, 0])))
 ax.set_xticklabels(df_aggr_m.iloc[:, 0])
 idx = 1
@@ -244,7 +294,8 @@ for label in ax.xaxis.get_ticklabels():
     idx+=1
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
-                                                                              p['no_below'], p['no_above']))
+                                                                              p['no_below'], p['no_above']),
+          **csfont)
 plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_m.png'.format(sent,
                                                                                      p['currmodel'],
                                                                                      lda_level_domtopic))
@@ -257,7 +308,7 @@ fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
 for i in range(1, len(df_aggr_q.columns)):
     ax.plot(df_aggr_q.iloc[:, i], marker='.', label='topic ' + str(df_aggr_q.iloc[:, i].name))
-ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
 ax.set_xticks(range(len(df_aggr_q.iloc[:, 0])))
 ax.set_xticklabels(df_aggr_q.iloc[:, 0])
 idx = 1
@@ -269,7 +320,8 @@ for label in ax.xaxis.get_ticklabels():
     idx+=1
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
-                                                                                p['no_below'], p['no_above']))
+                                                                                p['no_below'], p['no_above']),
+          **csfont)
 plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_q.png'.format(sent,
                                                                                      p['currmodel'],
                                                                                      lda_level_domtopic))
@@ -283,12 +335,13 @@ fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
 for i in range(1, len(df_aggr_y.columns)):
     ax.plot(df_aggr_y.iloc[:, i], marker='.', label='topic ' + str(df_aggr_y.iloc[:, i].name))
-ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
 ax.set_xticks(range(len(df_aggr_y.index)))
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
-                                                                             p['no_below'], p['no_above']))
+                                                                             p['no_below'], p['no_above']),
+          **csfont)
 plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_y.png'.format(sent,
                                                                                      p['currmodel'],
                                                                                      lda_level_domtopic))
@@ -1038,7 +1091,7 @@ fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
 for i in range(1, len(df_aggr_m.columns)):
     ax.plot(df_aggr_m.iloc[:, i], marker='.', label='topic ' + str(df_aggr_m.iloc[:, i].name))
-ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
 ax.set_xticks(range(len(df_aggr_m.iloc[:, 0])))
 ax.set_xticklabels(df_aggr_m.iloc[:, 0])
 idx = 1
@@ -1064,7 +1117,7 @@ fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
 for i in range(1, len(df_aggr_q.columns)):
     ax.plot(df_aggr_q.iloc[:, i], marker='.', label='topic ' + str(df_aggr_q.iloc[:, i].name))
-ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
 ax.set_xticks(range(len(df_aggr_q.iloc[:, 0])))
 ax.set_xticklabels(df_aggr_q.iloc[:, 0])
 idx = 1
@@ -1091,7 +1144,7 @@ fig = plt.figure(figsize=(10,5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
 for i in range(1, len(df_aggr_y.columns)):
     ax.plot(df_aggr_y.iloc[:, i], marker='.', label='topic ' + str(df_aggr_y.iloc[:, i].name))
-ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
 ax.set_xticks(range(len(df_aggr_y.index)))
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 ax.set_ylabel('relative frequency in percent')
