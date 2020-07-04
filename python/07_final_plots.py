@@ -33,9 +33,9 @@ legendfont = font_manager.FontProperties(family=_FONT)
 # Specify topics
 tc1 = 'Industry'
 tc2 = 'R&D'
-tc3 = 'vehicles'
-tc4 = 'Infrastructure'
-tc5 = 'politics'
+tc3 = 'Infrastructure'
+tc4 = 'Usability'
+tc5 = 'Policy'
 topics = ['topics', tc1, tc2, tc3, tc4, tc5]
 
 # Specify color palette
@@ -117,9 +117,11 @@ ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
 ax.axhline(y=0, color='#DEDEDE')
 plt.title('Sentiment score over time, by topics', **csfont)
-plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y_FINAL.png'.format(sent,
-                                                                                            p['currmodel'],
-                                                                                            lda_level_domtopic))
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y_FINAL.{}'.format(sent,
+                                                                                               p['currmodel'],
+                                                                                               lda_level_domtopic,
+                                                                                               fmt))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -284,5 +286,150 @@ for fmt in ['png', 'pdf', 'svg']:
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
+
+
+"""
+###################### Graph 1a + 1b: Sentiment score over time, by topics ######################
+Graph 1a: usability (4) und R&D (2)
+Graph 1b: Policy (5), infrastructure (3) und industry (1)
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_wide_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
+    index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+
+# make aggregation available
+df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+
+### Reformat dates
+df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
+
+### Graph 1a line by year
+# fig = plt.figure(figsize=(10,5))
+# ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+fig = plt.figure(figsize=(8, 5))
+ax = fig.add_axes([0.1, 0.05, .71, .85]) # [left, bottom, width, height]
+for i in [2, 4]:
+    ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i], color=_COLORS[i])
+ax.set_ylabel('sentiment score', **csfont_axis)
+ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_y.index)))
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
+plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
+ax.axhline(y=0, color='#DEDEDE')
+plt.title('Sentiment score over time, by topics', **csfont)
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/01a_sentiscore_bytopics_y_FINAL.{}'.format(sent,
+                                                                                               p['currmodel'],
+                                                                                               lda_level_domtopic,
+                                                                                               fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+### Graph 1b line by year
+# fig = plt.figure(figsize=(10,5))
+# ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+fig = plt.figure(figsize=(8, 5))
+ax = fig.add_axes([0.1, 0.05, .71, .85]) # [left, bottom, width, height]
+for i in [1, 3, 5]:
+    ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i], color=_COLORS[i])
+ax.set_ylabel('sentiment score', **csfont_axis)
+ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_y.index)))
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
+plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
+ax.axhline(y=0, color='#DEDEDE')
+plt.title('Sentiment score over time, by topics', **csfont)
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/01b_sentiscore_bytopics_y_FINAL.{}'.format(sent,
+                                                                                               p['currmodel'],
+                                                                                               lda_level_domtopic,
+                                                                                               fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+"""
+###################### Graph 3a + 3b: Frequency analysis, publication trend of topics over time (Fritsche, Mejia) ##########
+Graph 3a: usability (4) und R&D (2)
+Graph 3b: Policy (5), infrastructure (3) und industry (1)
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+
+# make aggregation available
+df_aggr_y = df_senti_freq_agg.groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
+
+### Reformat dates
+df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
+
+### Graph 3a line by year
+fig = plt.figure(figsize=(8, 5))
+ax = fig.add_axes([0.1, 0.05, .69, .85]) # [left, bottom, width, height]
+for i in [2, 4]:
+    ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i], color=_COLORS[i])
+ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_y.index)))
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
+ax.set_ylabel('frequency', **csfont_axis)
+plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
+# Set axis font
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
+plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
+ax.axhline(y=0, color='#DEDEDE')
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/03a_absfreqArt_bytopic_y_FINAL.{}'.format(sent,
+                                                                                              p['currmodel'],
+                                                                                              lda_level_domtopic,
+                                                                                              fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+### Graph 3a line by year
+fig = plt.figure(figsize=(8, 5))
+ax = fig.add_axes([0.1, 0.05, .69, .85]) # [left, bottom, width, height]
+for i in [1, 3, 5]:
+    ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i], color=_COLORS[i])
+ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_y.index)))
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
+ax.set_ylabel('frequency', **csfont_axis)
+plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
+# Set axis font
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
+plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
+ax.axhline(y=0, color='#DEDEDE')
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/03b_absfreqArt_bytopic_y_FINAL.{}'.format(sent,
+                                                                                              p['currmodel'],
+                                                                                              lda_level_domtopic,
+                                                                                              fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
 
 ###
