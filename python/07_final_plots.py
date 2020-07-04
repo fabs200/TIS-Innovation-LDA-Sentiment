@@ -320,6 +320,8 @@ for tick in ax.get_yticklabels():
     tick.set_fontname(_FONT)
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
+plt.ylim(-0.04, 0.1)
+
 ax.axhline(y=0, color='#DEDEDE')
 plt.title('Sentiment score over time, by topics', **csfont)
 for fmt in ['png', 'pdf', 'svg']:
