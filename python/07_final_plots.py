@@ -15,8 +15,11 @@ import warnings
 ### Run this script if 'article' is specified in lda_level_domtopic
 
 Graph 1: Sentiment score over time, by topics
+Graph 2: Frequency analysis, publication trend of articles over time (Fritsche, Mejia)
 Graph 3: Frequency analysis, publication trend of topics, over time (Fritsche, Mejia)
-
+Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia)
+NEW Graph 1.1: Sentiment score over time, by topics, with events
+NEW Graph 3.1: Frequency analysis, publication trend of topics, over time (Fritsche, Mejia), with events
 """
 
 # Ignore some warnings
@@ -432,6 +435,134 @@ plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
+"""
+Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia)
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'Newspaper']).count().\
+    reset_index()[['DomTopic_arti_arti_id', 'Newspaper', 'sentiscore_mean']].\
+    rename(columns={'sentiscore_mean': 'count'}).\
+    pivot(index='Newspaper', columns='DomTopic_arti_arti_id', values='count').\
+    fillna(0)
+
+# calculate percentages per topic
+df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
+df_wide_publishers_bytopics = df_wide_publishers_bytopics[df_wide_publishers_bytopics['sum']>7]
+totalcols = len(df_wide_publishers_bytopics.columns)
+for col in range(0, totalcols-1):
+    df_wide_publishers_bytopics.iloc[:, col] = 100*(df_wide_publishers_bytopics.iloc[:, col] / df_wide_publishers_bytopics.iloc[:, totalcols-1])
+df_wide_publishers_bytopics = df_wide_publishers_bytopics.drop(['sum'], axis=1)
+df_wide_publishers_bytopics = df_wide_publishers_bytopics.reset_index()
+
+# cut str at lengt
+df_wide_publishers_bytopics['Newspaper'] = df_wide_publishers_bytopics['Newspaper'].str.slice(0, 14)
+
+# transpose, rename to make plotable
+df_publishers_bytopics_t = df_wide_publishers_bytopics.transpose().reset_index()
+df_publishers_bytopics_t.columns = df_publishers_bytopics_t.iloc[0]
+df_publishers_bytopics_t = df_publishers_bytopics_t\
+    .drop(df_publishers_bytopics_t.columns[1], axis=1)\
+    .drop(0)\
+    .rename(columns={'Newspaper': 'topics'})
+
+# drop selected publishers
+df_publishers_bytopics_t = df_publishers_bytopics_t.drop(['BILD Bund'], axis=1)
+
+# rename topics according to our final identified topics
+for i, tp in enumerate(topics[1:]):
+    df_publishers_bytopics_t.iloc[i, 0] = tp
+
+# plot stacked bar plot
+barWidth = 0.85
+topics = df_publishers_bytopics_t['topics'].to_list()
+publishers = df_publishers_bytopics_t.columns[1:]
+# plot stacked bars
+fig = plt.figure(figsize=(10, 5))
+ax = fig.add_axes([0.08, 0.18, 0.75, 0.75]) # [left, bottom, width, height]
+for i in range(0, len(topics)):
+    if i==0:
+        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:])
+    else:
+        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:],
+                bottom=df_publishers_bytopics_t.iloc[0:i].sum().to_list()[1:])
+# legend
+ax.legend(topics, title='topics', bbox_to_anchor=(1.2, .85), ncol=1, borderaxespad=0.,
+          fontsize='small', loc='upper right')
+# Custom x axis
+plt.xticks(rotation=90, size=7)
+plt.xlabel('Newspaper')
+# Custom y axis
+plt.ylabel("percentage shares in topics")
+plt.tight_layout()
+plt.title('Topics by selected publishers')
+
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/07_topics_by_publishers_stacked_FINAL.{}'.format(sent,
+                                                                                                      p['currmodel'],
+                                                                                                      lda_level_domtopic,
+                                                                                                      fmt),
+                bbox_inches='tight')
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+"""
+###################### Graph 1.1: Sentiment score over time, by topics, with events ######################
+"""
+# # TODO: include events
+# # group by topics and reshape long to wide to make plottable
+# df_wide_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
+#     index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+#
+# # make aggregation available
+# df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+#
+# ### Reformat dates
+# df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
+#
+# ### Import events
+# df_events = pandas.read_excel(path_project + 'events/events_final.xlsx')
+#
+# # merge events
+# df_aggr_y = pandas.merge(df_aggr_y, df_events, on=['year'])
+#
+# # Graph line by year
+# fig = plt.figure(figsize=(12, 5))
+# ax = fig.add_axes([0.1, 0.05, .71, .85]) # [left, bottom, width, height]
+# for i in range(1, len(df_aggr_y.columns)):
+#     ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i], color=_COLORS[i])
+# for i in range(0, len(df_aggr_y.index)-1):
+#     plt.axvline(x=df_aggr_y.iloc[i, 0], color='black')
+#     plt.text(df_aggr_y.iloc[i, 0], ax.get_ylim()[1]-4, label=df_aggr_y.iloc[i, 6],
+#              horizontalalignment='center',
+#              verticalalignment='center',
+#              color='black',
+#              bbox=dict(facecolor='white', alpha=0.9))
+#
+# ax.set_ylabel('sentiment score', **csfont_axis)
+# ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+# ax.set_xticks(range(len(df_aggr_y.index)))
+# for tick in ax.get_xticklabels():
+#     tick.set_fontname(_FONT)
+# for tick in ax.get_yticklabels():
+#     tick.set_fontname(_FONT)
+# ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
+# plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
+# ax.axhline(y=0, color='#DEDEDE')
+# plt.title('Sentiment score over time, by topics', **csfont)
+#
+#
+# for fmt in ['png', 'pdf', 'svg']:
+#     plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y_FINAL.{}'.format(sent,
+#                                                                                                p['currmodel'],
+#                                                                                                lda_level_domtopic,
+#                                                                                                fmt))
+# plt.show(block=False)
+# time.sleep(1.5)
+# plt.close('all')
+#
 
 
 ###
