@@ -22,7 +22,7 @@ violation of LexisNexis user policy. Use at your own legal risk.
 - [x] check LDA_TEST_get_topics.py
   - [x]   coherence score, (grid search, alpha, beta, set random seed)
   - [x]   Leibler divergence (Li et al. 2019)
-  - [ ]   or 'auto'/'symmetric' as lda args (eyeballing)
+  - [x]   or 'auto'/'symmetric' as lda args (eyeballing)
 - [x] update and adjust SePL by manneg phrs
 - [x] add manneg phrs to ProcessSePLphrases(raw_sepl_phrase) and return it, too
 - [x] final programming routine to create final analysis df long (colums: sentence/parag/article, topic distr, dom. topic, avg sent, med sent, sd sent, n sent(/phr), list phrs)
@@ -30,17 +30,15 @@ violation of LexisNexis user policy. Use at your own legal risk.
 - [x] config_LDA.py: set up dictionary with parameters
 - [x] Test lds on Paragraph-level
 - [x] when LDA_TEST_get_topics.py checked -> set up code
-- [ ] topic modelling vizualization ([link](https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/), word doc)
-- [ ] clean up data files in cloud
-- [ ] additional doc types
-- [ ] plot: lda time series
-- [ ] Get large dataset
-- [ ] Check Frequency:
-    - [ ] all SePL phrs
-    - [ ] SePL phrs by topics
-
-## Tasks later
-- [ ] TD-IDF lda model (instead of doc2bow)
-- [ ] Drop duplicate articles based on similarity 
-- [ ] write lda as class()
-- [ ] Sentiment Analysis accuracy
+- [x] topic modelling vizualization ([link](https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/), word doc)
+- [x] clean up data files in cloud
+- [x] additional doc types
+- [x] plot: lda time series
+- [x] Get large dataset
+- [x] Check Frequency:
+    - [x] all SePL phrs
+    - [x] SePL phrs by topics
+- [x] TD-IDF lda model (instead of doc2bow)
+- [x] Drop duplicate articles based on similarity 
+- [x] write lda as class()
+- [x] Sentiment Analysis accuracy
