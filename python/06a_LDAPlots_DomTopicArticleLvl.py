@@ -30,6 +30,7 @@ Graph 13: Valid and non-valid sentiments by different lengths of articles
 Graph 14: Average length of articles with valid and non-valid sentiments by different lengths of articles
 Graph 15: (as Graph 2, but shares), relative frequency analysis, publication trend of articles, over time
 Graph 16: (as Graph 3, but shares), relative frequency analysis, publication trend of topics, over time
+Graph 17: Correlation plot of sentiment scores by topics
 Graph   : histogram dominant topics probabilities assigned, by topics
 Graph   : histogram article length, total and by topics
 
@@ -1157,6 +1158,86 @@ plt.savefig(path_project + 'graph/{}/model_{}/{}/16_relfreqArt_bytopic_y.png'.fo
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
+
+"""
+Graph 17: Correlation plot of sentiment scores by topics
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_wide_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
+    index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+
+# make aggregation available
+df_aggr_m = df_wide_bytopics.groupby(pandas.Grouper(freq='M')).mean().reset_index()
+df_aggr_q = df_wide_bytopics.groupby(pandas.Grouper(freq='Q')).mean().reset_index().rename(columns={'month': 'quarter'})
+df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+
+
+# Specify topics
+tc1 = 'Industry'
+tc2 = 'R&D'
+tc3 = 'Infrastructure'
+tc4 = 'Usability'
+tc5 = 'Policy'
+df_aggr_m.columns = ['year', tc1, tc2, tc3, tc4, tc5]
+df_aggr_q.columns = ['year', tc1, tc2, tc3, tc4, tc5]
+df_aggr_y.columns = ['year', tc1, tc2, tc3, tc4, tc5]
+
+# month: correlation plot
+import seaborn as sns
+corr = df_aggr_m.corr()
+ax = sns.heatmap(
+    corr, annot=True,
+    vmin=-1, vmax=1, center=0,
+    cmap=sns.diverging_palette(20, 220, n=200),
+    square=True)
+ax.set_xticklabels(
+    ax.get_xticklabels(),
+    rotation=45,
+    horizontalalignment='right'
+)
+fig = ax.get_figure()
+fig.savefig(path_project + 'graph/{}/model_{}/{}/17_corrplot_bytopic_m.png'.format(sent, p['currmodel'],
+                                                                                   lda_level_domtopic),
+            bbox_inches='tight')
+plt.clf()
+
+# quarter: correlation plot
+corr = df_aggr_q.corr()
+ax = sns.heatmap(
+    corr, annot=True,
+    vmin=-1, vmax=1, center=0,
+    cmap=sns.diverging_palette(20, 220, n=200),
+    square=True)
+ax.set_xticklabels(
+    ax.get_xticklabels(),
+    rotation=45,
+    horizontalalignment='right'
+)
+fig = ax.get_figure()
+fig.savefig(path_project + 'graph/{}/model_{}/{}/17_corrplot_bytopic_q.png'.format(sent, p['currmodel'],
+                                                                                   lda_level_domtopic),
+            bbox_inches='tight')
+plt.clf()
+
+# year: correlation plot
+corr = df_aggr_y.corr()
+ax = sns.heatmap(
+    corr, annot=True,
+    vmin=-1, vmax=1, center=0,
+    cmap=sns.diverging_palette(20, 220, n=200),
+    square=True)
+ax.set_xticklabels(
+    ax.get_xticklabels(),
+    rotation=45,
+    horizontalalignment='right'
+)
+fig = ax.get_figure()
+fig.savefig(path_project + 'graph/{}/model_{}/{}/17_corrplot_bytopic_y.png'.format(sent, p['currmodel'],
+                                                                                   lda_level_domtopic),
+            bbox_inches='tight')
+plt.clf()
+plt.close()
 
 
 #####
