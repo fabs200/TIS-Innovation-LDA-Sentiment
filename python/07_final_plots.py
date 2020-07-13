@@ -511,58 +511,122 @@ plt.close('all')
 """
 ###################### Graph 1.1: Sentiment score over time, by topics, with events ######################
 """
-# # TODO: include events
-# # group by topics and reshape long to wide to make plottable
-# df_wide_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
-#     index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
-#
-# # make aggregation available
-# df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
-#
-# ### Reformat dates
-# df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
-#
-# ### Import events
-# df_events = pandas.read_excel(path_project + 'events/events_final.xlsx')
-#
-# # merge events
-# df_aggr_y = pandas.merge(df_aggr_y, df_events, on=['year'])
-#
-# # Graph line by year
-# fig = plt.figure(figsize=(12, 5))
-# ax = fig.add_axes([0.1, 0.05, .71, .85]) # [left, bottom, width, height]
-# for i in range(1, len(df_aggr_y.columns)):
-#     ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i], color=_COLORS[i])
-# for i in range(0, len(df_aggr_y.index)-1):
-#     plt.axvline(x=df_aggr_y.iloc[i, 0], color='black')
-#     plt.text(df_aggr_y.iloc[i, 0], ax.get_ylim()[1]-4, label=df_aggr_y.iloc[i, 6],
-#              horizontalalignment='center',
-#              verticalalignment='center',
-#              color='black',
-#              bbox=dict(facecolor='white', alpha=0.9))
-#
-# ax.set_ylabel('sentiment score', **csfont_axis)
-# ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., prop=legendfont)
-# ax.set_xticks(range(len(df_aggr_y.index)))
-# for tick in ax.get_xticklabels():
-#     tick.set_fontname(_FONT)
-# for tick in ax.get_yticklabels():
-#     tick.set_fontname(_FONT)
+
+# group by topics and reshape long to wide to make plottable
+df_wide_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
+    index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+
+# make aggregation available
+df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+
+### Reformat dates
+df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:, 0]).year
+
+### Import events
+df_events = pandas.read_excel(path_project + 'events/events_final.xlsx')
+
+# merge events
+df_aggr_y = pandas.merge(df_aggr_y, df_events, on=['year'], how='outer')
+
+# get overall maximum of sentiment -> will define location of event labels
+max_sentiment = []
+for i, tp in enumerate(df_aggr_y.columns):
+    templist_ = df_aggr_y[[tp]].values
+    max_sentiment.append(templist_.max())
+max_sentiment = np.array(max_sentiment[1:-1]).max()
+
+# Graph line by year
+fig = plt.figure(figsize=(10, 5))
+ax = fig.add_axes([0.1, 0.05, .71, .9]) # [left, bottom, width, height]
+for i in range(1, len(df_aggr_y.columns)-1):
+    ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i-1], color=_COLORS[i])
+for i in range(0, len(df_aggr_y.index)):
+    plt.axvline(x=i, color='gray', alpha=.3, linestyle='dashed')
+    plt.text(i, max_sentiment, s=df_aggr_y.iloc[i, 6].replace('; ', '\n'), label=df_aggr_y.iloc[i, 6],
+             rotation=90, fontsize=7, wrap=True,
+             alpha=.7, ha='right', va='bottom')
+ax.set_ylabel('sentiment score', **csfont_axis)
+ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_y.index)))
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
+# plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
+ax.axhline(y=0, color='#DEDEDE')
+plt.title('Sentiment score over time, by topics', **csfont)
+
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y_FINAL_events.{}'.format(sent,
+                                                                                                      p['currmodel'],
+                                                                                                      lda_level_domtopic,
+                                                                                                      fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+"""
+###################### Graph 3.1: Frequency analysis, publication trend of topics over time (Fritsche, Mejia), #########
+                                  with events
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+
+# make aggregation available
+df_aggr_y = df_senti_freq_agg.groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
+
+### Reformat dates
+df_aggr_y['year'] = pandas.DatetimeIndex(df_aggr_y.iloc[:,0]).year
+
+### Import events
+df_events = pandas.read_excel(path_project + 'events/events_final.xlsx')
+
+# merge events
+df_aggr_y = pandas.merge(df_aggr_y, df_events, on=['year'], how='outer')
+
+# get overall maximum of sentiment -> will define location of event labels
+max_frequency = []
+for i, tp in enumerate(df_aggr_y.columns):
+    templist_ = df_aggr_y[[tp]].values
+    max_frequency.append(templist_.max())
+max_frequency = np.array(max_frequency[1:-1]).max()
+
+# Graph line by year
+fig = plt.figure(figsize=(10, 5))
+ax = fig.add_axes([0.1, 0.05, .71, .9]) # [left, bottom, width, height]
+for i in range(1, len(df_aggr_y.columns)-1):
+    ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i-1], color=_COLORS[i])
+for i in range(0, len(df_aggr_y.index)):
+    plt.axvline(x=i, color='gray', alpha=.3, linestyle='dashed')
+    plt.text(i, max_frequency, s=df_aggr_y.iloc[i, 6].replace('; ', '\n'), label=df_aggr_y.iloc[i, 6],
+             rotation=90, fontsize=7, wrap=True,
+             alpha=.7, ha='right', va='bottom')
+ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+ax.set_xticks(range(len(df_aggr_y.index)))
+ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
+ax.set_ylabel('frequency', **csfont_axis)
+plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
+# Set axis font
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
 # ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 # plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
-# ax.axhline(y=0, color='#DEDEDE')
-# plt.title('Sentiment score over time, by topics', **csfont)
-#
-#
-# for fmt in ['png', 'pdf', 'svg']:
-#     plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y_FINAL.{}'.format(sent,
-#                                                                                                p['currmodel'],
-#                                                                                                lda_level_domtopic,
-#                                                                                                fmt))
-# plt.show(block=False)
-# time.sleep(1.5)
-# plt.close('all')
-#
+ax.axhline(y=0, color='#DEDEDE')
+
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_y_FINAL_events.{}'.format(sent,
+                                                                                              p['currmodel'],
+                                                                                              lda_level_domtopic,
+                                                                                              fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
 
 
 ###
