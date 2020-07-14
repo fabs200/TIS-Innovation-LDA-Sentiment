@@ -538,6 +538,7 @@ max_sentiment = np.array(max_sentiment[1:-1]).max()
 # Graph line by year
 fig = plt.figure(figsize=(10, 5))
 ax = fig.add_axes([0.1, 0.05, .71, .9]) # [left, bottom, width, height]
+ax.axhline(y=0, color='#DEDEDE')
 for i in range(1, len(df_aggr_y.columns)-1):
     ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i-1], color=_COLORS[i])
 for i in range(0, len(df_aggr_y.index)):
@@ -554,7 +555,6 @@ for tick in ax.get_yticklabels():
     tick.set_fontname(_FONT)
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 # plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
-ax.axhline(y=0, color='#DEDEDE')
 plt.title('Sentiment score over time, by topics', **csfont)
 
 for fmt in ['png', 'pdf', 'svg']:
@@ -597,6 +597,7 @@ max_frequency = np.array(max_frequency[1:-1]).max()
 # Graph line by year
 fig = plt.figure(figsize=(10, 5))
 ax = fig.add_axes([0.1, 0.05, .71, .9]) # [left, bottom, width, height]
+ax.axhline(y=0, color='#DEDEDE')
 for i in range(1, len(df_aggr_y.columns)-1):
     ax.plot(df_aggr_y.iloc[:, i], marker='.', label=topics[i-1], color=_COLORS[i])
 for i in range(0, len(df_aggr_y.index)):
@@ -616,7 +617,6 @@ for tick in ax.get_yticklabels():
     tick.set_fontname(_FONT)
 # ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 # plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
-ax.axhline(y=0, color='#DEDEDE')
 
 for fmt in ['png', 'pdf', 'svg']:
     plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_y_FINAL_events.{}'.format(sent,
