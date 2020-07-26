@@ -26,6 +26,9 @@ NEW Graph 3.1: Frequency analysis, publication trend of topics, over time (Frits
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+# Plot title
+_PLOTTITLE = False
+
 # Specify font
 _FONT = 'Arial'
 csfont = {'fontname': _FONT, 'size': 16}
@@ -81,9 +84,21 @@ df_long['month'] = pandas.to_datetime(df_long['month'], format='%Y-%m')
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
+# actual number of articles with sentiment score and assigned dominant topic
+print('Number of actual articles ({} to {}) with sentiment score and assigned dominant topic: {}'.format(
+    df_long.year.min(),
+    df_long.year.max(),
+    df_long.DomTopic_arti_arti_id.__len__()))
+
 # select date range
 df_long = df_long[(df_long['month'] >= '2009-1-1')]
 df_long = df_long[(df_long['month'] <= '2020-1-1')]
+
+# actual number of articles with sentiment score and assigned dominant topic
+print('Number of actual articles ({} to {}) with sentiment score and assigned dominant topic: {}'.format(
+    df_long.year.min(),
+    df_long.year.max(),
+    df_long.DomTopic_arti_arti_id.__len__()))
 
 # replace everything in brackets from Newspaper
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
@@ -119,7 +134,7 @@ for tick in ax.get_yticklabels():
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
 ax.axhline(y=0, color='#DEDEDE')
-plt.title('Sentiment score over time, by topics', **csfont)
+if _PLOTTITLE: plt.title('Sentiment score over time, by topics', **csfont)
 for fmt in ['png', 'pdf', 'svg']:
     plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y_FINAL.{}'.format(sent,
                                                                                                p['currmodel'],
@@ -145,7 +160,7 @@ fig = plt.figure(figsize=(7, 5))
 ax = fig.add_axes([0.1, 0.05, .85, .85]) # [left, bottom, width, height]
 ax.bar(df_senti_freq_y.iloc[:,0], df_senti_freq_y.iloc[:, 1], color=_COLORS[1], width=width)
 ax.set_ylabel('frequency', **csfont_axis)
-ax.set_title('Absolute frequency of articles over time', **csfont)
+if _PLOTTITLE: ax.set_title('Absolute frequency of articles over time', **csfont)
 ax.xaxis.set_ticks(np.arange(df_senti_freq_y.iloc[:,0].min(), df_senti_freq_y.iloc[:,0].max()+1, 1))
 # Access bars
 rects = ax.patches
@@ -195,7 +210,7 @@ ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=leg
 ax.set_xticks(range(len(df_aggr_y.index)))
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 ax.set_ylabel('frequency', **csfont_axis)
-plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
+if _PLOTTITLE: plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
 # Set axis font
 for tick in ax.get_xticklabels():
     tick.set_fontname(_FONT)
@@ -273,7 +288,7 @@ for tick in ax.get_yticklabels():
     tick.set_fontname(_FONT)
 ax.set_xticklabels([str(x) for x in df_publishers_bytopics_t.columns[1:]], **csfont_axis)
 plt.tight_layout()
-plt.title('Topics by publishers', **csfont)
+if _PLOTTITLE: plt.title('Topics by publishers', **csfont)
 # Set axis font
 for tick in ax.get_xticklabels():
     tick.set_fontname(_FONT)
@@ -326,7 +341,7 @@ plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
 plt.ylim(-0.04, 0.1)
 
 ax.axhline(y=0, color='#DEDEDE')
-plt.title('Sentiment score over time, by topics', **csfont)
+if _PLOTTITLE: plt.title('Sentiment score over time, by topics', **csfont)
 for fmt in ['png', 'pdf', 'svg']:
     plt.savefig(path_project + 'graph/{}/model_{}/{}/01a_sentiscore_bytopics_y_FINAL.{}'.format(sent,
                                                                                                p['currmodel'],
@@ -353,7 +368,7 @@ for tick in ax.get_yticklabels():
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
 ax.axhline(y=0, color='#DEDEDE')
-plt.title('Sentiment score over time, by topics', **csfont)
+# plt.title('Sentiment score over time, by topics', **csfont)
 for fmt in ['png', 'pdf', 'svg']:
     plt.savefig(path_project + 'graph/{}/model_{}/{}/01b_sentiscore_bytopics_y_FINAL.{}'.format(sent,
                                                                                                p['currmodel'],
@@ -389,7 +404,7 @@ ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=leg
 ax.set_xticks(range(len(df_aggr_y.index)))
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 ax.set_ylabel('frequency', **csfont_axis)
-plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
+if _PLOTTITLE: plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
 # Set axis font
 for tick in ax.get_xticklabels():
     tick.set_fontname(_FONT)
@@ -417,7 +432,7 @@ ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=leg
 ax.set_xticks(range(len(df_aggr_y.index)))
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 ax.set_ylabel('frequency', **csfont_axis)
-plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
+if _PLOTTITLE: plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
 # Set axis font
 for tick in ax.get_xticklabels():
     tick.set_fontname(_FONT)
@@ -495,7 +510,7 @@ plt.xlabel('Newspaper')
 # Custom y axis
 plt.ylabel("percentage shares in topics")
 plt.tight_layout()
-plt.title('Topics by selected publishers')
+if _PLOTTITLE: plt.title('Topics by selected publishers')
 
 for fmt in ['png', 'pdf', 'svg']:
     plt.savefig(path_project + 'graph/{}/model_{}/{}/07_topics_by_publishers_stacked_FINAL.{}'.format(sent,
@@ -555,7 +570,7 @@ for tick in ax.get_yticklabels():
     tick.set_fontname(_FONT)
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values], **csfont_axis)
 # plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
-plt.title('Sentiment score over time, by topics', **csfont)
+if _PLOTTITLE: plt.title('Sentiment score over time, by topics', **csfont)
 
 for fmt in ['png', 'pdf', 'svg']:
     plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y_FINAL_events.{}'.format(sent,
@@ -609,7 +624,7 @@ ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=leg
 ax.set_xticks(range(len(df_aggr_y.index)))
 ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 ax.set_ylabel('frequency', **csfont_axis)
-plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
+if _PLOTTITLE: plt.title('Absolute frequency of articles with sentiment score over time, by topics', **csfont)
 # Set axis font
 for tick in ax.get_xticklabels():
     tick.set_fontname(_FONT)
