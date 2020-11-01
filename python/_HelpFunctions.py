@@ -4,6 +4,7 @@ from python.params import params as p
 def filter_sentiment_params(df, df_sentiment_list):
     """
     filters out Sentiment params specified in params.py, this filter is used only in 06*_LDA_Plots_*.py
+    Filters: 'drop_sentence_lenght', 'drop_article_lenght', 'drop_prob_below', 'drop_senti_below', 'drop_senti_above'
     :param df: lda_results_*_l.csv
     :param df_sentiment_list: 'sepldefault', 'seplmodified', 'sentiwsdefault', 'sentifinal'
     :return: filtered pandas df
