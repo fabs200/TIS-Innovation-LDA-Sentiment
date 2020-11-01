@@ -6,7 +6,7 @@ import numpy as np
 
 """
 ---------------------
-LDAAnalysis.py
+05_LDAAnalysis.py
 ---------------------
 * Run estimation lda
 * Extract dominant topics

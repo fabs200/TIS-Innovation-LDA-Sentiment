@@ -11,6 +11,27 @@ from gensim.models.coherencemodel import CoherenceModel
 from gensim.test.utils import datapath
 import matplotlib.pyplot as plt
 
+
+def Load_Sentiment_final():
+    """
+    Reads in final SentimentList_final from 02_ProcessSentimentlists.py.
+    This will be our final dictionary of phrases with sentiments.
+    Load it and prepare for GetSentiments()
+
+    :return: Pandas dataframe with phrs and sentiments
+    """
+    # Read in final Sentimentlist
+    df_sentiment_final = pandas.read_csv(path_data + 'Sentiment/Sentimentlist_final.csv', sep=',')
+
+    # convert all words to lower case
+    df_sentiment_final['phrase'] = [i.lower() for i in df_sentiment_final['phrase']]
+
+    df_sentiment_final['phrase_sorted'] = df_sentiment_final['phrase'].apply(lambda x: ' '.join(sorted(x.split())))
+    print('Sentiment final list loaded')
+
+    return df_sentiment_final
+
+
 def Load_SePL(type='default'):
     """
     Reads in SePL file, prepares phrases and sorts them; this is required be be run before MakeCandidates() and
@@ -21,10 +42,10 @@ def Load_SePL(type='default'):
     """
     if type == 'modified':
         # Read in modified SePL
-        df_sepl = pandas.read_csv(path_data + 'SePL/SePL_v1.3_negated_modified.csv', sep=';')
+        df_sepl = pandas.read_csv(path_data + 'Sentiment/SePL/SePL_v1.3_negated_modified.csv', sep=';')
     else:
         # Read in default SePL
-        df_sepl = pandas.read_csv(path_data + 'SePL/SePL_v1.1.csv', sep=';')
+        df_sepl = pandas.read_csv(path_data + 'Sentiment/SePL/SePL_v1.1.csv', sep=';')
 
     # convert all words to lower case
     df_sepl['phrase'] = [i.lower() for i in df_sepl['phrase']]
@@ -34,7 +55,9 @@ def Load_SePL(type='default'):
 
     return df_sepl
 
+
 nlp2 = spacy.load('de_core_news_md', disable=['ner', 'parser'])
+
 
 def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation_list=None):
     """
@@ -84,7 +107,7 @@ def MakeCandidates(sent, df_sepl=None, get='candidates', verbose=False, negation
             for token in s:
                 if verbose: print(token.text, token.tag_)
                 if (token.text in negation_list):
-                # if (token.tag_.startswith(('PIAT', 'PIS', 'PTKNEG'))) or (token.text in negation_list):
+                    # if (token.tag_.startswith(('PIAT', 'PIS', 'PTKNEG'))) or (token.text in negation_list):
                     c.append(token.text)
             candidates.append(c)
         if verbose: print('final negations:', candidates)
@@ -121,32 +144,35 @@ def ReadSePLSentiments(candidates, df_sepl=None, verbose=False):
             if df_sepl['phrase_sorted'].str.contains(word).any():
                 stack.append(word)
                 if verbose: print(word, '|| stack without neighbours:', stack)
-                for i in c[index+1:]:
+                for i in c[index + 1:]:
                     stack.append(i)
                     if verbose: print(word, '|| stack with right neighbours:', stack)
 
                 # select slice of left neigbours and reverse it with second bracket
                 for x in c[:index][::-1]:
                     stack.append(x)
-                    if verbose: print (word, '|| stack with left neighbours:', stack)
+                    if verbose: print(word, '|| stack with left neighbours:', stack)
 
                 if verbose: print('final stack:', stack)
 
                 # loop over stack and check whether word in SePL, if not, delete el from stack, if yes, extract sentiment,
                 # delete el from stack and continue with remaining el in stack
-                while len(stack)>0:
+                while len(stack) > 0:
                     phr = sorted(stack)
                     phr_string = ' '.join(phr)
                     if verbose: print('phr_string:', phr_string)
 
                     # if el of stack found in SePL, extract sentiment and save phrases
-                    if (df_sepl['phrase_sorted'] == phr_string).any() and phr_string not in c_phrs and set(tagged_phr_list).intersection(phr).__len__() == 0:
+                    if (df_sepl['phrase_sorted'] == phr_string).any() and phr_string not in c_phrs and set(
+                            tagged_phr_list).intersection(phr).__len__() == 0:
                         # extract sentiment, SePL sometimes contains non-unique entries, thus get the highest value
                         # if there are more than 1 sentiments
                         try:
-                            sentiment_score = df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'opinion_value'].item()
+                            sentiment_score = df_sepl.loc[
+                                df_sepl['phrase_sorted'] == phr_string, 'sentiment'].item()
                         except ValueError:
-                            sentiment_score = max(df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'opinion_value'].to_list())
+                            sentiment_score = max(
+                                df_sepl.loc[df_sepl['phrase_sorted'] == phr_string, 'sentiment'].to_list())
                         c_sentiments.append(sentiment_score)
                         if verbose: print('phrase found! sentiment is', sentiment_score)
                         # save phr
@@ -250,7 +276,7 @@ def ProcessSePLphrases(sepl_phrase):
     return processed_sepl_phrases
 
 
-def GetSentimentScores(listOfSentenceparts, df_sepl):
+def GetSentimentScores(listOfSentenceparts, sentiment_list):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
     Note: Apply this function on the final long file only!
@@ -272,13 +298,12 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     listOfSentiScores, listOfseplphrs = [], []
 
     for sentpart in listOfSentenceparts:
-
         """
         first step: identification of suitable candidates for opinionated phrases suitable candidates: 
         nouns, adjectives, adverbs and verbs
         """
-        candidates = MakeCandidates(sentpart, df_sepl, get='candidates')
-        negation_candidates = MakeCandidates(sentpart, df_sepl, get='negation')
+        candidates = MakeCandidates(sentpart, sentiment_list, get='candidates')
+        negation_candidates = MakeCandidates(sentpart, sentiment_list, get='negation')
 
         """
         second step: extraction of possible opinion-bearing phrases from a candidate starting from a candidate, 
@@ -289,7 +314,7 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
         the phrase.
         """
 
-        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, df_sepl)
+        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, sentiment_list)
 
         """
         third step: compare extracted phrases with SePL After all phrases have been extracted, they are compared with the 
@@ -313,7 +338,8 @@ def GetSentimentScores(listOfSentenceparts, df_sepl):
     # Retrieve statistics
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
 
-    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfseplphrs
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'sentiscores': listOfSentiScores,
+            'phrs': listOfseplphrs}
 
 
 def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_topics=5, num_words=10,
@@ -349,10 +375,9 @@ def EstimateLDA(dataframecolumn, type=p['type'], no_below=50, no_above=0.9, num_
     # Bag-of-words representation of the documents
     corpus_lda = [dict_lda.doc2bow(doc) for doc in docsforlda]
 
-    if type=='tfidf':
+    if type == 'tfidf':
         tfidf = TfidfModel(corpus_lda)
         corpus_lda = tfidf[corpus_lda]
-
 
     # Make a index to word dictionary
     temp = dict_lda[0]  # This is only to "load" the dictionary
@@ -425,7 +450,7 @@ def GetDomTopic(doc, lda_model, dict_lda):
     """
     Uses a previously trained lda model to estimate the dominant topic of a document
 
-    :param doc: 1 document as a string (e.g. articles_text, capitalized nouns, from PreprocessingArticles.py)
+    :param doc: 1 document as a string (e.g. articles_text, capitalized nouns, from 03a_PreprocessingArticles.py)
     :param lda_model: estimated LDA model
     :return: dominant topic id and its probability as a tupel
     """
@@ -465,7 +490,7 @@ def MakeTopicsBOW(topic, dict_lda):
         # split topic probability and word
         prob, word = word.split('*')
         # get rid of spaces
-        word = word.replace(" ","").replace('"','')
+        word = word.replace(" ", "").replace('"', '')
         # map topic words to dictionary id
         word_id = dict_lda.doc2bow([word])
         # append word_id and topic probability
@@ -504,7 +529,7 @@ def LDAHellinger(lda_model, dict_lda, num_topics=None, num_words=10):
         sum = sum + dis
     print('computed average Hellinger distance')
 
-    return sum/lda_model.num_topics
+    return sum / lda_model.num_topics
 
 
 def LDAJaccard(lda_model, topn=10):
@@ -549,7 +574,7 @@ def LDACoherence(lda_model, corpus, dictionary, texts):
     # we use coherence measure c_v as suggested by Röder et al. 2015, because it has the highest correlation
     # with human interpretability
 
-    #lda_model_cm = CoherenceModel(model=lda_model, corpus=corpus, dictionary=dictionary, coherence="u_mass")
+    # lda_model_cm = CoherenceModel(model=lda_model, corpus=corpus, dictionary=dictionary, coherence="u_mass")
     lda_model_cm = CoherenceModel(model=lda_model, texts=texts, dictionary=dictionary, coherence='c_v')
     print(lda_model_cm.get_coherence())
 
@@ -596,7 +621,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         metric = []
         metric.append(m)
 
-    # create metrics lists where values will be saved to 
+    # create metrics lists where values will be saved to
     jaccard_values, hellinger_values, coherence_values, perplexity_values = [], [], [], []
 
     model_list, metric_results = [], {}
@@ -620,44 +645,45 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
         lda_model, docsforlda, dict_lda, corpus_lda = lda_results[0], lda_results[1], lda_results[2], lda_results[3]
         model_list.append(lda_model)
 
-    #     if metric == 'jaccard':
-    #         metric_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
-    #     if metric == 'hellinger':
-    #         metric_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
-    #     if metric == 'coherence':
-    #         metric_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
-    #     if metric == 'perplexity':
-    #         metric_values.append(lda_model.log_perplexity(corpus_lda))
+        #     if metric == 'jaccard':
+        #         metric_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
+        #     if metric == 'hellinger':
+        #         metric_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
+        #     if metric == 'coherence':
+        #         metric_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
+        #     if metric == 'perplexity':
+        #         metric_values.append(lda_model.log_perplexity(corpus_lda))
 
-    #     if verbose: print('num_topics: {}, metric: {}, metric values: {}'.format(num_topics, metric, metric_values))
+        #     if verbose: print('num_topics: {}, metric: {}, metric values: {}'.format(num_topics, metric, metric_values))
 
-    # if display_plot:
-    #     fig = plt.figure()
-    #     ax = plt.subplot(111)
-    #     ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
-    #             label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(
-    #                 metric, type, p['POStag'],
-    #                 str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)),
-    #                 alpha, eta, code))
-    #     ax.legend()
-    #     if save_plot:
-    #         plt.savefig(path_project +
-    #                     'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], metric)+
-    #                     'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
-    #                                                                           str(round(no_above, ndigits=3)),
-    #                                                                           alpha, eta))
-    #     plt.show(block=False)
-    #     time.sleep(1.5)
-    #     plt.close('all')
-
+        # if display_plot:
+        #     fig = plt.figure()
+        #     ax = plt.subplot(111)
+        #     ax.plot(range(topics_start, topics_limit, topics_step), metric_values,
+        #             label='metric: {}, type="{}", POStag="{}",\nno_below={}, no_above={}, alpha="{}", eta="{}"'.format(
+        #                 metric, type, p['POStag'],
+        #                 str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)),
+        #                 alpha, eta, code))
+        #     ax.legend()
+        #     if save_plot:
+        #         plt.savefig(path_project +
+        #                     'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], metric)+
+        #                     'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
+        #                                                                           str(round(no_above, ndigits=3)),
+        #                                                                           alpha, eta))
+        #     plt.show(block=False)
+        #     time.sleep(1.5)
+        #     plt.close('all')
 
         for m in metric:
             if m == 'jaccard':
                 jaccard_values.append(LDAJaccard(topn=topn, lda_model=lda_model))
             if m == 'hellinger':
-                hellinger_values.append(LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
+                hellinger_values.append(
+                    LDAHellinger(num_words=num_words, lda_model=lda_model, num_topics=None, dict_lda=dict_lda))
             if m == 'coherence':
-                coherence_values.append(LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
+                coherence_values.append(
+                    LDACoherence(lda_model=lda_model, corpus=corpus_lda, dictionary=dict_lda, texts=docsforlda))
             if m == 'perplexity':
                 perplexity_values.append(lda_model.log_perplexity(corpus_lda))
 
@@ -667,18 +693,23 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
     if display_plot:
 
         for m in metric:
-            
+
             # jaccard
             if m == 'jaccard':
                 fig = plt.figure()
                 ax = plt.subplot(111)
                 ax.plot(range(topics_start, topics_limit, topics_step), jaccard_values,
-                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format('jaccard', type, p['POStag'], str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format(
+                            'jaccard', type, p['POStag'], str(round(no_below, ndigits=2)),
+                            str(round(no_above, ndigits=3)), alpha, eta))
                 ax.legend()
                 if save_plot:
                     plt.savefig(path_project +
-                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], 'jaccard')+
-                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'],
+                                                                              'jaccard') +
+                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
+                                                                                      str(round(no_above, ndigits=3)),
+                                                                                      alpha, eta))
                 plt.show(block=False)
                 time.sleep(1)
                 plt.close('all')
@@ -688,12 +719,17 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
                 fig = plt.figure()
                 ax = plt.subplot(111)
                 ax.plot(range(topics_start, topics_limit, topics_step), hellinger_values,
-                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format('hellinger', type, p['POStag'], str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format(
+                            'hellinger', type, p['POStag'], str(round(no_below, ndigits=2)),
+                            str(round(no_above, ndigits=3)), alpha, eta))
                 ax.legend()
                 if save_plot:
                     plt.savefig(path_project +
-                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], 'hellinger')+
-                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'],
+                                                                              'hellinger') +
+                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
+                                                                                      str(round(no_above, ndigits=3)),
+                                                                                      alpha, eta))
                 plt.show(block=False)
                 time.sleep(1)
                 plt.close('all')
@@ -703,12 +739,17 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
                 fig = plt.figure()
                 ax = plt.subplot(111)
                 ax.plot(range(topics_start, topics_limit, topics_step), coherence_values,
-                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format('coherence', type, p['POStag'], str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format(
+                            'coherence', type, p['POStag'], str(round(no_below, ndigits=2)),
+                            str(round(no_above, ndigits=3)), alpha, eta))
                 ax.legend()
                 if save_plot:
                     plt.savefig(path_project +
-                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], 'coherence')+
-                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'],
+                                                                              'coherence') +
+                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
+                                                                                      str(round(no_above, ndigits=3)),
+                                                                                      alpha, eta))
                 plt.show(block=False)
                 time.sleep(1)
                 plt.close('all')
@@ -718,25 +759,30 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
                 fig = plt.figure()
                 ax = plt.subplot(111)
                 ax.plot(range(topics_start, topics_limit, topics_step), perplexity_values,
-                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format('perplexity', type, p['POStag'], str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                        label='metric: {}, type={}, POStag={},\nno_below={}, no_above={}, alpha={}, eta={}'.format(
+                            'perplexity', type, p['POStag'], str(round(no_below, ndigits=2)),
+                            str(round(no_above, ndigits=3)), alpha, eta))
                 ax.legend()
                 if save_plot:
                     plt.savefig(path_project +
-                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'], 'perplexity')+
-                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)), str(round(no_above, ndigits=3)), alpha, eta))
+                                'calibration/{}/calibration_{}_{}/{}/'.format(p['lda_level_fit'][0], type, p['POStag'],
+                                                                              'perplexity') +
+                                'Figure_nobelow{}_noabove{}_alpha{}_eta{}.png'.format(str(round(no_below, ndigits=2)),
+                                                                                      str(round(no_above, ndigits=3)),
+                                                                                      alpha, eta))
                 plt.show(block=False)
                 time.sleep(1)
                 plt.close('all')
 
     # save metric results
     for m in metric:
-        if m=='jaccard':
+        if m == 'jaccard':
             metric_results['jaccard'] = jaccard_values
-        if m=='hellinger':
+        if m == 'hellinger':
             metric_results['hellinger'] = hellinger_values
-        if m=='coherence':
+        if m == 'coherence':
             metric_results['coherence'] = coherence_values
-        if m=='perplexity':
+        if m == 'perplexity':
             metric_results['perplexity'] = perplexity_values
 
     return model_list, metric_results
@@ -746,6 +792,7 @@ def LDACalibration(dataframecolumn, topics_start=1, topics_limit=20, topics_step
 ################## Sentiment score functions to apply to long files ##################
 """
 
+
 def ProcessforSentiment_l(sent):
     """
     Process sentences before running Sentiment Analysis, replace ;: KON by , and drop .!? and lemmatize
@@ -754,11 +801,12 @@ def ProcessforSentiment_l(sent):
         [['sentencepart1', 'sentencepart2', ...], [], [], ...]
         which are split by ,
     """
-    listOfSents = [sent] #new line
+    listOfSents = [sent]  # new line
     temp_article, processed_article, final_article = [], [], []
     for sent in listOfSents:
         # First drop .?! and brackets
-        temp_sent = sent.replace('.', '').replace('!', '').replace('?', '').replace('(', '').replace(')', '').replace('[', '').replace(']', '')
+        temp_sent = sent.replace('.', '').replace('!', '').replace('?', '').replace('(', '').replace(')', '').replace(
+            '[', '').replace(']', '')
         # Replace :; by ,
         temp_sent = temp_sent.replace(';', ',').replace(':', ',')
         # apply nlp2 to temp_sent
@@ -766,7 +814,7 @@ def ProcessforSentiment_l(sent):
         # process each token and 'translate' konjunction or ;: to ,
         temp_sent = []
         for token in temp_sent_nlp:
-            if token.tag_=='KON':
+            if token.tag_ == 'KON':
                 temp_sent.append(',')
             else:
                 temp_sent.append(token.text)
@@ -803,7 +851,7 @@ def ProcessforSentiment_l(sent):
     return final_article
 
 
-def GetSentimentScores_l(sent, df_sepl, verbose=False):
+def GetSentimentScores_l(sent, sentiment_list, verbose=False):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
     Note: Apply this function on the final long file only!
@@ -823,17 +871,16 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
     """
     if verbose: print('### sent:', sent)
     listOfSentenceparts = ProcessforSentiment_l(sent)
-    listOfSentiScores, listOfseplphrs = [], []
+    listOfSentiScores, listOfphrs = [], []
 
     for sentpart in listOfSentenceparts:
-
         """
         first step: identification of suitable candidates for opinionated phrases suitable candidates: 
         nouns, adjectives, adverbs and verbs
         """
         # if verbose: print('\tsentpart:', sentpart, end='\r')
-        candidates = MakeCandidates(sentpart, df_sepl, get='candidates')
-        negation_candidates = MakeCandidates(sentpart, df_sepl, get='negation')
+        candidates = MakeCandidates(sentpart, sentiment_list, get='candidates')
+        negation_candidates = MakeCandidates(sentpart, sentiment_list, get='negation')
         # if verbose: print('\tcandidates:', candidates, end='\r')
         # if verbose: print('\tnegation_candidates:', negation_candidates)
         """
@@ -845,7 +892,7 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
         the phrase.
         """
 
-        raw_sentimentscores, raw_sepl_phrase = ReadSePLSentiments(candidates, df_sepl)
+        raw_sentimentscores, raw_phrs = ReadSePLSentiments(candidates, sentiment_list)
         # if verbose: print('\traw_sentimentscores:', raw_sentimentscores, 'raw_sepl_phrase:', raw_sepl_phrase)
 
         """
@@ -855,16 +902,16 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
         """
 
         # Make sure sepl_phrase, negation_candidates, sentimentscores are of same size
-        assert len(raw_sepl_phrase) == len(raw_sentimentscores) == len(candidates) == len(negation_candidates)
+        assert len(raw_phrs) == len(raw_sentimentscores) == len(candidates) == len(negation_candidates)
 
         # export processed, flattened lists
-        sentimentscores = ProcessSentimentScores(raw_sepl_phrase, negation_candidates, raw_sentimentscores)
+        sentimentscores = ProcessSentimentScores(raw_phrs, negation_candidates, raw_sentimentscores)
         # if verbose: print('\tsentimentscores:', sentimentscores, end='\r')
-        sepl_phrase = ProcessSePLphrases(raw_sepl_phrase)
+        final_phrs = ProcessSePLphrases(raw_phrs)
         # if verbose: print('\tsepl_phrase:', sepl_phrase)
 
         listOfSentiScores.append(sentimentscores)
-        listOfseplphrs.append(sepl_phrase)
+        listOfphrs.append(final_phrs)
 
     # create flat, non-empty list with scores
     sentiscores = np.array([i for i in listOfSentiScores if i])
@@ -873,12 +920,13 @@ def GetSentimentScores_l(sent, df_sepl, verbose=False):
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
     if verbose: print('\tstats:', ss_mean, ss_median, ss_n, ss_sd, end='\n\n')
 
-    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'SentiScores': listOfSentiScores, 'seplphrs': listOfseplphrs}
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'sentiscores': listOfSentiScores,
+            'phrs': listOfphrs}
 
 
 #######################################################################################################################
 ######################################################################################################################
-#Functions for SentiWS/simple word lists
+# Functions for SentiWS/simple word lists
 
 def Load_SentiWS(type='default'):
     """
@@ -892,10 +940,10 @@ def Load_SentiWS(type='default'):
     """
     if type == 'modified':
         # Read in modified SentiWS
-        df_SentiWS = pandas.read_csv(path_data + 'SentiWS/SentiWS_final_v1.x_negated_modified.csv', sep=';')
+        df_SentiWS = pandas.read_csv(path_data + 'Sentiment/SentiWS/SentiWS_final_v1.x_negated_modified.csv', sep=';')
     else:
         # Read in default SentiWS
-        df_SentiWS = pandas.read_csv(path_data + 'SentiWS/SentiWS_final.csv', sep=';')
+        df_SentiWS = pandas.read_csv(path_data + 'Sentiment/SentiWS/SentiWS_final.csv', sep=';')
 
     # convert all words to lower case
     df_SentiWS['word'] = [i.lower() for i in df_SentiWS['word']]
@@ -906,7 +954,6 @@ def Load_SentiWS(type='default'):
 
 
 def MakeCandidatesWS(sent, df_SentiWS=None, get='candidates', verbose=False, negation_list=None):
-
     sent = sent.split(',')
     sent = [nlp2(s) for s in sent]
     candidates = []
@@ -927,7 +974,7 @@ def MakeCandidatesWS(sent, df_SentiWS=None, get='candidates', verbose=False, neg
             c = []
             # loop over tokens in sentences, get tags and prepare
             for token in s:
-               # if verbose: print('token:', token.text, '->', token.tag_)
+                # if verbose: print('token:', token.text, '->', token.tag_)
                 if token.tag_.startswith(('NN', 'V', 'ADV', 'ADJ')) or token.text in negation_list:
                     if df_SentiWS['word'].str.contains(r'(?:\s|^){}(?:\s|$)'.format(token.text)).any():
                         c.append(token.text)
@@ -942,9 +989,9 @@ def MakeCandidatesWS(sent, df_SentiWS=None, get='candidates', verbose=False, neg
             c = []
             # loop over tokens in sentence part
             for token in s:
-               # if verbose: print(token.text, token.tag_)
+                # if verbose: print(token.text, token.tag_)
                 if (token.text in negation_list):
-                # if (token.tag_.startswith(('PIAT', 'PIS', 'PTKNEG'))) or (token.text in negation_list):
+                    # if (token.tag_.startswith(('PIAT', 'PIS', 'PTKNEG'))) or (token.text in negation_list):
                     c.append(token.text)
             candidates.append(c)
         if verbose: print('final negations:', candidates)
@@ -976,7 +1023,7 @@ def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
                 # if there are more than 1 sentiments
                 try:
                     sentiment_score = df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].item()
-                    print(sentiment_score, word)
+                    if verbose: print(sentiment_score, word)
                 except ValueError:
                     sentiment_score = max(df_SentiWS.loc[df_SentiWS['word'] == word, 'sentiment'].to_list())
                 c_sentiments.append(sentiment_score)
@@ -992,7 +1039,6 @@ def ReadSentiWSSentiments(candidates, df_SentiWS=None, verbose=False):
     if verbose: print('final list of phrs:', final_phrs)
 
     return final_sentiments, final_phrs
-
 
 
 def ProcessSentimentScoresWS(WS_phrase, negation_candidates, sentimentscores, negation_list=None):
@@ -1092,7 +1138,6 @@ def GetSentimentScoresWS(listOfSentenceparts, df_SentiWS):
     listOfSentiScores, listOfWSphrs = [], []
 
     for sentpart in listOfSentenceparts:
-
         """
         first step: identification of suitable candidates for opinionated phrases suitable candidates:
         nouns, adjectives, adverbs and verbs
@@ -1135,7 +1180,6 @@ def GetSentimentScoresWS(listOfSentenceparts, df_SentiWS):
     return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd}, listOfSentiScores, listOfWSphrs
 
 
-
 def GetSentimentScoresWS_l(sent, df_SentiWS, verbose=False):
     """
     Run this function on each article (sentence- or paragraph-level) and get final sentiment scores.
@@ -1159,7 +1203,6 @@ def GetSentimentScoresWS_l(sent, df_SentiWS, verbose=False):
     listOfSentiScores, listOfWSphrs = [], []
 
     for sentpart in listOfSentenceparts:
-
         """
         first step: identification of suitable candidates for opinionated phrases suitable candidates:
         nouns, adjectives, adverbs and verbs
@@ -1203,5 +1246,5 @@ def GetSentimentScoresWS_l(sent, df_SentiWS, verbose=False):
     ss_mean, ss_median, ss_n, ss_sd = sentiscores.mean(), np.median(sentiscores), sentiscores.size, sentiscores.std()
     if verbose: print('\tstats:', ss_mean, ss_median, ss_n, ss_sd, end='\n\n')
 
-    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'SentiScores': listOfSentiScores, 'WSphrs': listOfWSphrs}
-
+    return {'mean': ss_mean, 'median': ss_median, 'n': ss_n, 'sd': ss_sd, 'sentiscores': listOfSentiScores,
+            'phrs': listOfWSphrs}

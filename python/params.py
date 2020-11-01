@@ -1,5 +1,5 @@
 """
-Specify parameters here, adjust configurations for lda and for calibration
+Specify parameters here, adjust configurations for lda, for its calibration and for adjusting lda-sentiment-plots
 """
 
 import numpy as np
@@ -8,6 +8,27 @@ np.random.seed(1) # setting random seed to get the same results each time
 
 params = {
 
+    ### Sentiment params
+
+    # select sentiment type ['sepldefault', 'seplmodified', 'sentiwsdefault', 'sentifinal']
+    'sentiment_list': 'sentifinal',
+
+    # drop short articles (int or None)
+    'drop_article_lenght': None, #=2.5% percentile, We don't use this filter as we are also not filtering before lda
+
+    # drop short sentences (int or None)
+    'drop_sentence_lenght': None, #=2.5% percentile, We don't use this filter as we are also not filtering before lda
+
+    # drop articles with low probability of assigned dominant topic (decimal number between 0 and 1 or None)
+    'drop_prob_below': None, #=2.5% percentile, hardly any difference
+
+    #drop sentences with (relatively) neutral sentiment score (either =0 or in range(-.1, .1), or set None
+    'drop_senti_below': None, # hardly any difference
+    'drop_senti_above': None, # hardly any difference
+
+
+    ### LDA pramas
+    
     # Specify POStag type
     'POStag':  'NNV',
 
@@ -15,7 +36,7 @@ params = {
     'lda_level_fit':        ['article'], # article, paragraph, sentence
 
     # Specify of which level get dominant topics
-    'lda_level_domtopic':     ['article', 'sentence'], # article, paragraph, sentence
+    'lda_level_domtopic':     ['article', 'paragraph', 'sentence'], # article, paragraph, sentence
 
     # EstimateLDA() parameters (Note: below parameters are passed to LdaModel())
     'type':         'tfidf',

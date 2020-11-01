@@ -1,5 +1,6 @@
 import pandas, os, time, dtale
 from python.ConfigUser import path_data, path_project
+from python._HelpFunctions import filter_sentiment_params
 from python.params import params as p
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,10 +8,10 @@ import warnings
 
 """
 ------------------------------------------
-LDAPlots_DomTopicArticleLvl.py - Overview of graphs
+06a_LDAPlots_DomTopicParagraphLvl.py - Overview of graphs
 ------------------------------------------
 
-### Run this script if 'article' is specified in lda_level_domtopic
+### Run this script if 'paragraph' is specified in lda_level_domtopic
 
 Graph 1: Sentiment score over time, by topics
 Graph 2: Frequency analysis, publication trend of articles, over time (Fritsche, Mejia)
@@ -19,7 +20,7 @@ Graph 4: Frequency analysis, publisher bias, over time (Mejia)
 Graph 5: Frequency analysis, Annual total with 3-years-average, by topic, over time (Melton)
 Graph 6: Frequency analysis, barplot, frequency of published articles of top publishers
 Graph 7: Barplot percentage shares of topics for selected publishers (stacked/not stacked) (Mejia)
-Graph 8: Histogram Sentiment
+Graph 8: Histogram SentimentGraph 3
 Graph 9: Histogram Sentiment by year
 Graph 10: Boxplot sentiments by year
 Graph 11: Barplot, how many articles have a sentiment score and how many not ...
@@ -37,53 +38,47 @@ Graph: Scatterplot number articles vs. sentiment polarity, over topics (Mejia) T
 Graph: Trends in sentiment polarity, frequency of 3 sentiments (pos, neg, neutr), over time (Mejia)
 """
 
-# Todo: look up/implement LDAvis
-# https://www.machinelearningplus.com/nlp/topic-modeling-visualization-how-to-present-results-lda-models/
+# select sentiment type ['sepldefault', 'seplmodified', 'sentiwsdefault', 'sentifinal']
+sent = 'sentifinal'
 
 # Ignore some warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # unpack POStag type, lda_levels to run lda on, lda_level to get domtopic from
-POStag, lda_level_fit = p['POStag'], p['lda_level_fit']
-if 'article' in p['lda_level_domtopic']: lda_level_domtopic = 'article'
+POStag, lda_level_fit, sent = p['POStag'], p['lda_level_fit'], p['sentiment_list']
+if 'paragraph' in p['lda_level_domtopic']: lda_level_domtopic = 'paragraph'
 
 # create folder in graphs with currmodel
-os.makedirs(path_project + "graph/model_{}".format(p['currmodel']), exist_ok=True)
+os.makedirs(path_project + "graph/{}/model_{}".format(sent, p['currmodel']), exist_ok=True)
 # create folder in currmodel with specified lda_level_domtopic
-os.makedirs(path_project + "graph/model_{}/{}".format(p['currmodel'], lda_level_domtopic), exist_ok=True)
+os.makedirs(path_project + "graph/{}/model_{}/{}".format(sent, p['currmodel'], lda_level_domtopic), exist_ok=True)
 
 # Load long file (sentence-level)
 print('Loading lda_results_{}_l.csv'.format(p['currmodel']))
 df_long = pandas.read_csv(path_data + 'csv/lda_results_{}_l.csv'.format(p['currmodel']), sep='\t', na_filter=False)
 
-# to numeric
-df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
+# Rename target sentiment variable
+df_long = df_long.rename(columns={'ss_{}_mean'.format(sent): 'sentiscore_mean'})
+df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'],errors='coerce')
 
-# calculate average sentiment per article and merge to df_long
-df_long = pandas.merge(df_long.drop('sentiscore_mean', axis=1),
-                       df_long.groupby('Art_ID', as_index=False).sentiscore_mean.mean(),
-                       how='left', on=['Art_ID'])
-
-# Todo: drop neutral sentiment scores (either =0 or in range(-.1, .1) or ...)
+# Filter df_long
+df_long = filter_sentiment_params(df_long, sent)
 
 # Select articles and columns
-df_long = df_long[df_long['Art_unique'] == 1][['DomTopic_arti_arti_id',
-                                               'year', 'quarter', 'month',
-                                               'Newspaper', 'sentiscore_mean', 'articles_text']]
+df_long = df_long[['DomTopic_arti_para_id', 'year', 'quarter', 'month',
+                   'Newspaper', 'sentiscore_mean', 'articles_text', 'paragraphs_{}_for_lda'.format(POStag)]]
 
 # convert dtypes
 df_long['month'] = pandas.to_datetime(df_long['month'], format='%Y-%m')
 df_long['sentiscore_mean'] = pandas.to_numeric(df_long['sentiscore_mean'], errors='coerce')
 
 # select date range
-df_long = df_long[(df_long['month'] >= '2007-1-1')]
+df_long = df_long[(df_long['month'] >= '2009-1-1')]
+df_long = df_long[(df_long['month'] <= '2020-1-1')]
 
 # replace everything in brackets from Newspaper
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
-
-# df_long.to_excel(path_data + 'df_long_tocheckarticles.xlsx')
-
 
 
 """
@@ -91,8 +86,8 @@ df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='
 """
 
 # group by topics and reshape long to wide to make plottable
-df_wide_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
-    index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+df_wide_bytopics = df_long.groupby(['DomTopic_arti_para_id', 'month'])[['sentiscore_mean']].mean().reset_index().pivot(
+    index='month', columns='DomTopic_arti_para_id', values='sentiscore_mean')
 
 # make aggregation available
 df_aggr_m = df_wide_bytopics.groupby(pandas.Grouper(freq='M')).mean()
@@ -102,7 +97,7 @@ df_aggr_y = df_wide_bytopics.groupby(pandas.Grouper(freq='Y')).mean()
 # plot
 # df_aggr_m.plot()
 # df_aggr_q.plot()
-# df_aggr_y.plot()
+df_aggr_y.plot()
 
 # Graph by month
 fig = plt.figure(figsize=(10,5))
@@ -114,7 +109,9 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/01_sentiscore_bytopics_m.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_m.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -130,7 +127,9 @@ plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'],
                                                                                 p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/01_sentiscore_bytopics_q.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_q.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -146,28 +145,15 @@ ax.axhline(linewidth=1, color='grey', alpha=.5)
 plt.title('Sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/01_sentiscore_bytopics_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
 
 
-# import numpy
-# def smoothListGaussian(list, strippedXs=False, degree=5):
-#     window = degree*2-1
-#     weight = numpy.array([1.0]*window)
-#     weightGauss = []
-#     for i in range(window):
-#         i = i-degree+1
-#         frac = i/float(window)
-#         gauss = 1/(numpy.exp((4*(frac))**2))
-#         weightGauss.append(gauss)
-#     weight = numpy.array(weightGauss)*weight
-#     smoothed = [0.0]*(len(list)-window)
-#     for i in range(len(smoothed)):
-#         smoothed[i] = sum(numpy.array(list[i:i+window])*weight)/sum(weight)
-#     return smoothed
 
 
 """
@@ -195,7 +181,7 @@ labels = df_senti_freq_y.iloc[:,1]
 for rect, label in zip(rects, labels):
     ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + 2, label, ha='center', va='bottom')
 
-plt.savefig(path_project + 'graph/model_{}/{}/02_absfreqArt_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/02_absfreqArt_y.png'.format(sent, p['currmodel'], lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -206,8 +192,8 @@ plt.close('all')
 """
 
 # group by topics and reshape long to wide to make plottable
-df_senti_freq_agg = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].count().reset_index()\
-    .pivot(index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_para_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_para_id', values='sentiscore_mean')
 
 # make aggregation available
 df_aggr_m = df_senti_freq_agg.groupby(pandas.Grouper(freq='M')).sum().reset_index()
@@ -248,7 +234,9 @@ for label in ax.xaxis.get_ticklabels():
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/03_absfreqArt_bytopic_m.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_m_.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -271,7 +259,9 @@ for label in ax.xaxis.get_ticklabels():
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/03_absfreqArt_bytopic_q.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_q.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -288,7 +278,9 @@ ax.set_xticklabels([str(x) for x in df_aggr_y.iloc[:, 0].values])
 plt.title('Absolute frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/03_absfreqArt_bytopic_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/03_absfreqArt_bytopic_y.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -372,12 +364,12 @@ plt.title('Average sentiment score by main publishers\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/04a_sentiscore_bypublisher.png'.format(p['currmodel'],
-                                                                                     lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/04a_sentiscore_bypublisher.png'.format(sent,
+                                                                                        p['currmodel'],
+                                                                                        lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
-
 
 
 # Plot Publisher's sentiment score, with Stderr
@@ -402,7 +394,9 @@ plt.title('Average sentiment score of publisher\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/04b_absfreqArt_bytopic_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/04b_absfreqArt_bytopic_y.png'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -413,8 +407,8 @@ plt.close('all')
 """
 
 # group by topics and reshape long to wide to make plottable
-df_senti_freq_agg = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].count().reset_index()\
-    .pivot(index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_para_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_para_id', values='sentiscore_mean')
 
 # make aggregation available
 # df_aggr_m = df_senti_freq_agg.groupby(pandas.Grouper(freq='M')).sum().reset_index()
@@ -466,9 +460,10 @@ for t, topic in enumerate(topics):
               'POStag: {}, frequency: quarterly,\nno_below: {}, no_above: {}'.format(t, p['POStag'],
                                                                                         p['no_below'], p['no_above']))
     plt.tight_layout()
-    plt.savefig(path_project + 'graph/model_{}/{}/05_freq_q_topic{}_withline.png'.format(p['currmodel'],
-                                                                                         lda_level_domtopic,
-                                                                                         str(t)))
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/05_freq_q_topic{}_withline.png'.format(sent,
+                                                                                            p['currmodel'],
+                                                                                            lda_level_domtopic,
+                                                                                            str(t)))
     plt.show(block=False)
     time.sleep(1.5)
     plt.close('all')
@@ -503,9 +498,10 @@ for t, topic in enumerate(topics):
               'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(t, p['POStag'],
                                                                                      p['no_below'], p['no_above']))
     plt.tight_layout()
-    plt.savefig(path_project + 'graph/model_{}/{}/05_freq_y_topic{}_withline.png'.format(p['currmodel'],
-                                                                                         lda_level_domtopic,
-                                                                                         str(t)))
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/05_freq_y_topic{}_withline.png'.format(sent,
+                                                                                            p['currmodel'],
+                                                                                            lda_level_domtopic,
+                                                                                            str(t)))
     plt.show(block=False)
     time.sleep(1.5)
     plt.close('all')
@@ -589,8 +585,9 @@ plt.title('Total number of articles by \nmain publishers\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/06_totalarticles_bypublisher.png'.format(p['currmodel'],
-                                                                                       lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/06_totalarticles_bypublisher.png'.format(sent,
+                                                                                          p['currmodel'],
+                                                                                          lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -600,10 +597,10 @@ Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/n
 """
 
 # group by topics and reshape long to wide to make plottable
-df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'Newspaper']).count().\
-    reset_index()[['DomTopic_arti_arti_id', 'Newspaper', 'sentiscore_mean']].\
+df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_para_id', 'Newspaper']).count().\
+    reset_index()[['DomTopic_arti_para_id', 'Newspaper', 'sentiscore_mean']].\
     rename(columns={'sentiscore_mean': 'count'}).\
-    pivot(index='Newspaper', columns='DomTopic_arti_arti_id', values='count').\
+    pivot(index='Newspaper', columns='DomTopic_arti_para_id', values='count').\
     fillna(0)
 
 # calculate percentages per topic
@@ -641,7 +638,7 @@ for i in range(0, len(topics)):
                 bottom=df_publishers_bytopics_t.iloc[0:i].sum().to_list()[1:])
 # legend
 ax.legend(topics, title='topics', bbox_to_anchor=(1.1, .75), ncol=1, borderaxespad=0.,
-          fontsize='small', loc='upper right', )
+          fontsize='small', loc='upper right')
 # Custom x axis
 plt.xticks(rotation=90, size=7)
 plt.xlabel('Newspaper')
@@ -651,8 +648,9 @@ plt.tight_layout()
 plt.title('Topics by publishers\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/07_topics_by_publishers_stacked.png'.format(p['currmodel'],
-                                                                                          lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/07_topics_by_publishers_stacked.png'.format(sent,
+                                                                                             p['currmodel'],
+                                                                                             lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -677,7 +675,9 @@ plt.text(df_long['sentiscore_mean'].mean()*1.1, 20,
          'Median: {:.2f}'.format(df_long['sentiscore_mean'].mean()), color='lime')
 plt.title('Histogram sentiment score\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/08_hist_sentiment.png'.format(p['currmodel'], lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/08_hist_sentiment.png'.format(sent,
+                                                                               p['currmodel'],
+                                                                               lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -699,7 +699,9 @@ for i, ax in enumerate(axs.reshape(-1)):
     if i < len(years):
         ax.hist(df_long[df_long['year'] == years[i]]['sentiscore_mean'], bins=20)
         ax.set_title(years[i], fontsize=12)
-plt.savefig(path_project + 'graph/model_{}/{}/09_hist_sentiment_byyears.png'.format(p['currmodel'], lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/09_hist_sentiment_byyears.png'.format(sent,
+                                                                                       p['currmodel'],
+                                                                                       lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -709,8 +711,9 @@ plt.close('all')
 Graph 10: Boxplot sentiments over year
 """
 boxplot = df_long[['year', 'sentiscore_mean']].boxplot(column=['sentiscore_mean'], by='year')
-plt.savefig(path_project + 'graph/model_{}/{}/10_boxplot_sentiment_overyears.png'.format(p['currmodel'],
-                                                                                         lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/10_boxplot_sentiment_overyears.png'.format(sent,
+                                                                                            p['currmodel'],
+                                                                                            lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -747,8 +750,9 @@ plt.ylabel('frequency articles')
 plt.title('Bar plot of articles w/o valid sentiments\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/11_barplot_sentavailability.png'.format(p['currmodel'],
-                                                                                      lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/11_barplot_sentavailability.png'.format(sent,
+                                                                                         p['currmodel'],
+                                                                                         lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -805,8 +809,9 @@ plt.ylabel('frequency articles')
 plt.title('Bar plot of articles w/o valid sentiments by year\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/12_barplot_sentavailability_byyear.png'.format(p['currmodel'],
-                                                                                             lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/12_barplot_sentavailability_byyear.png'.format(sent,
+                                                                                                p['currmodel'],
+                                                                                                lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -821,10 +826,10 @@ Graph 13: Valid and non-valid sentiments by different lengths of articles
 df_long['D_filledsent'] = df_long['sentiscore_mean'].notnull().astype('int').replace(0, 2)
 # get deciles
 deciles = 9
-df_long['articles_len'] = df_long.articles_text.apply(lambda x: len(x))
-df_long['articles_len_dc'] = pandas.qcut(df_long['articles_len'], deciles, labels=False)
-df_filledsent_dc = df_long[['articles_len_dc', 'articles_len', 'D_filledsent']].\
-    groupby(['articles_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index()
+df_long['paragraph_len'] = df_long['paragraphs_{}_for_lda'.format(POStag)].apply(lambda x: len(x))
+df_long['paragraph_len_dc'] = pandas.qcut(df_long['paragraph_len'], deciles, labels=False, duplicates='drop')
+df_filledsent_dc = df_long[['paragraph_len_dc', 'paragraph_len', 'D_filledsent']].\
+    groupby(['paragraph_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index()
 
 # label
 label = ['with sentiment', 'without sentiment']
@@ -834,28 +839,36 @@ fig, ax = plt.subplots(figsize=(8, 4.5))
 # Define bar width. We'll use this to offset the second bar.
 bar_width = .4
 # 1. bars and number on bars, filled
-b1 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['articles_len_dc'].to_numpy()-bar_width/2,
-            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['articles_len'].to_list(),
+b1 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['paragraph_len_dc'].to_numpy()-bar_width/2,
+            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['paragraph_len'].to_list(),
             width=bar_width)
 # loop over each pair of x- and y-value and annotate b1 bars
 for i in range(deciles):
     # Create annotation
-    x_val, y_val = i-bar_width, df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1, 'articles_len'].to_list()[i]
+    x_val = i-bar_width
+    try:
+        y_val = df_filledsent_dc.loc[df_filledsent_dc['D_filledsent'] == 1, 'paragraph_len'].to_list()[i]
+    except:
+        y_val = 0
     plt.annotate("{:.0f}".format(y_val), (x_val, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # 2. bars and number on bars, empty
-b2 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['articles_len_dc'].to_numpy()+bar_width/2,
-            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['articles_len'].to_list(),
+b2 = ax.bar(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['paragraph_len_dc'].to_numpy()+bar_width/2,
+            df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2]['paragraph_len'].to_list(),
             width=bar_width)
 # loop over each pair of x- and y-value and annotate b2 bars
 for i in range(deciles):
     # Create annotation
-    x_val, y_val = i, df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==2, 'articles_len'].to_list()[i]
+    x_val = i
+    try:
+        y_val = df_filledsent_dc.loc[df_filledsent_dc['D_filledsent'] == 2, 'paragraph_len'].to_list()[i]
+    except:
+        y_val = 0
     plt.annotate("{:.0f}".format(y_val), (x_val, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # label
-ax.set_xticks(df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['articles_len_dc'].to_numpy())
-ax.set_xticklabels(labels=10*(1+df_filledsent_dc.loc[df_filledsent_dc['D_filledsent']==1]['articles_len_dc'].to_numpy()))
+ax.set_xticks((1+np.arange(deciles)))
+ax.set_xticklabels(labels=10*(1+np.arange(deciles)))
 
 # legend, axis labels
 plt.legend([b1, b2], ['valid sentiment', 'missing sentiment'], loc='lower left')
@@ -863,11 +876,12 @@ plt.ylabel('frequency articles')
 plt.xlabel('deciles of length of articles')
 # For each bar: Place a label
 
-plt.title('Bar plot of deciles of article lengths w/o valid sentiments by year\n'
+plt.title('Bar plot of deciles of sentence lengths w/o valid sentiments by year\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/13_barplot_sentavailability_deciles.png'.format(p['currmodel'],
-                                                                                              lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/13_barplot_sentavailability_deciles.png'.format(sent,
+                                                                                                 p['currmodel'],
+                                                                                                 lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
@@ -883,16 +897,16 @@ Graph 14: Average length of articles with valid and non-valid sentiments by diff
 df_long['D_filledsent'] = df_long['sentiscore_mean'].notnull().astype('int').replace(0, 2)
 # get deciles
 deciles = 9
-df_long['articles_len'] = df_long.articles_text.apply(lambda x: len(x))
-df_long['articles_len_dc'] = pandas.qcut(df_long['articles_len'], deciles, labels=False)
+df_long['paragraph_len'] = df_long['paragraphs_{}_for_lda'.format(POStag)].apply(lambda x: len(x))
+df_long['paragraph_len_dc'] = pandas.qcut(df_long['paragraph_len'], deciles, labels=False, duplicates='drop')
 # aggregate deciles
-df_filledsent_dc = df_long[['articles_len_dc', 'articles_len', 'D_filledsent']].\
-    groupby(['articles_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index().\
-    rename(columns={'articles_len': 'count'})
+df_filledsent_dc = df_long[['paragraph_len_dc', 'paragraph_len', 'D_filledsent']].\
+    groupby(['paragraph_len_dc', 'D_filledsent']).count().unstack(fill_value=0).stack().reset_index().\
+    rename(columns={'paragraph_len': 'count'})
 # aggregate lengths
-df_filledsent_dc_len = df_long[['articles_len_dc', 'articles_len', 'D_filledsent']].\
-    groupby(['articles_len_dc', 'D_filledsent']).mean().unstack(fill_value=0).stack().reset_index().\
-    rename(columns={'articles_len': 'avg_len'})
+df_filledsent_dc_len = df_long[['paragraph_len_dc', 'paragraph_len', 'D_filledsent']].\
+    groupby(['paragraph_len_dc', 'D_filledsent']).mean().unstack(fill_value=0).stack().reset_index().\
+    rename(columns={'paragraph_len': 'avg_len'})
 # add deciles to lengths df
 df_filledsent_dc_len.insert(2, 'count', df_filledsent_dc['count'].to_list(), True)
 
@@ -904,30 +918,40 @@ fig, ax = plt.subplots(figsize=(8, 4.5))
 # Define bar width. We'll use this to offset the second bar.
 bar_width = .4
 # 1. bars and number on bars, filled
-b1 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['articles_len_dc'].to_numpy()-bar_width/2,
+b1 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['paragraph_len_dc'].to_numpy()-bar_width/2,
             df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['count'].to_list(),
             width=bar_width)
 # loop over each pair of x- and y-value and annotate b1 bars
 for i in range(deciles):
     # Create annotation
-    x_val, y_val = i-bar_width, df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'count'].to_list()[i]
-    display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'avg_len'].to_list()[i]
+    try:
+        y_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'count'].to_list()[i]
+        display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1, 'avg_len'].to_list()[i]
+    except:
+        y_val = 0
+        display_val = 0
+    x_val = i-bar_width
     plt.annotate("({:.0f})".format(display_val), (x_val, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # 2. bars and number on bars, empty
-b2 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2]['articles_len_dc'].to_numpy()+bar_width/2,
+b2 = ax.bar(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2]['paragraph_len_dc'].to_numpy()+bar_width/2,
             df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2]['count'].to_list(),
             width=bar_width)
 # loop over each pair of x- and y-value and annotate b2 bars
 for i in range(deciles):
     # Create annotation
-    x_val, y_val = i, df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2, 'count'].to_list()[i]
-    display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2, 'avg_len'].to_list()[i]
+    x_val = i
+    try:
+        y_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent'] == 2, 'count'].to_list()[i]
+        display_val = df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==2, 'avg_len'].to_list()[i]
+    except:
+        y_val = 0
+        display_val = 0
     plt.annotate("({:.0f})".format(display_val), (x_val, y_val+5),
                  xytext=(space, 0), textcoords="offset points", va='center', ha=ha, size=7)
 # label
-ax.set_xticks(df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['articles_len_dc'].to_numpy())
-ax.set_xticklabels(labels=10*(1+df_filledsent_dc_len.loc[df_filledsent_dc_len['D_filledsent']==1]['articles_len_dc'].to_numpy()))
+ax.set_xticks(1+np.arange(deciles))
+ax.set_xticklabels(labels=10*(1+np.arange(deciles)))
 
 # legend, axis labels
 plt.legend([b1, b2], ['valid sentiment', 'missing sentiment'], loc='lower left')
@@ -939,16 +963,19 @@ plt.title('Bar plot of deciles of article lengths w/o valid sentiments by year,\
           'average length of article in brackets on bars,\n'
           'POStag: {}, no_below: {}, no_above: {}'.format(p['POStag'], p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/model_{}/{}/14_barplot_sentavailability_deciles_withartilen.png'.format(p['currmodel'],
-                                                                                                          lda_level_domtopic),
+plt.savefig(path_project + 'graph/{}/model_{}/{}/14_barplot_sentavailability_deciles_withartilen.png'.format(sent,
+                                                                                                             p['currmodel'],
+                                                                                                             lda_level_domtopic),
             bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
+
 """
 Graph 15: (as Graph 2, but shares), relative frequency analysis, publication trend of articles, over time
 """
+
 # group by year
 df_senti_freq_y = df_long.groupby(['year'])[['sentiscore_mean']].count().reset_index()
 
@@ -958,7 +985,7 @@ fig = plt.figure(figsize=(10, 5))
 ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
 ax.bar(df_senti_freq_y.iloc[:,0], 100*(df_senti_freq_y.iloc[:, 1]/totalrows), color='#004488', width=width)
 ax.set_ylabel('relative frequency in percent')
-ax.set_title('Relative frequency of articles over time\n'
+ax.set_title('Relative frequency of sentences over time\n'
              'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'], p['no_above']))
 ax.xaxis.set_ticks(np.arange(df_senti_freq_y.iloc[:,0].min(), df_senti_freq_y.iloc[:,0].max()+1, 1))
@@ -970,7 +997,7 @@ labels = round(100*(df_senti_freq_y.iloc[:,1]/totalrows), 2)
 for rect, label in zip(rects, labels):
     ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label, ha='center', va='bottom')
 
-plt.savefig(path_project + 'graph/model_{}/{}/15_relfreqArt_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/15_relfreqArt_y.png'.format(sent, p['currmodel'], lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -981,8 +1008,8 @@ Graph 16: (as Graph 3, but shares), relative frequency analysis, publication tre
 """
 
 # group by topics and reshape long to wide to make plottable
-df_senti_freq_agg = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentiscore_mean']].count().reset_index()\
-    .pivot(index='month', columns='DomTopic_arti_arti_id', values='sentiscore_mean')
+df_senti_freq_agg = df_long.groupby(['DomTopic_arti_para_id', 'month'])[['sentiscore_mean']].count().reset_index()\
+    .pivot(index='month', columns='DomTopic_arti_para_id', values='sentiscore_mean')
 
 # make aggregation available
 df_aggr_m = df_senti_freq_agg.groupby(pandas.Grouper(freq='M')).sum().reset_index()
@@ -1032,7 +1059,10 @@ ax.set_ylabel('relative frequency in percent')
 plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: monthly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_m.png'.format(p['currmodel'], lda_level_domtopic))
+
+plt.savefig(path_project + 'graph/{}/model_{}/{}/16_relfreqArt_bytopic_m.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -1056,7 +1086,9 @@ ax.set_ylabel('relative frequency in percent')
 plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: quarterly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                                 p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_q.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/16_relfreqArt_bytopic_q.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
@@ -1074,7 +1106,9 @@ ax.set_ylabel('relative frequency in percent')
 plt.title('Relative frequency of articles with sentiment score over time, by topics\n'
           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
                                                                              p['no_below'], p['no_above']))
-plt.savefig(path_project + 'graph/model_{}/{}/16_relfreqArt_bytopic_y.png'.format(p['currmodel'], lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/16_relfreqArt_bytopic_y.png'.format(sent,
+                                                                                     p['currmodel'],
+                                                                                     lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')

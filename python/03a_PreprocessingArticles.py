@@ -11,6 +11,9 @@ start_time0 = time.process_time()
 # Read in file with articles from R-Skript ProcessNexisArticles.R
 df_articles = pandas.read_feather(path_data + 'feather/auto_articles_withbattery.feather')
 
+# Raw article numbers
+print('Raw article numbers:', len(df_articles['Art_ID'].unique()))
+
 ######
 # TEMP keep first x articles
 # df_articles = df_articles[df_articles['Art_ID']<11]
@@ -22,6 +25,9 @@ df_articles['Article'] = [i.lower() for i in df_articles['Article']]
 # Drop duplicates
 df_articles.drop_duplicates(subset=['Article', 'Date'], inplace=True)
 df_articles.drop_duplicates(subset=['Headline'], inplace=True)
+
+# Article numbers after dropping duplicates
+print('Article numbers after dropping duplicates:', len(df_articles['Art_ID'].unique()))
 
 # Remove text which defines end of articles
 for splitstring in ['graphic', 'foto: classification language', 'classification language', 'kommentar seite ',

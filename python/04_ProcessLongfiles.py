@@ -1,13 +1,14 @@
 import pandas, time, dtale
 import numpy as np
 from python.ConfigUser import path_data
-from python._ProcessingFunctions import Sentencizer, IgnoreWarnings
-from python._AnalysisFunctions import Load_SePL, Load_SentiWS, GetSentimentScores_l, GetSentimentScoresWS_l
+from python._ProcessingFunctions import Sentencizer, IgnoreWarnings, split_sentidict
+from python._AnalysisFunctions import Load_SePL, Load_SentiWS, Load_Sentiment_final, \
+    GetSentimentScores_l, GetSentimentScoresWS_l
 from python.params import params as p
 
 """
 ---------------------
-ProcessLongfiles.py
+04_ProcessLongfiles.py
 ---------------------
 * Load all Long files and put together
 * Produce Par_ID, Sent_ID, Art_ID variables
@@ -37,7 +38,7 @@ df_long_arti = pandas.read_csv(path_data + 'csv/articles_for_lda_{}_l.csv'.forma
 
 ######
 # TEMP: Make smaller
-df_long_sent = df_long_sent[df_long_sent['Art_ID']<200]
+# df_long_sent = df_long_sent[df_long_sent['Art_ID']<101]
 # df_long_para = df_long_para[df_long_para['Art_ID']<10]
 ######
 
@@ -119,35 +120,47 @@ start_time4 = time.process_time()
 
 ### 9. Extract Sentiment Score
 
-# Read in SePL, SentiWS
-df_sepl, df_SentiWS = Load_SePL(), Load_SentiWS()
+# Read in SePL, SentiWS and final Sentiment list
+df_sepl_default, df_sepl_modified = Load_SePL(), Load_SePL(type='modified')
+df_SentiWS_default = Load_SentiWS()
+df_sentiment_final = Load_Sentiment_final()
 
 # Extract sentiment scores
 print('Extract sentiment scores')
 IgnoreWarnings()
-df_long_complete['Sentiment_sepl_dict'] = \
-    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, df_sepl=df_sepl))
-df_long_complete['Sentiment_sentiws_dict'] = \
-    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScoresWS_l(sent=x, df_SentiWS=df_SentiWS))
+df_long_complete['Sentiment_sepldefault_dict'] = \
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, sentiment_list=df_sepl_default))
+df_long_complete['Sentiment_seplmodified_dict'] = \
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, sentiment_list=df_sepl_modified))
+df_long_complete['Sentiment_sentiwsdefault_dict'] = \
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScoresWS_l(sent=x, df_SentiWS=df_SentiWS_default))
+df_long_complete['Sentiment_sentifinal_dict'] = \
+    df_long_complete['sentences_for_sentiment'].apply(lambda x: GetSentimentScores_l(sent=x, sentiment_list=df_sentiment_final))
 
-# Split columns from 'Sentiment_score_temp' and concatenate df_temp
-df_long_complete = \
-    pandas.concat([df_long_complete, pandas.json_normalize(df_long_complete['Sentiment_sepl_dict'])], axis=1)
-# TODO: also for Sentiment_sentiws_dict
+## Loop over sepl or sentiws and split for each the dictionary into columns
+for sent in ['sepldefault', 'seplmodified', 'sentiwsdefault', 'sentifinal']:
+
+    # Split columns from 'Sentiment_*_dict' into single cols and rename (might not function, split_sentidict() solves)
+    try:
+        df_long_complete = pandas.concat(
+            [df_long_complete, pandas.json_normalize(df_long_complete['Sentiment_{}_dict'.format(sent)])], axis=1)
+    except:
+        split_sentidict(df_long_complete, sent)
+
+    ### 10. Rename and order vars
+    print('Order vars for {}'.format(sent))
+    df_long_complete = df_long_complete.rename(columns={'mean': 'ss_{}_mean'.format(sent),
+                                                        'median': 'ss_{}_median'.format(sent),
+                                                        'n': 'ss_{}_n'.format(sent),
+                                                        'sd': 'ss_{}_sd'.format(sent),
+                                                        'sentiscores': 'ss_{}_scores'.format(sent),
+                                                        'phrs': 'ss_{}_phrs'.format(sent)
+                                                        })
 
 end_time4 = time.process_time()
 print('\ttimer4: Elapsed time is {} seconds.'.format(round(end_time4-start_time4, 2)))
 
 start_time5 = time.process_time()
-
-### 10. Rename and order vars
-print('Order vars')
-df_long_complete = df_long_complete.rename(columns={'mean': 'sentiscore_mean',
-                                                    'median': 'sentiscore_median',
-                                                    'n': 'sentiscore_n',
-                                                    'sd': 'sentiscore_sd',
-                                                    'SentiScores': 'sentiscore_scores',
-                                                    'seplphrs': 'sentiscore_seplphrs'})
 
 df_long_complete = df_long_complete[[
     # IDs
@@ -158,8 +171,23 @@ df_long_complete = df_long_complete[[
     'sentences_for_sentiment', 'sentences_{}_for_lda'.format(POStag_type),
     'paragraphs_text', 'paragraphs_{}_for_lda'.format(POStag_type),
     'articles_text', 'articles_{}_for_lda'.format(POStag_type),
-    # Sentiment Scores
-    'sentiscore_mean', 'sentiscore_median', 'sentiscore_n', 'sentiscore_sd', 'sentiscore_scores', 'sentiscore_seplphrs'
+    ## Sentiment Scores:
+    # Sepl default
+    'ss_{}_mean'.format('sepldefault'), 'ss_{}_median'.format('sepldefault'),
+    'ss_{}_n'.format('sepldefault'), 'ss_{}_sd'.format('sepldefault'),
+    'ss_{}_scores'.format('sepldefault'), 'ss_{}_phrs'.format('sepldefault'),
+    # Sepl default
+    'ss_{}_mean'.format('seplmodified'), 'ss_{}_median'.format('seplmodified'),
+    'ss_{}_n'.format('seplmodified'), 'ss_{}_sd'.format('seplmodified'),
+    'ss_{}_scores'.format('seplmodified'), 'ss_{}_phrs'.format('seplmodified'),
+    # SentiWS default
+    'ss_{}_mean'.format('sentiwsdefault'), 'ss_{}_median'.format('sentiwsdefault'),
+    'ss_{}_n'.format('sentiwsdefault'), 'ss_{}_sd'.format('sentiwsdefault'),
+    'ss_{}_scores'.format('sentiwsdefault'), 'ss_{}_phrs'.format('sentiwsdefault'),
+    # Sentiment final list
+    'ss_{}_mean'.format('sentifinal'), 'ss_{}_median'.format('sentifinal'),
+    'ss_{}_n'.format('sentifinal'), 'ss_{}_sd'.format('sentifinal'),
+    'ss_{}_scores'.format('sentifinal'), 'ss_{}_phrs'.format('sentifinal')
 ]]
 
 ### 11. Export longfile to csv (will be read in later)

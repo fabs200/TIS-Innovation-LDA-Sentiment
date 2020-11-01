@@ -4,7 +4,7 @@ from python._AnalysisFunctions import LDACalibration, EstimateLDA
 from python.params import params as p
 import numpy as np
 
-# Read in output file from PreprocessingSentences.py
+# Read in output file from 03c_PreprocessingSentences.py
 complete_for_lda = pandas.read_csv(path_data + 'csv/complete_for_lda_{}_l.csv'.format(p['POStag']),
                                    sep='\t', na_filter=False)
 

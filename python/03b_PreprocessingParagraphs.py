@@ -101,7 +101,7 @@ df_articles['paragraphs_{}_for_lda'.format(POStag_type)] = df_articles['paragrap
                                                                                            minwordlength=p['minwordlength'],
                                                                                                 drop=False)
 
-### Export data to csv (will be read in again in LDACalibration.py)
+### Export data to csv (will be read in again in 05_LDACalibration.py)
 # df_articles[['ID_incr', 'Art_ID', 'Date', 'paragraphs_{}_for_lda'.format(POStag)]].to_csv(
 #     path_data + 'csv/paragraphs_for_lda_{}.csv'.format(POStag), sep='\t', index=False)
 
