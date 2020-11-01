@@ -1,7 +1,7 @@
 import pandas, time
-from python.ConfigUser import path_data
-from python._ProcessingFunctions import *
-from python.params import params as p
+from ConfigUser import path_data
+from _ProcessingFunctions import *
+from params import params as p
 
 # unpack POStag type
 POStag_type = p['POStag']

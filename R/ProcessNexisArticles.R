@@ -8,7 +8,7 @@ library("rlist")
 
 rm(list = ls())
 
-projectpath <- "/Users/Fabian/OneDrive/Projekt/Media Analysis/"
+projectpath <- "/Users/fabiannemeczek/OneDrive/Projekt/Media Analysis/"
 
 
 # define folder where the files are
