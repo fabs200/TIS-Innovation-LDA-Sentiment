@@ -20,6 +20,7 @@ Graph 3: Frequency analysis, publication trend of topics, over time (Fritsche, M
 Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia)
 NEW Graph 1.1: Sentiment score over time, by topics, with events
 NEW Graph 3.1: Frequency analysis, publication trend of topics, over time (Fritsche, Mejia), with events
+NEW Graph 4: sentiment score by publishers
 """
 
 # Ignore some warnings
@@ -229,81 +230,6 @@ plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
-
-"""
-Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia)
-"""
-
-# group by topics and reshape long to wide to make plottable
-df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'Newspaper']).count().\
-    reset_index()[['DomTopic_arti_arti_id', 'Newspaper', 'sentiscore_mean']].\
-    rename(columns={'sentiscore_mean': 'count'}).\
-    pivot(index='Newspaper', columns='DomTopic_arti_arti_id', values='count').\
-    fillna(0)
-# TODO: Gruppiere große Zeitungen zusammen, Bsp. Bild
-
-# calculate percentages per topic
-df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
-df_wide_publishers_bytopics = df_wide_publishers_bytopics[df_wide_publishers_bytopics['sum']>7]
-totalcols = len(df_wide_publishers_bytopics.columns)
-for col in range(0, totalcols-1):
-    df_wide_publishers_bytopics.iloc[:, col] = 100*(df_wide_publishers_bytopics.iloc[:, col] / df_wide_publishers_bytopics.iloc[:, totalcols-1])
-df_wide_publishers_bytopics = df_wide_publishers_bytopics.drop(['sum'], axis=1)
-df_wide_publishers_bytopics = df_wide_publishers_bytopics.reset_index()
-
-# cut str at lengt
-df_wide_publishers_bytopics['Newspaper'] = df_wide_publishers_bytopics['Newspaper'].str.slice(0, 14)
-
-# transpose, rename to make plotable
-df_publishers_bytopics_t = df_wide_publishers_bytopics.transpose().reset_index()
-df_publishers_bytopics_t.columns = df_publishers_bytopics_t.iloc[0]
-df_publishers_bytopics_t = df_publishers_bytopics_t\
-    .drop(df_publishers_bytopics_t.columns[1], axis=1)\
-    .drop(0)\
-    .rename(columns={'Newspaper': 'topics'})
-
-# plot stacked bar plot
-barWidth = 0.85
-publishers = df_publishers_bytopics_t.columns[1:]
-# plot stacked bars
-fig = plt.figure(figsize=(10, 4.5))
-ax = fig.add_axes([0.1, 0.32, 0.76, 0.62])  # [left, bottom, width, height]
-for i in range(0, len(topics[1:])):
-    if i==0:
-        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:])
-    else:
-        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:],
-                bottom=df_publishers_bytopics_t.iloc[0:i].sum().to_list()[1:], color=_COLORS[i+1])
-# legend
-ax.legend(topics, bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=legendfont)
-# Custom x axis
-plt.xticks(rotation=90, size=7)
-plt.xlabel('Newspaper', **csfont_axis)
-# Custom y axis
-plt.ylabel('percentage shares in topics', **csfont_axis)
-# Set axis font
-for tick in ax.get_xticklabels():
-    tick.set_fontname(_FONT)
-for tick in ax.get_yticklabels():
-    tick.set_fontname(_FONT)
-ax.set_xticklabels([str(x) for x in df_publishers_bytopics_t.columns[1:]], **csfont_axis)
-plt.tight_layout()
-if _PLOTTITLE: plt.title('Topics by publishers', **csfont)
-# Set axis font
-for tick in ax.get_xticklabels():
-    tick.set_fontname(_FONT)
-for tick in ax.get_yticklabels():
-    tick.set_fontname(_FONT)
-
-for fmt in ['png', 'pdf', 'svg']:
-    plt.savefig(path_project + 'graph/{}/model_{}/{}/07_topics_by_publishers_stacked_FINAL.{}'.format(sent,
-                                                                                                      p['currmodel'],
-                                                                                                      lda_level_domtopic,
-                                                                                                      fmt),
-                bbox_inches='tight')
-plt.show(block=False)
-time.sleep(1.5)
-plt.close('all')
 
 
 """
@@ -638,6 +564,141 @@ for fmt in ['png', 'pdf', 'svg']:
                                                                                               p['currmodel'],
                                                                                               lda_level_domtopic,
                                                                                               fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+
+"""
+Graph 4: Sentiment by Publisher with SD
+"""
+
+# groupby Newspaper, year, aggregate and rename, over time
+df_aggr_publisher = df_long[['year', 'Newspaper', 'sentiscore_mean']]\
+    .groupby(['Newspaper'])\
+    .agg({'Newspaper': 'count', 'sentiscore_mean': ['mean', 'count', 'std']}).reset_index()\
+    .rename(columns = {'sentiscore_mean': 'sentiscore'})\
+# make readable column names
+df_aggr_publisher.columns = df_aggr_publisher.columns.map('_'.join)
+
+# replace everything in brackets from Newspaper
+df_aggr_publisher['Newspaper_'] = df_aggr_publisher.Newspaper_.\
+    replace(to_replace='\([^)]*\)', value='', regex=True).\
+    str.strip()
+
+# filter by x largest Newspaper (exclude empty Newspaper name)
+df_aggr_publisher_topn = df_aggr_publisher[df_aggr_publisher['Newspaper_'].str.len() > 0].nlargest(15, 'Newspaper_count')
+topn_publishers = df_aggr_publisher_topn.Newspaper_.to_list()
+
+# Plot Publisher's sentiment score, with Stderr
+ax = df_aggr_publisher_topn[['sentiscore_mean', 'sentiscore_std']].\
+    sort_values(by='sentiscore_mean').\
+    plot.barh(figsize=(7, 7.75), zorder=2, width=0.65, xerr='sentiscore_std', color='#004488', alpha=0.3)
+ax.tick_params(axis="both", which="both", bottom="off", top="on", labelbottom="off",
+               left="off", right="off", labelleft="on")
+# set up ytitlelabels
+ax.set_yticklabels(df_aggr_publisher_topn.Newspaper_)
+# set up xticks and xtickslabels
+ax.set_xticks(np.around(np.arange(-.8, .81, step=0.2), decimals=1))
+ax.set_xticklabels(np.around(np.arange(-.8, .81, step=0.2), decimals=1))
+# Draw vertical axis lines
+vals = ax.get_xticks()
+# fix "-0.0"
+vals[4] = 0
+for tick in vals:
+    ax.axvline(x=tick, linestyle='solid', alpha=0.25, color='#eeeeee', zorder=1)
+# draw black line through sentimentscore=0
+ax.axvline(x=0, linestyle='solid', alpha=.5, color='black', zorder=1)
+# no legend
+ax.get_legend().remove()
+ax.set_xlabel("Sentiment score")
+# plt.title('Average sentiment score of publisher')
+plt.tight_layout()
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/04_sentiscore_bypublisher_with_ci.{}'.format(sent,
+                                                                                                  p['currmodel'],
+                                                                                                  lda_level_domtopic,
+                                                                                                  fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
+
+
+
+"""
+Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia)
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'Newspaper']).count().\
+    reset_index()[['DomTopic_arti_arti_id', 'Newspaper', 'sentiscore_mean']].\
+    rename(columns={'sentiscore_mean': 'count'}).\
+    pivot(index='Newspaper', columns='DomTopic_arti_arti_id', values='count').\
+    fillna(0)
+
+# keep publishers which are in previous Graph 4 in topn
+df_wide_publishers_bytopics = df_wide_publishers_bytopics.loc[df_wide_publishers_bytopics.index.isin(topn_publishers)]
+
+# calculate percentages per topic
+df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
+# df_wide_publishers_bytopics = df_wide_publishers_bytopics[df_wide_publishers_bytopics['sum']>7]
+totalcols = len(df_wide_publishers_bytopics.columns)
+for col in range(0, totalcols-1):
+    df_wide_publishers_bytopics.iloc[:, col] = 100*(df_wide_publishers_bytopics.iloc[:, col] / df_wide_publishers_bytopics.iloc[:, totalcols-1])
+df_wide_publishers_bytopics = df_wide_publishers_bytopics.drop(['sum'], axis=1)
+df_wide_publishers_bytopics = df_wide_publishers_bytopics.reset_index()
+
+# cut str at lengt
+df_wide_publishers_bytopics['Newspaper'] = df_wide_publishers_bytopics['Newspaper'].str.slice(0, 16)
+
+# transpose, rename to make plotable
+df_publishers_bytopics_t = df_wide_publishers_bytopics.transpose().reset_index()
+df_publishers_bytopics_t.columns = df_publishers_bytopics_t.iloc[0]
+df_publishers_bytopics_t = df_publishers_bytopics_t\
+    .drop(df_publishers_bytopics_t.columns[1], axis=1) \
+    .rename(columns={'Newspaper': 'topics'})\
+    .drop(0)
+
+# plot stacked bar plot
+barWidth = 0.85
+publishers = df_publishers_bytopics_t.columns[1:]
+# plot stacked bars
+fig = plt.figure(figsize=(10, 4.5))
+ax = fig.add_axes([0.1, 0.32, 0.76, 0.62])  # [left, bottom, width, height]
+for i in range(0, len(topics)):
+    if i==0:
+        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:])
+    else:
+        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:],
+                bottom=df_publishers_bytopics_t.iloc[0:i].sum().to_list()[1:], color=_COLORS[i+1])
+# legend
+ax.legend(topics, bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0., prop=legendfont)
+# Custom x axis
+plt.xticks(rotation=90, size=7)
+plt.xlabel('Newspaper', **csfont_axis)
+# Custom y axis
+plt.ylabel('percentage shares in topics', **csfont_axis)
+# Set axis font
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
+ax.set_xticklabels([str(x) for x in df_publishers_bytopics_t.columns[1:]], **csfont_axis)
+plt.tight_layout()
+if _PLOTTITLE: plt.title('Topics by publishers', **csfont)
+# Set axis font
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
+
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/07_topics_by_publishers_stacked_FINAL.{}'.format(sent,
+                                                                                                      p['currmodel'],
+                                                                                                      lda_level_domtopic,
+                                                                                                      fmt),
+                bbox_inches='tight')
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')

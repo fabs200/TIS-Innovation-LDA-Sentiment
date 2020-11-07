@@ -18,7 +18,7 @@ def filter_sentiment_params(df, df_sentiment_list):
     # drop short sentences
     if p['drop_sentence_lenght']:
         df['sentences_for_sentiment_lenght']= df['sentences_for_sentiment'].str.len()
-        df_long= df.drop(df[df.sentences_for_sentiment_lenght <= p['drop_sentence_lenght']].index)
+        df = df.drop(df[df.sentences_for_sentiment_lenght <= p['drop_sentence_lenght']].index)
 
     # drop articles with low probability of assigned dominant topic
     if p['drop_prob_below']:

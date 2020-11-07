@@ -1,11 +1,9 @@
-import pandas, os, time, dtale
+import os
+import pandas
+
 from python.ConfigUser import path_data, path_project
 from python._HelpFunctions import filter_sentiment_params
 from python.params import params as p
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as font_manager
-import numpy as np
-import warnings
 
 """
 ------------------------------------------
@@ -60,10 +58,10 @@ df_long = df_long[(df_long['month'] <= '2020-1-1')]
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
 
 """
-###################### Table 1: descriptives, by year ######################
+###################### Table 1: descriptives, by topic & year ######################
 """
 
-# group by topics, calculate mean, sd, and reshape long to wide to make plottable
+# group by topics, calculate mean, sd, and reshape long to wide
 df_wide_bytopics_mean = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['mean']].mean().reset_index().pivot(
     index='month', columns='DomTopic_arti_arti_id', values='mean')
 df_wide_bytopics_std = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['std']].mean().reset_index().pivot(
@@ -98,30 +96,6 @@ df_aggr_bytopics_min_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_min_y.ilo
 df_aggr_bytopics_max_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_max_y.iloc[:, 0]).year
 
 
-# Graph line by year
-# fig = plt.figure(figsize=(10,5))
-# ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
-# for i in range(1, len(df_aggr_bytopics_mean_y.columns)):
-#     ax.plot(df_aggr_bytopics_mean_y.iloc[:, i], marker='.', label='topic ' + str(df_aggr_bytopics_mean_y.iloc[:, i].name))
-# ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop=legendfont)
-# ax.set_xticks(range(len(df_aggr_bytopics_mean_y.index)))
-# # Set the font name for axis tick labels to be Comic Sans
-# for tick in ax.get_xticklabels():
-#     tick.set_fontname("Times New Roman")
-# for tick in ax.get_yticklabels():
-#     tick.set_fontname("Times New Roman")
-# ax.set_xticklabels([str(x) for x in df_aggr_bytopics_mean_y.iloc[:, 0].values], **csfont)
-# plt.title('Sentiment score over time, by topics\n'
-#           'POStag: {}, frequency: yearly, no_below: {}, no_above: {}'.format(p['POStag'],
-#                                                                              p['no_below'], p['no_above']), **csfont)
-# plt.savefig(path_project + 'graph/{}/model_{}/{}/01_sentiscore_bytopics_y.png'.format(sent,
-#                                                                                       p['currmodel'],
-#                                                                                       lda_level_domtopic))
-# plt.show(block=False)
-# time.sleep(1.5)
-# plt.close('all')
-
-
 # before appending all dfs, define a help-id to sort properly later
 df_aggr_bytopics_count_y['help_id_'] = 1
 df_aggr_bytopics_mean_y['help_id_'] = 2
@@ -145,6 +119,21 @@ df_agg_bytopics = df_agg_bytopics.set_index(['stats', 'year'])
 
 # export as excel
 df_agg_bytopics.to_excel(path_project + "tables/{}/model_{}/01_descriptive_sentiment.xlsx".format(sent, p['currmodel']))
+
+"""
+###################### Table 2: descriptives of sentiment and article count by year ######################
+"""
+
+# group by year, calculate mean, sd, min, max, count articles
+df_articles_by_year = df_long.groupby('year').agg({'count': 'count',
+                                                   'mean': 'mean',
+                                                   'min': 'min',
+                                                   'max': 'max'})
+
+# export as excel
+df_articles_by_year.to_excel(path_project + "tables/{}/model_{}/02_descriptive_sentiment.xlsx".format(sent, p['currmodel']))
+
+
 
 print('done')
 

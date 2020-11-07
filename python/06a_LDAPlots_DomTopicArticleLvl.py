@@ -352,7 +352,7 @@ plt.close('all')
 
 
 """
-Graph 4: Frequency analysis, publisher bias, over time (Mejia)
+Graph 4: Sentiment by Publisher
 """
 
 # groupby Newspaper, year, aggregate and rename, over time
@@ -460,9 +460,8 @@ plt.title('Average sentiment score of publisher\n'
           'POStag: {}, frequency: yearly,\nno_below: {}, no_above: {}'.format(p['POStag'],
                                                                               p['no_below'], p['no_above']))
 plt.tight_layout()
-plt.savefig(path_project + 'graph/{}/model_{}/{}/04b_absfreqArt_bytopic_y.png'.format(sent,
-                                                                                      p['currmodel'],
-                                                                                      lda_level_domtopic))
+plt.savefig(path_project + 'graph/{}/model_{}/{}/04b_sentiscore_bypublisher_with_ci.png'.format(sent, p['currmodel'],
+                                                                                                lda_level_domtopic))
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
