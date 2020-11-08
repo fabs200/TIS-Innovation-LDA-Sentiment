@@ -57,6 +57,10 @@ df_long = df_long[(df_long['month'] <= '2020-1-1')]
 # replace everything in brackets from Newspaper
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
 
+# prepare counts
+df_long = df_long.rename(columns = {'count': 'sentences_count'})
+df_long['count'] = 1
+
 """
 ###################### Table 1: descriptives, by topic & year ######################
 """
@@ -72,6 +76,9 @@ df_wide_bytopics_prob = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['Do
 df_wide_bytopics_count = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['count']].sum()\
     .reset_index().pivot(index='month', columns='DomTopic_arti_arti_id', values='count')\
     .rename(columns={'DomTopic_arti_arti_prob': 'count'})
+df_wide_bytopics_sentencescount = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['sentences_count']].sum()\
+    .reset_index().pivot(index='month', columns='DomTopic_arti_arti_id', values='sentences_count')\
+    .rename(columns={'DomTopic_arti_arti_prob': 'sentences_count'})
 df_wide_bytopics_min = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['min']].min()\
     .reset_index().pivot(index='month', columns='DomTopic_arti_arti_id', values='min')\
     .rename(columns={'DomTopic_arti_arti_prob': 'min'})
@@ -84,6 +91,7 @@ df_aggr_bytopics_mean_y = df_wide_bytopics_mean.groupby(pandas.Grouper(freq='Y')
 df_aggr_bytopics_std_y = df_wide_bytopics_std.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
 df_aggr_bytopics_prob_y = df_wide_bytopics_prob.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
 df_aggr_bytopics_count_y = df_wide_bytopics_count.groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
+df_aggr_bytopics_sentencescount_y = df_wide_bytopics_sentencescount.groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
 df_aggr_bytopics_min_y = df_wide_bytopics_min.groupby(pandas.Grouper(freq='Y')).min().reset_index().rename(columns={'month': 'year'})
 df_aggr_bytopics_max_y = df_wide_bytopics_max.groupby(pandas.Grouper(freq='Y')).max().reset_index().rename(columns={'month': 'year'})
 
@@ -92,6 +100,7 @@ df_aggr_bytopics_mean_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_mean_y.i
 df_aggr_bytopics_std_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_std_y.iloc[:, 0]).year
 df_aggr_bytopics_prob_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_prob_y.iloc[:, 0]).year
 df_aggr_bytopics_count_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_count_y.iloc[:, 0]).year
+df_aggr_bytopics_sentencescount_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_sentencescount_y.iloc[:, 0]).year
 df_aggr_bytopics_min_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_min_y.iloc[:, 0]).year
 df_aggr_bytopics_max_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_max_y.iloc[:, 0]).year
 
@@ -103,17 +112,19 @@ df_aggr_bytopics_std_y['help_id_'] = 3
 df_aggr_bytopics_min_y['help_id_'] = 4
 df_aggr_bytopics_max_y['help_id_'] = 5
 df_aggr_bytopics_prob_y['help_id_'] = 6
+df_aggr_bytopics_sentencescount_y['help_id_'] = 7
 
 # append all dfs and sort
 df_agg_bytopics = df_aggr_bytopics_count_y.append([df_aggr_bytopics_mean_y,
                                                    df_aggr_bytopics_std_y,
                                                    df_aggr_bytopics_min_y,
                                                    df_aggr_bytopics_max_y,
-                                                   df_aggr_bytopics_prob_y], ignore_index=True)\
+                                                   df_aggr_bytopics_prob_y,
+                                                   df_aggr_bytopics_sentencescount_y], ignore_index=True)\
     .sort_values(by=['year', 'help_id_'])\
     .drop(columns=['help_id_'])
 # insert a list with stats as first column
-stats_col = ['n', 'mean', 'sd', 'min', 'max', 'probability']*int(df_agg_bytopics.shape[0]/6)
+stats_col = ['n', 'mean', 'sd', 'min', 'max', 'probability', 'sentences_count']*int(df_agg_bytopics.shape[0]/7)
 df_agg_bytopics.insert(0, 'stats', stats_col)
 df_agg_bytopics = df_agg_bytopics.set_index(['stats', 'year'])
 
