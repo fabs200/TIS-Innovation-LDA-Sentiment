@@ -69,13 +69,13 @@ df_wide_bytopics_std = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['std
 df_wide_bytopics_prob = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['DomTopic_arti_arti_prob']].mean()\
     .reset_index().pivot(index='month', columns='DomTopic_arti_arti_id', values='DomTopic_arti_arti_prob')\
     .rename(columns={'DomTopic_arti_arti_prob': 'prob'})
-df_wide_bytopics_count = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['count']].mean()\
+df_wide_bytopics_count = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['count']].sum()\
     .reset_index().pivot(index='month', columns='DomTopic_arti_arti_id', values='count')\
     .rename(columns={'DomTopic_arti_arti_prob': 'count'})
-df_wide_bytopics_min = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['min']].mean()\
+df_wide_bytopics_min = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['min']].min()\
     .reset_index().pivot(index='month', columns='DomTopic_arti_arti_id', values='min')\
     .rename(columns={'DomTopic_arti_arti_prob': 'min'})
-df_wide_bytopics_max = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['max']].mean()\
+df_wide_bytopics_max = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['max']].max()\
     .reset_index().pivot(index='month', columns='DomTopic_arti_arti_id', values='max')\
     .rename(columns={'DomTopic_arti_arti_prob': 'max'})
 
@@ -83,9 +83,9 @@ df_wide_bytopics_max = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['max
 df_aggr_bytopics_mean_y = df_wide_bytopics_mean.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
 df_aggr_bytopics_std_y = df_wide_bytopics_std.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
 df_aggr_bytopics_prob_y = df_wide_bytopics_prob.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
-df_aggr_bytopics_count_y = df_wide_bytopics_count.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
-df_aggr_bytopics_min_y = df_wide_bytopics_min.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
-df_aggr_bytopics_max_y = df_wide_bytopics_max.groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+df_aggr_bytopics_count_y = df_wide_bytopics_count.groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
+df_aggr_bytopics_min_y = df_wide_bytopics_min.groupby(pandas.Grouper(freq='Y')).min().reset_index().rename(columns={'month': 'year'})
+df_aggr_bytopics_max_y = df_wide_bytopics_max.groupby(pandas.Grouper(freq='Y')).max().reset_index().rename(columns={'month': 'year'})
 
 ### Reformat dates
 df_aggr_bytopics_mean_y['year'] = pandas.DatetimeIndex(df_aggr_bytopics_mean_y.iloc[:, 0]).year
@@ -127,6 +127,7 @@ df_agg_bytopics.to_excel(path_project + "tables/{}/model_{}/01_descriptive_senti
 # group by year, calculate mean, sd, min, max, count articles
 df_articles_by_year = df_long.groupby('year').agg({'count': 'count',
                                                    'mean': 'mean',
+                                                   'std': 'mean',
                                                    'min': 'min',
                                                    'max': 'max'})
 
