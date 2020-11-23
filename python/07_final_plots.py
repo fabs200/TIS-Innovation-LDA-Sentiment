@@ -18,9 +18,10 @@ Graph 1: Sentiment score over time, by topics
 Graph 2: Frequency analysis, publication trend of articles over time (Fritsche, Mejia)
 Graph 3: Frequency analysis, publication trend of topics, over time (Fritsche, Mejia)
 Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia)
-NEW Graph 1.1: Sentiment score over time, by topics, with events
-NEW Graph 3.1: Frequency analysis, publication trend of topics, over time (Fritsche, Mejia), with events
-NEW Graph 4: sentiment score by publishers
+* NEW (October 2020):
+Graph 1.1: Sentiment score over time, by topics, with events
+Graph 3.1: Frequency analysis, publication trend of topics over time (Fritsche, Mejia), with events
+Graph 4: Sentiment by Publisher with SD
 """
 
 # Ignore some warnings
@@ -508,8 +509,7 @@ time.sleep(1.5)
 plt.close('all')
 
 """
-###################### Graph 3.1: Frequency analysis, publication trend of topics over time (Fritsche, Mejia), #########
-                                  with events
+########## Graph 3.1: Frequency analysis, publication trend of topics over time (Fritsche, Mejia), with events #########
 """
 
 # group by topics and reshape long to wide to make plottable
@@ -578,7 +578,7 @@ Graph 4: Sentiment by Publisher with SD
 df_aggr_publisher = df_long[['year', 'Newspaper', 'sentiscore_mean']]\
     .groupby(['Newspaper'])\
     .agg({'Newspaper': 'count', 'sentiscore_mean': ['mean', 'count', 'std']}).reset_index()\
-    .rename(columns = {'sentiscore_mean': 'sentiscore'})\
+    .rename(columns = {'sentiscore_mean': 'sentiscore'})
 # make readable column names
 df_aggr_publisher.columns = df_aggr_publisher.columns.map('_'.join)
 

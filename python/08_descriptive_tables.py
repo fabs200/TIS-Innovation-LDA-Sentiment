@@ -9,6 +9,10 @@ from python.params import params as p
 ------------------------------------------
 08_descriptive_tables
 ------------------------------------------
+* Table 1: descriptives, by topic & year
+* Table 2: descriptives of sentiment and article count by year
+* Table 3: sentiment over time, by topic and by top publishers
+------------------------------------------
 
 """
 
@@ -145,6 +149,39 @@ df_articles_by_year = df_long.groupby('year').agg({'count': 'count',
 # export as excel
 df_articles_by_year.to_excel(path_project + "tables/{}/model_{}/02_descriptive_sentiment.xlsx".format(sent, p['currmodel']))
 
+"""
+###################### Table 3: sentiment over time, by topic and by top publishers ######################
+"""
+
+# groupby Newspaper, year, and topics, then aggregate and rename, over time
+df_aggr_publisher = df_long[['year', 'Newspaper', 'DomTopic_arti_arti_id', 'mean']]\
+    .groupby(['Newspaper', 'DomTopic_arti_arti_id', 'year'])\
+    .agg({'Newspaper': 'count', 'mean': ['mean', 'count', 'std']}).reset_index()
+# make readable column names
+df_aggr_publisher.columns = df_aggr_publisher.columns.map('_'.join)
+
+# replace everything in brackets from Newspaper
+df_aggr_publisher['Newspaper_'] = df_aggr_publisher.Newspaper_.\
+    replace(to_replace='\([^)]*\)', value='', regex=True).\
+    str.strip()
+
+# filter by x largest Newspaper (exclude empty Newspaper name)
+df_aggr_publisher_topn_help = df_aggr_publisher[df_aggr_publisher['Newspaper_'].str.len() > 0].nlargest(15, 'Newspaper_count')
+topn_publishers = df_aggr_publisher_topn_help.Newspaper_.to_list()
+df_aggr_publisher_topn = df_aggr_publisher[df_aggr_publisher['Newspaper_'].isin(topn_publishers)]
+
+# prepare columns for export
+df_aggr_publisher_topn = df_aggr_publisher_topn.rename(columns={'mean_mean': 'sentiment_mean',
+                                                                'mean_count': 'sentiment_n',
+                                                                'mean_std': 'sentiment_std',
+                                                                'year_': 'year',
+                                                                'DomTopic_arti_arti_id_': 'topic',
+                                                                'Newspaper_': 'Newspaper'})
+
+# export as excel
+df_aggr_publisher_topn.to_excel(path_project + "tables/{}/model_{}/03_sentiment_overtime_byTopNPublish_byTopic.xlsx"\
+                                .format(sent, p['currmodel']),
+                                index=False)
 
 
 print('done')
