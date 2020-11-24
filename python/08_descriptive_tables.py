@@ -165,9 +165,19 @@ df_aggr_publisher['Newspaper_'] = df_aggr_publisher.Newspaper_.\
     replace(to_replace='\([^)]*\)', value='', regex=True).\
     str.strip()
 
+# make a variable showing the overall count of articles by publisher and merge
+df_aggr_publisher_totalcount = df_aggr_publisher.groupby(['Newspaper_']).\
+                                 agg({'Newspaper_count': 'sum'}).\
+                                 rename(columns={'Newspaper_count': 'Newspaper_totalcount'}).reset_index()
+df_aggr_publisher = pandas.merge(df_aggr_publisher,
+                                 df_aggr_publisher_totalcount,
+                                 on=['Newspaper_']
+                                 )
+
 # filter by x largest Newspaper (exclude empty Newspaper name)
-df_aggr_publisher_topn_help = df_aggr_publisher[df_aggr_publisher['Newspaper_'].str.len() > 0].nlargest(15, 'Newspaper_count')
-topn_publishers = df_aggr_publisher_topn_help.Newspaper_.to_list()
+df_aggr_publisher_topn_help = df_aggr_publisher_totalcount[df_aggr_publisher_totalcount['Newspaper_'].str.len() > 0]\
+    .nlargest(15, 'Newspaper_totalcount')
+topn_publishers = list(set(df_aggr_publisher_topn_help.Newspaper_.to_list())) # unique list with topn publishers
 df_aggr_publisher_topn = df_aggr_publisher[df_aggr_publisher['Newspaper_'].isin(topn_publishers)]
 
 # prepare columns for export
