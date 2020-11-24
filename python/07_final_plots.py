@@ -22,6 +22,7 @@ Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/n
 Graph 1.1: Sentiment score over time, by topics, with events
 Graph 3.1: Frequency analysis, publication trend of topics over time (Fritsche, Mejia), with events
 Graph 4: Sentiment by Publisher with SD
+Graph 5: Barplot Sentiment by topic, for top publishers
 """
 
 # Ignore some warnings
@@ -390,7 +391,8 @@ df_wide_publishers_bytopics = df_long.groupby(['DomTopic_arti_arti_id', 'Newspap
 
 # calculate percentages per topic
 df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
-df_wide_publishers_bytopics = df_wide_publishers_bytopics[df_wide_publishers_bytopics['sum']>7]
+df_wide_publishers_bytopics = df_wide_publishers_bytopics.nlargest(10, 'sum')
+# df_wide_publishers_bytopics = df_wide_publishers_bytopics[df_wide_publishers_bytopics['sum']>7]
 totalcols = len(df_wide_publishers_bytopics.columns)
 for col in range(0, totalcols-1):
     df_wide_publishers_bytopics.iloc[:, col] = 100*(df_wide_publishers_bytopics.iloc[:, col] / df_wide_publishers_bytopics.iloc[:, totalcols-1])
@@ -409,7 +411,7 @@ df_publishers_bytopics_t = df_publishers_bytopics_t\
     .rename(columns={'Newspaper': 'topics'})
 
 # drop selected publishers
-df_publishers_bytopics_t = df_publishers_bytopics_t.drop(['BILD Bund'], axis=1)
+# df_publishers_bytopics_t = df_publishers_bytopics_t.drop(['BILD Bund'], axis=1)
 
 # rename topics according to our final identified topics
 for i, tp in enumerate(topics[1:]):
@@ -588,7 +590,7 @@ df_aggr_publisher['Newspaper_'] = df_aggr_publisher.Newspaper_.\
     str.strip()
 
 # filter by x largest Newspaper (exclude empty Newspaper name)
-df_aggr_publisher_topn = df_aggr_publisher[df_aggr_publisher['Newspaper_'].str.len() > 0].nlargest(15, 'Newspaper_count')
+df_aggr_publisher_topn = df_aggr_publisher[df_aggr_publisher['Newspaper_'].str.len() > 0].nlargest(10, 'Newspaper_count')
 topn_publishers = df_aggr_publisher_topn.Newspaper_.to_list()
 
 # Plot Publisher's sentiment score, with Stderr
@@ -642,7 +644,6 @@ df_wide_publishers_bytopics = df_wide_publishers_bytopics.loc[df_wide_publishers
 
 # calculate percentages per topic
 df_wide_publishers_bytopics['sum'] = df_wide_publishers_bytopics.sum(axis=1)
-# df_wide_publishers_bytopics = df_wide_publishers_bytopics[df_wide_publishers_bytopics['sum']>7]
 totalcols = len(df_wide_publishers_bytopics.columns)
 for col in range(0, totalcols-1):
     df_wide_publishers_bytopics.iloc[:, col] = 100*(df_wide_publishers_bytopics.iloc[:, col] / df_wide_publishers_bytopics.iloc[:, totalcols-1])
@@ -703,6 +704,32 @@ plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
+"""
+############## Graph 5: Barplot Sentiment by topic, for top publishers ##############
+"""
+
+# group by topics and Newspaper and make plottable
+df_long_topn_publisher = df_long.loc[df_long['Newspaper'].isin(topn_publishers)]
+df_long_topn_publisher = df_long_topn_publisher[['DomTopic_arti_arti_id', 'Newspaper', 'sentiscore_mean']]\
+    .groupby(['DomTopic_arti_arti_id', 'Newspaper']).mean()\
+    .unstack(0).fillna(0)
+
+# rename topics
+df_long_topn_publisher.columns = topics
+
+# plot horizontal barplot by topic and publisher
+# (for cosmetics: https://pandas.pydata.org/pandas-docs/version/0.16.1/generated/pandas.core.groupby.DataFrameGroupBy.plot.html)
+ax = df_long_topn_publisher.plot.barh(color=_COLORS[1:], xlim=[-.2, .2], fontsize='small')
+import matplotlib.pyplot as plt
+for fmt in ['png', 'pdf', 'svg']:
+    ax.figure.savefig(path_project + 'graph/{}/model_{}/{}/05_sentiment_by_topic_topPublish_FINAL.{}'.format(sent,
+                                                                                                       p['currmodel'],
+                                                                                                       lda_level_domtopic,
+                                                                                                       fmt),
+                bbox_inches='tight')
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 
 ###
