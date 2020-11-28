@@ -23,6 +23,7 @@ Graph 1.1: Sentiment score over time, by topics, with events
 Graph 3.1: Frequency analysis, publication trend of topics over time (Fritsche, Mejia), with events
 Graph 4: Sentiment by Publisher with SD
 Graph 5: Barplot Sentiment by topic, for top publishers
+Graph 6: Overall mean sentiment over time
 """
 
 # Ignore some warnings
@@ -731,5 +732,42 @@ plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
+"""
+############## Graph 6: Overall mean sentiment over time ##############
+"""
+
+# group by topics and reshape long to wide to make plottable
+df_senti_mean_yearly = df_long.groupby(['month'])[['sentiscore_mean']].mean()\
+    .groupby(pandas.Grouper(freq='Y')).mean().reset_index()\
+    .rename(columns={'month': 'year'})
+
+# Reformat dates
+df_senti_mean_yearly['year'] = pandas.DatetimeIndex(df_senti_mean_yearly.iloc[:,0]).year
+
+# Graph line by year
+# fig = plt.figure(figsize=(10,5))
+# ax = fig.add_axes([0.05, 0.1, 0.79, 0.79])
+fig = plt.figure(figsize=(8, 5))
+ax = fig.add_axes([0.1, 0.05, .71, .85]) # [left, bottom, width, height]
+ax.plot(df_senti_mean_yearly['sentiscore_mean'], marker='.', color=_COLORS[1])
+ax.set_ylabel('sentiment score', **csfont_axis)
+ax.set_xticks(range(len(df_senti_mean_yearly.index)))
+ax.set_yticks(np.arange(-.2, .21, .05))
+for tick in ax.get_xticklabels():
+    tick.set_fontname(_FONT)
+for tick in ax.get_yticklabels():
+    tick.set_fontname(_FONT)
+ax.set_xticklabels([str(x) for x in df_senti_mean_yearly.iloc[:, 0].values], **csfont_axis)
+plt.grid(b=True, which='major', color='#F0F0F0', linestyle='-')
+ax.axhline(y=0, color='#DEDEDE')
+if _PLOTTITLE: plt.title('Sentiment score over time', **csfont)
+for fmt in ['png', 'pdf', 'svg']:
+    plt.savefig(path_project + 'graph/{}/model_{}/{}/06_sentiscore_y_FINAL.{}'.format(sent,
+                                                                                      p['currmodel'],
+                                                                                      lda_level_domtopic,
+                                                                                      fmt))
+plt.show(block=False)
+time.sleep(1.5)
+plt.close('all')
 
 ###
