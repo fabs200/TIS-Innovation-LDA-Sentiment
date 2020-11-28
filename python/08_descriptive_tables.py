@@ -12,6 +12,7 @@ from python.params import params as p
 * Table 1: descriptives, by topic & year
 * Table 2: descriptives of sentiment and article count by year
 * Table 3: sentiment over time, by topic and by top publishers
+* Table 4: descriptives, by year, on full sample AND by topic
 ------------------------------------------
 
 """
@@ -193,6 +194,127 @@ df_aggr_publisher_topn.to_excel(path_project + "tables/{}/model_{}/03_sentiment_
                                 .format(sent, p['currmodel']),
                                 index=False)
 
+"""
+#################### Table 4: descriptives, by year, on full sample AND by topic ####################
+"""
+
+## on full sample
+# group by date only, calculate mean, std and n, and aggregate by year
+df_wide_fullsample_mean = df_long.groupby(['month'])[['mean']].mean()\
+    .groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+df_wide_fullsample_std = df_long.groupby(['month'])[['std']].mean()\
+    .groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+df_wide_fullsample_n = df_long.groupby(['month'])[['count']].sum()\
+    .groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
+
+## by each topic
+# group by topics, calculate mean, std and n, and reshape long to wide, and finally aggregate by year
+df_wide_bytopics_mean = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['mean']].mean().reset_index().pivot(
+    index='month', columns='DomTopic_arti_arti_id', values='mean')\
+    .groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+df_wide_bytopics_std = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['std']].mean().reset_index().pivot(
+    index='month', columns='DomTopic_arti_arti_id', values='std')\
+    .groupby(pandas.Grouper(freq='Y')).mean().reset_index().rename(columns={'month': 'year'})
+df_wide_bytopics_n = df_long.groupby(['DomTopic_arti_arti_id', 'month'])[['count']].sum().reset_index().pivot(
+    index='month', columns='DomTopic_arti_arti_id', values='count')\
+    .groupby(pandas.Grouper(freq='Y')).sum().reset_index().rename(columns={'month': 'year'})
+
+## Reformat dates
+df_wide_fullsample_mean['year'] = pandas.DatetimeIndex(df_wide_fullsample_mean.iloc[:, 0]).year
+df_wide_fullsample_std['year'] = pandas.DatetimeIndex(df_wide_fullsample_std.iloc[:, 0]).year
+df_wide_fullsample_n['year'] = pandas.DatetimeIndex(df_wide_fullsample_n.iloc[:, 0]).year
+df_wide_bytopics_mean['year'] = pandas.DatetimeIndex(df_wide_bytopics_mean.iloc[:, 0]).year
+df_wide_bytopics_std['year'] = pandas.DatetimeIndex(df_wide_bytopics_std.iloc[:, 0]).year
+df_wide_bytopics_n['year'] = pandas.DatetimeIndex(df_wide_bytopics_n.iloc[:, 0]).year
+
+# before appending all dfs, define a help-id to sort properly later
+df_wide_fullsample_mean['help_id_'] = 1
+df_wide_fullsample_std['help_id_'] = 2
+df_wide_fullsample_n['help_id_'] = 1
+df_wide_bytopics_mean['help_id_'] = 1
+df_wide_bytopics_std['help_id_'] = 2
+df_wide_bytopics_n['help_id_'] = 1
+
+# create empty df-template with years (each year 2x) and help_id_ (1, 2, 2); we merge all dfs to this
+yr_list = sorted(list(range(2009, 2020))*2)
+help_id_list = list(range(1, 3))*len(list(range(2009, 2020)))
+
+list_to_df = []
+for y in range(2009, 2020):
+    list_to_df.append([y, 1])
+    list_to_df.append([y, 2])
+
+df_merged_stats = pandas.DataFrame(list_to_df, columns=['year', 'help_id_'])
+
+## merge all fullsample dfs (mean, std)
+# merge fullsample mean
+df_merged_stats = pandas.merge(df_merged_stats,
+                               df_wide_fullsample_mean,
+                               on=['year', 'help_id_'],
+                               how='left'
+                               )
+# merge fullsample std, fill the NaNs in mean by std and drop std column
+df_merged_stats = pandas.merge(df_merged_stats,
+                               df_wide_fullsample_std,
+                               on=['year', 'help_id_'],
+                               how='left'
+                               )
+df_merged_stats['mean'] = df_merged_stats['mean'].fillna(df_merged_stats['std'])
+df_merged_stats = df_merged_stats.drop('std', axis=1)
+
+## merge all bytopic dfs (mean, std)
+# merge bytopic mean
+df_merged_stats = pandas.merge(df_merged_stats,
+                               df_wide_bytopics_mean,
+                               on=['year', 'help_id_'],
+                               how='left'
+                               )
+# merge bytopic std, fill the NaNs in mean by std and drop std column
+df_merged_stats = pandas.merge(df_merged_stats,
+                               df_wide_bytopics_std,
+                               on=['year', 'help_id_'],
+                               how='left'
+                               )
+
+# loop over topic columns in df left-hand-side, fill na by right-hand-side topic columns, and clean up
+for i in [c for c in df_merged_stats.columns if 'x' in c]:
+    df_merged_stats[i] = df_merged_stats[i].fillna(df_merged_stats[i[:-1]+'y'])
+    df_merged_stats.drop(i[:-1]+'y', axis=1, inplace=True)
+    df_merged_stats.rename(columns={i: i[:-2]}, inplace=True)
+
+
+## merge all fullsample dfs (n)
+# merge fullsample n
+df_merged_stats = pandas.merge(df_merged_stats,
+                               df_wide_fullsample_n,
+                               on=['year', 'help_id_'],
+                               how='left'
+                               )
+
+## merge all bytopic dfs (n)
+# merge bytopic n
+df_merged_stats = pandas.merge(df_merged_stats,
+                               df_wide_bytopics_n,
+                               on=['year', 'help_id_'],
+                               how='left'
+                               )
+
+# replace NaN with None
+df_merged_stats = df_merged_stats.where(pandas.notnull(df_merged_stats), None)
+
+# rename columns
+for i in [c for c in df_merged_stats.columns if 'x' in c]:
+    df_merged_stats = df_merged_stats.rename(columns={i: i[:-1]+'mean',
+                                                      i[:-1]+'y': i[:-1]+'n'})
+
+# reorder and select columns
+select_cols = ['year', 'mean', 'count']
+select_cols.extend(sorted(df_merged_stats.columns)[:-4])
+df_merged_stats = df_merged_stats[select_cols]
+
+# export as excel
+df_merged_stats.to_excel(path_project + "tables/{}/model_{}/04_descriptives_sentiment_count_std_full_and_bytopic.xlsx".format(sent, p['currmodel']),
+                         index=False)
 
 print('done')
 
