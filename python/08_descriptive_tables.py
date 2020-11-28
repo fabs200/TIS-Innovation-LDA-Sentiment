@@ -59,12 +59,18 @@ for stat in ['min', 'max', 'mean', 'std', 'DomTopic_arti_arti_prob']:
 df_long = df_long[(df_long['month'] >= '2009-1-1')]
 df_long = df_long[(df_long['month'] <= '2020-1-1')]
 
+# actual number of articles with sentiment score and assigned dominant topic
+print('Number of actual articles ({} to {}) with sentiment score and assigned dominant topic: {}'.format(
+    df_long.year.min(),
+    df_long.year.max(),
+    df_long.DomTopic_arti_arti_id.__len__()))
+
 # replace everything in brackets from Newspaper
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
 
 # prepare counts
 df_long = df_long.rename(columns = {'count': 'sentences_count'})
-df_long['count'] = 1
+df_long['count'] = df_long['mean'].notna().astype(int)
 
 """
 ###################### Table 1: descriptives, by topic & year ######################

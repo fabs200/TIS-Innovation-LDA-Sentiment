@@ -154,7 +154,16 @@ plt.close('all')
 """
 
 # group by year
-df_senti_freq_y = df_long.groupby(['year'])[['sentiscore_mean']].count().reset_index()
+# NOTE: below aggregation does not correspond to the aggregation when computing the yearly sentiment scores.
+# df_senti_freq_y = df_long.groupby(['year'])[['sentiscore_mean']].count().reset_index()
+
+# redo but analogeously to aggregation yearly sentiment scores
+df_senti_freq_y = df_long.groupby(['month'])[['sentiscore_mean']].count()\
+    .groupby(pandas.Grouper(freq='Y')).sum().reset_index()\
+    .rename(columns={'month': 'year'})
+
+# Reformat dates
+df_senti_freq_y['year'] = pandas.DatetimeIndex(df_senti_freq_y.iloc[:,0]).year
 
 # Graph bar by year
 width = .75
