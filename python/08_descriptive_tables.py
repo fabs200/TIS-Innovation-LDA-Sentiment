@@ -246,6 +246,16 @@ for y in range(2009, 2020):
 
 df_merged_stats = pandas.DataFrame(list_to_df, columns=['year', 'help_id_'])
 
+# format numbers, to string and add brackets to std
+df_wide_fullsample_mean['mean'] = df_wide_fullsample_mean['mean'].astype(float).map('{:,.2f}'.format)
+df_wide_fullsample_std['std'] = df_wide_fullsample_std['std'].astype(float).map('{:,.2f}'.format)
+df_wide_fullsample_std['std'] = df_wide_fullsample_std['std'].apply(lambda x: '(' + x + ')')
+
+for col in df_wide_bytopics_mean.columns[1:-1]:
+    df_wide_bytopics_mean[col] = df_wide_bytopics_mean[col].astype(float).map('{:,.2f}'.format)
+    df_wide_bytopics_std[col] = df_wide_bytopics_std[col].astype(float).map('{:,.2f}'.format)
+    df_wide_bytopics_std[col] = df_wide_bytopics_std[col].apply(lambda x: '(' + x + ')')
+
 ## merge all fullsample dfs (mean, std)
 # merge fullsample mean
 df_merged_stats = pandas.merge(df_merged_stats,
