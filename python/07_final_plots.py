@@ -624,7 +624,7 @@ for tick in vals:
 ax.axvline(x=0, linestyle='solid', alpha=.5, color='black', zorder=1)
 # no legend
 ax.get_legend().remove()
-ax.set_xlabel("Sentiment score")
+ax.set(xlabel='sentiment score', ylabel='Newspaper')
 # plt.title('Average sentiment score of publisher')
 plt.tight_layout()
 for fmt in ['png', 'pdf', 'svg']:
@@ -730,6 +730,7 @@ df_long_topn_publisher.columns = topics
 # plot horizontal barplot by topic and publisher
 # (for cosmetics: https://pandas.pydata.org/pandas-docs/version/0.16.1/generated/pandas.core.groupby.DataFrameGroupBy.plot.html)
 ax = df_long_topn_publisher.plot.barh(color=_COLORS[1:], xlim=[-.2, .2], fontsize='small')
+ax.set(xlabel='sentiment score', ylabel='Newspaper')
 import matplotlib.pyplot as plt
 for fmt in ['png', 'pdf', 'svg']:
     ax.figure.savefig(path_project + 'graph/{}/model_{}/{}/05_sentiment_by_topic_topPublish_FINAL.{}'.format(sent,
