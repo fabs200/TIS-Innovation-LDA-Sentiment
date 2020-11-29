@@ -388,6 +388,7 @@ plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
 
+
 """
 Graph 7: Barplot percentage shares of topics for selected publishers, (stacked/not stacked) (Mejia)
 """
@@ -416,9 +417,9 @@ df_wide_publishers_bytopics['Newspaper'] = df_wide_publishers_bytopics['Newspape
 df_publishers_bytopics_t = df_wide_publishers_bytopics.transpose().reset_index()
 df_publishers_bytopics_t.columns = df_publishers_bytopics_t.iloc[0]
 df_publishers_bytopics_t = df_publishers_bytopics_t\
-    .drop(df_publishers_bytopics_t.columns[1], axis=1)\
     .drop(0)\
     .rename(columns={'Newspaper': 'topics'})
+#    .drop(df_publishers_bytopics_t.columns[1], axis=1)\
 
 # drop selected publishers
 # df_publishers_bytopics_t = df_publishers_bytopics_t.drop(['BILD Bund'], axis=1)
@@ -436,13 +437,12 @@ fig = plt.figure(figsize=(10, 5))
 ax = fig.add_axes([0.08, 0.18, 0.75, 0.75]) # [left, bottom, width, height]
 for i in range(0, len(topics)):
     if i==0:
-        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:])
+        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:], color=_COLORS[i+1])
     else:
         ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:],
-                bottom=df_publishers_bytopics_t.iloc[0:i].sum().to_list()[1:])
+                bottom=df_publishers_bytopics_t.iloc[0:i].sum().to_list()[1:], color=_COLORS[i+1])
 # legend
-ax.legend(topics, title='topics', bbox_to_anchor=(1.2, .85), ncol=1, borderaxespad=0.,
-          fontsize='small', loc='upper right')
+ax.legend(topics, bbox_to_anchor=(1.2, .85), ncol=1, borderaxespad=0., fontsize='small', loc='upper right')
 # Custom x axis
 plt.xticks(rotation=90, size=7)
 plt.xlabel('Newspaper')
@@ -667,9 +667,9 @@ df_wide_publishers_bytopics['Newspaper'] = df_wide_publishers_bytopics['Newspape
 df_publishers_bytopics_t = df_wide_publishers_bytopics.transpose().reset_index()
 df_publishers_bytopics_t.columns = df_publishers_bytopics_t.iloc[0]
 df_publishers_bytopics_t = df_publishers_bytopics_t\
-    .drop(df_publishers_bytopics_t.columns[1], axis=1) \
     .rename(columns={'Newspaper': 'topics'})\
     .drop(0)
+# .drop(df_publishers_bytopics_t.columns[0], axis=1) \
 
 # plot stacked bar plot
 barWidth = 0.85
@@ -677,9 +677,9 @@ publishers = df_publishers_bytopics_t.columns[1:]
 # plot stacked bars
 fig = plt.figure(figsize=(10, 4.5))
 ax = fig.add_axes([0.1, 0.32, 0.76, 0.62])  # [left, bottom, width, height]
-for i in range(0, len(topics)):
+for i in range(0, len(topics[1:])):
     if i==0:
-        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:])
+        ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:], color=_COLORS[i+1])
     else:
         ax.bar(publishers, df_publishers_bytopics_t.iloc[i].to_list()[1:],
                 bottom=df_publishers_bytopics_t.iloc[0:i].sum().to_list()[1:], color=_COLORS[i+1])
@@ -740,6 +740,7 @@ for fmt in ['png', 'pdf', 'svg']:
 plt.show(block=False)
 time.sleep(1.5)
 plt.close('all')
+
 
 """
 ############## Graph 6: Overall mean sentiment over time ##############
