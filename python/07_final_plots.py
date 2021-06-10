@@ -107,6 +107,11 @@ print('Number of actual articles ({} to {}) with sentiment score and assigned do
 # replace everything in brackets from Newspaper
 df_long['Newspaper'] = df_long.Newspaper.replace(to_replace='\([^)]*\)', value='', regex=True).str.strip()
 
+# save final dataset of graphs
+if not os.path.exists(path_project + 'data/final/'):
+    os.makedirs(path_project + 'data/final/')
+df_long.to_excel(path_project + 'data/final/final_data_for_graphs.xlsx')
+
 """
 ###################### Graph 1: Sentiment score over time, by topics ######################
 """
