@@ -82,7 +82,7 @@ df_long['topic'] = None
 df_long.loc[df_long['DomTopic_arti_arti_id'] == '0.0', 'topic'] = tc1
 df_long.loc[df_long['DomTopic_arti_arti_id'] == '1.0', 'topic'] = tc2
 df_long.loc[df_long['DomTopic_arti_arti_id'] == '2.0', 'topic'] = tc3
-df_long.loc[df_long['DomTopic_arti_arti_id'] == '3.0', 'topic'] = tc3
+df_long.loc[df_long['DomTopic_arti_arti_id'] == '3.0', 'topic'] = tc4
 df_long.loc[df_long['DomTopic_arti_arti_id'] == '4.0', 'topic'] = tc5
 
 # read in lda topic words
