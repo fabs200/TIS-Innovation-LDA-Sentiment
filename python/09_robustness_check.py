@@ -3,6 +3,7 @@ from python.ConfigUser import path_data, path_project
 from python._HelpFunctions import filter_sentiment_params
 from python.params import params as p
 import warnings
+import re
 
 """
 ------------------------------------------
@@ -83,6 +84,20 @@ df_long.loc[df_long['DomTopic_arti_arti_id'] == '1.0', 'topic'] = tc2
 df_long.loc[df_long['DomTopic_arti_arti_id'] == '2.0', 'topic'] = tc3
 df_long.loc[df_long['DomTopic_arti_arti_id'] == '3.0', 'topic'] = tc3
 df_long.loc[df_long['DomTopic_arti_arti_id'] == '4.0', 'topic'] = tc5
+
+# read in lda topic words
+lda_file = open(path_project + "lda/{}/model_{}/topics.txt".format(p['lda_level_fit'][0], p['currmodel']), 'r')
+lda_topicwords = lda_file.read()
+lda_topicwords = re.findall(r'(\(.*\'\))', lda_topicwords)
+lda_topicwords = [t.replace("\'", "") for t in lda_topicwords]
+
+# add topic words as a column article
+df_long['topic_words'] = None
+df_long.loc[df_long['DomTopic_arti_arti_id'] == '0.0', 'topic_words'] = lda_topicwords[0]
+df_long.loc[df_long['DomTopic_arti_arti_id'] == '1.0', 'topic_words'] = lda_topicwords[1]
+df_long.loc[df_long['DomTopic_arti_arti_id'] == '2.0', 'topic_words'] = lda_topicwords[2]
+df_long.loc[df_long['DomTopic_arti_arti_id'] == '3.0', 'topic_words'] = lda_topicwords[3]
+df_long.loc[df_long['DomTopic_arti_arti_id'] == '4.0', 'topic_words'] = lda_topicwords[4]
 
 # extract highest assigned articles and gather in one df
 df_sample = df_long[df_long['DomTopic_arti_arti_id']=='0.0'].sort_values('DomTopic_arti_arti_prob', ascending=False).head(10)
